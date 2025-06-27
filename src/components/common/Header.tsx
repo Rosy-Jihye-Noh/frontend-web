@@ -21,7 +21,7 @@ const Header = () => {
           <Button
             variant="ghost"
             className="px-3 py-2 text-sm md:px-4 md:py-2.5 md:text-base font-medium text-gray-700 hover:scale-105"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/login")}
           >
             로그인
           </Button>
