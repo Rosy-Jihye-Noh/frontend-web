@@ -55,7 +55,7 @@ const LoginPage = () => {
       <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
         아직 계정이 없으신가요?{" "}
         <span
-          onClick={() => navigate("signup")}
+          onClick={() => navigate("/signup")}
           className="font-semibold text-blue-600 hover:underline cursor-pointer"
         >
           회원가입
