@@ -38,6 +38,15 @@ const LoginPage = () => {
     }
   };
 
+  /**
+   * 아이디/비밀번호 찾기 페이지로 이동하는 함수
+   * @param tab 이동 후 활성화할 탭의 이름 ('find-email' 또는 'find-password')
+   */
+  const goToFindCredentials = (tab: 'find-email' | 'find-password') => {
+    // navigate 함수의 state 옵션을 사용하여 이동할 페이지에 데이터를 전달합니다.
+    navigate('/find-credentials', { state: { initialTab: tab } });
+  };
+
   return (
     <div className="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
       <h1 className="text-3xl font-extrabold text-blue-600 mb-8">SynergyM</h1>
@@ -80,6 +89,24 @@ const LoginPage = () => {
           >
             로그인
           </Button>
+
+          {/* [추가된 부분] 아이디/비밀번호 찾기 링크 */}
+          <div className="text-sm text-center text-gray-600 dark:text-gray-400 flex justify-center items-center space-x-2 pt-2">
+            <span
+              onClick={() => goToFindCredentials('find-email')}
+              className="hover:underline cursor-pointer"
+            >
+              아이디 찾기
+            </span>
+            <span className="text-gray-400 dark:text-gray-600">|</span>
+            <span
+              onClick={() => goToFindCredentials('find-password')}
+              className="hover:underline cursor-pointer"
+            >
+              비밀번호 찾기
+            </span>
+          </div>
+
         </div>
       </Card>
       <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">

@@ -1,5 +1,5 @@
 import axios from './axiosInstance';
-import type { LoginRequest, SignupRequest, ChangePasswordRequest, LoginResponse } from '@/types/auth';
+import type { LoginRequest, SignupRequest, ChangePasswordRequest, LoginResponse, FindEmailRequest } from '@/types/auth';
 
 const apiClient = axios.create({
     baseURL: 'http://localhost:8081/api/auth',
@@ -46,6 +46,13 @@ export const verifyCode = (email: string, code: string) => {
 export const changePassword = (passwordData: ChangePasswordRequest) => {
     return apiClient.post('/change-password', passwordData);
 };
+
+// 이메일 찾기
+export const findEmail = (findData: FindEmailRequest) => {
+    // 백엔드는 이메일 주소를 텍스트로 바로 반환하므로, 응답 타입을 string으로 지정
+    return apiClient.post<string>('/find-email', findData);
+};
+
 
 
 // interface LoginRequest {
