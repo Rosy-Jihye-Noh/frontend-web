@@ -29,7 +29,7 @@ const Header = () => {
           {/* 회원가입 버튼 */}
           <Button
             className="bg-blue-600 text-white hover:scale-105 hover:bg-blue-700 px-3 py-2 text-sm md:px-4 md:py-2.5 md:text-base font-medium"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/signup")}
           >
             회원가입
           </Button>
