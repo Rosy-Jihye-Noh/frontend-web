@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { login } from "@/api/authApi";
+import type { LoginRequest } from "@/types/auth";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -12,28 +13,34 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
-    if (!email && !password) return alert("🤔 이메일과 비밀번호를 입력해주세요!");
-    if (!email) return alert("📧 이메일을 입력해주세요!");
-    if (!password) return alert("🔐 비밀번호를 입력해주세요!");
+    if (!email || !password) {
+      alert("🤔 이메일과 비밀번호를 입력해주세요!");
+      return;
+    }
+
+    const loginData: LoginRequest = { email, password };
 
     try {
-      const response = await login({ email, password });
+      const response = await login(loginData);
+      const responseData = response.data;
 
-      if (response.success) {
+      if (responseData.success) {
+        localStorage.setItem('jwt_token', responseData.token);
         alert(`🎉 로그인 성공!\n환영합니다!`);
         navigate("/");
       } else {
-        alert(`❌ 로그인 실패: ${response.message}`);
+        alert(`❌ 로그인 실패: ${responseData.message}`);
       }
-    } catch (err) {
-      console.error("로그인 실패", err);
-      alert("🚨 서버 오류 또는 네트워크 문제입니다.");
+    } catch (err: any) {
+      console.error("로그인 실패:", err);
+      const errorMessage = err.response?.data?.message || "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
+      alert(`🚨 ${errorMessage}`);
     }
   };
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
-      <h1 className="text-3xl font-extrabold text-blue-600 mb-8">Health AI</h1>
+      <h1 className="text-3xl font-extrabold text-blue-600 mb-8">SynergyM</h1>
       <Card className="w-full max-w-md p-8">
         <h2 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-white">
           로그인
