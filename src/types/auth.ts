@@ -51,6 +51,7 @@ export interface SocialSignupRequest {
   goal?: string;
   birthday: string;
   gender: string;
+  provider: string; // 로그인 타입
   weight?: number;
   height?: number;
 }

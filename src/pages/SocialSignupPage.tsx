@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { ChangeEvent } from 'react';
 import { socialSignup } from '@/api/authApi';
-// [수정] SignupRequest 대신 SocialSignupRequest 타입을 임포트
 import type { SocialSignupRequest } from '@/types/auth';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,25 +12,25 @@ const SocialSignupPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // [수정] 상태 타입을 SocialSignupRequest로 변경하고 password 필드 제거
     const [formData, setFormData] = useState<SocialSignupRequest>({
         email: '',
         name: '',
         birthday: '',
         gender: 'MALE',
+        provider: '',
         goal: '',
         weight: 0,
         height: 0,
     });
 
-    // ... useEffect 및 핸들러 함수들은 이전과 동일하게 유지 ...
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const email = params.get('email');
         const name = params.get('name');
+        const provider = params.get('provider');
         
-        if (email && name) {
-            setFormData(prev => ({ ...prev, email, name }));
+        if (email && name && provider) {
+            setFormData(prev => ({ ...prev, email, name, provider }));
         } else {
             alert('잘못된 접근입니다. 로그인 페이지로 이동합니다.');
             navigate('/login');
@@ -68,7 +67,6 @@ const SocialSignupPage = () => {
     };
 
 
-    // ... JSX 렌더링 부분은 이전과 동일 ...
     return (
         <div className="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
             <h1 className="text-3xl font-extrabold text-blue-600 mb-8">SynergyM</h1>
