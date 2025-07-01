@@ -44,3 +44,13 @@ export interface FindEmailRequest {
   name: string;
   birthday: string; // 'yyyy-MM-dd'
 }
+
+export interface SocialSignupRequest {
+  email: string;
+  name: string;
+  goal?: string;
+  birthday: string;
+  gender: string;
+  weight?: number;
+  height?: number;
+}
