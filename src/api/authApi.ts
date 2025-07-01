@@ -1,5 +1,5 @@
 import axios from './axiosInstance';
-import type { LoginRequest, SignupRequest, ChangePasswordRequest, LoginResponse, FindEmailRequest } from '@/types/auth';
+import type { SocialSignupRequest, LoginRequest, SignupRequest, ChangePasswordRequest, LoginResponse, FindEmailRequest } from '@/types/auth';
 
 const apiClient = axios.create({
     baseURL: 'http://localhost:8081/api/auth',
@@ -53,7 +53,10 @@ export const findEmail = (findData: FindEmailRequest) => {
     return apiClient.post<string>('/find-email', findData);
 };
 
-
+// 소셜 회원가입 완료 요청
+export const socialSignup = (signupData: SocialSignupRequest) => {
+    return apiClient.post<LoginResponse>('/social-signup', signupData);
+};
 
 // interface LoginRequest {
 //   email: string;

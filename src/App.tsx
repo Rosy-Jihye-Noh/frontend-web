@@ -4,6 +4,9 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Signup2 from './pages/Signup2';
 import FindCredentials from './pages/FindCredentials';
+import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
+import SocialSignupPage from './pages/SocialSignupPage';
+
 
 const App = () => {
   return (
@@ -13,6 +16,8 @@ const App = () => {
       <Route path="/signup" element={<Signup />} />
       <Route path="/signup2" element={<Signup2 />} />
       <Route path="/find-credentials" element={<FindCredentials />} />
+      <Route path="/oauth/redirect" element={<OAuth2RedirectHandler />} />
+      <Route path="/social-signup" element={<SocialSignupPage />} />
     </Routes>
   )
 }

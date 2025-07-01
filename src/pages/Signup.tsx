@@ -150,13 +150,13 @@ const SignupPage = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">성별</label>
-                                <Select onValueChange={handleGenderChange} defaultValue={formData.gender}>
-                                    <SelectTrigger className="bg-white dark:bg-transparent dark:text-white">
+                                <Select value={formData.gender} onValueChange={handleGenderChange}>
+                                    <SelectTrigger className="bg-white dark:bg-transparent dark:text-white border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                         <SelectValue placeholder="성별을 선택하세요" />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="MALE">남성</SelectItem>
-                                        <SelectItem value="FEMALE">여성</SelectItem>
+                                    <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg">
+                                        <SelectItem value="MALE" className="cursor-pointer px-3 py-2 hover:bg-blue-50 dark:hover:bg-gray-700">남성</SelectItem>
+                                        <SelectItem value="FEMALE" className="cursor-pointer px-3 py-2 hover:bg-blue-50 dark:hover:bg-gray-700">여성</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -171,6 +171,29 @@ const SignupPage = () => {
                         </>
                     )}
                 </form>
+
+                <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white px-2 text-muted-foreground dark:bg-gray-800">
+                            Or sign up with
+                        </span>
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <Button variant="outline" asChild>
+                        <a href="http://localhost:8081/oauth2/authorization/google">Google</a>
+                    </Button>
+                    <Button variant="outline" asChild>
+                        <a href="http://localhost:8081/oauth2/authorization/naver">Naver</a>
+                    </Button>
+                    <Button variant="outline" asChild>
+                        <a href="http://localhost:8081/oauth2/authorization/kakao">Kakao</a>
+                    </Button>
+                </div>
+
                 <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
                     이미 계정이 있으신가요?{" "}
                     <span onClick={() => navigate("/login")} className="font-semibold text-blue-600 hover:underline cursor-pointer">

@@ -90,7 +90,30 @@ const LoginPage = () => {
             로그인
           </Button>
 
-          {/* [추가된 부분] 아이디/비밀번호 찾기 링크 */}
+          <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-muted-foreground dark:bg-gray-800">
+                      Or continue with
+                  </span>
+              </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+              {/* 각 버튼은 백엔드의 OAuth2 인증 시작 URL로 연결되는 a 태그입니다. */}
+              <Button variant="outline" asChild>
+                  <a href="http://localhost:8081/oauth2/authorization/google">Google</a>
+              </Button>
+              <Button variant="outline" asChild>
+                  <a href="http://localhost:8081/oauth2/authorization/naver">Naver</a>
+              </Button>
+              <Button variant="outline" asChild>
+                  <a href="http://localhost:8081/oauth2/authorization/kakao">Kakao</a>
+              </Button>
+          </div>
+          
+          
           <div className="text-sm text-center text-gray-600 dark:text-gray-400 flex justify-center items-center space-x-2 pt-2">
             <span
               onClick={() => goToFindCredentials('find-email')}
