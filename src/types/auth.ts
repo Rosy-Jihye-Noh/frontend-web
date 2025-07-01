@@ -39,3 +39,8 @@ export interface LoginResponse {
     success: boolean;
     message: string;
 }
+
+export interface FindEmailRequest {
+  name: string;
+  birthday: string; // 'yyyy-MM-dd'
+}
