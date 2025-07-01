@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { login } from "@/api/authApi";
 import type { LoginRequest } from "@/types/auth";
+import { useUserStore } from "@/store/userStore";
 
 const LoginPage = () => {
-  const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const setUser = useUserStore((state) => state.setUser);
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -26,8 +28,9 @@ const LoginPage = () => {
 
       if (responseData.success) {
         localStorage.setItem('jwt_token', responseData.token);
-        alert(`🎉 로그인 성공!\n환영합니다!`);
+        setUser(responseData.user);
         navigate("/");
+        alert(`🎉 로그인 성공!\n환영합니다!`);
       } else {
         alert(`❌ 로그인 실패: ${responseData.message}`);
       }
