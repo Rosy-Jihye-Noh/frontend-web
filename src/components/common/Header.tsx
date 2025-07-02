@@ -3,12 +3,13 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useUserStore } from '@/store/userStore';
 import { HiMenu, HiX } from "react-icons/hi";
+import MobileMenuModal from './MobileMenuModal';
 
 const menus = [
   { name: "홈", path: "/dashboard" },
-  { name: "커뮤니티", path: "/community" },
+  { name: "커뮤니티", path: "/posts" },
   { name: "운동 목록", path: "/exercises" },
-  { name: "운동 기록", path: "/exercise-log" },
+  { name: "운동 기록", path: "/exercise-logs" },
 ];
 
 const Header: React.FC = () => {
@@ -37,11 +38,11 @@ const Header: React.FC = () => {
           </h1>
         </div>
         {/* 데스크탑: 메뉴/버튼 */}
-        <nav className="hidden [@media(min-width:1025px)]:flex flex-1 justify-center gap-4">
+        <nav className="hidden [@media(min-width:1025px)]:flex flex-1 justify-center gap-8">
           {menus.map((menu) => (
             <button
               key={menu.name}
-              className={`text-base font-medium cursor-pointer ${location.pathname === menu.path ? "text-blue-600" : "text-gray-700 hover:text-blue-600"}`}
+              className={`text-base font-bold cursor-pointer ${location.pathname === menu.path ? "text-blue-600" : "text-gray-700 hover:text-blue-600"}`}
               onClick={() => navigate(menu.path)}
               style={{ cursor: 'pointer' }}
             >
@@ -78,73 +79,60 @@ const Header: React.FC = () => {
           )}
         </div>
         {/* 모바일: 햄버거 버튼 */}
-        <button
-          className="[@media(min-width:1025px)]:hidden flex items-center justify-center p-2 cursor-pointer"
-          onClick={() => setMobileOpen((v) => !v)}
-          aria-label="메뉴 열기"
-          style={{ cursor: 'pointer' }}
-        >
-          {mobileOpen ? <HiX className="w-7 h-7 cursor-pointer" /> : <HiMenu className="w-7 h-7 cursor-pointer" />}
-        </button>
+        {mobileOpen ? null : (
+          <button
+            className="[@media(min-width:1025px)]:hidden flex items-center justify-center p-2 cursor-pointer"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label="메뉴 열기"
+            style={{ cursor: 'pointer' }}
+          >
+            <HiMenu className="w-7 h-7 cursor-pointer" />
+          </button>
+        )}
       </div>
       {/* 모바일 메뉴 드로어 */}
-      {mobileOpen && (
-        <div className="[@media(min-width:1025px)]:hidden fixed top-0 left-0 w-full h-full bg-white z-20" onClick={() => setMobileOpen(false)}>
-          <div
-            className="absolute top-0 right-0 w-64 h-full bg-white shadow-lg flex flex-col p-6 gap-4"
-            onClick={e => e.stopPropagation()}
-          >
+      <MobileMenuModal open={mobileOpen} onClose={() => setMobileOpen(false)}>
+        <div className="flex flex-col gap-2 mt-8">
+          {menus.map((menu) => (
             <button
-              className="absolute top-4 right-4 p-2 cursor-pointer"
-              onClick={() => setMobileOpen(false)}
-              aria-label="메뉴 닫기"
+              key={menu.name}
+              className={`text-lg font-semibold text-left cursor-pointer ${location.pathname === menu.path ? "text-blue-600" : "text-gray-700 hover:text-blue-600"}`}
+              onClick={() => handleMenuClick(menu.path)}
               style={{ cursor: 'pointer' }}
             >
-              <HiX className="w-7 h-7" />
+              {menu.name}
             </button>
-            <div className="flex flex-col gap-2 mt-8">
-              {menus.map((menu) => (
-                <button
-                  key={menu.name}
-                  className={`text-lg font-semibold text-left cursor-pointer ${location.pathname === menu.path ? "text-blue-600" : "text-gray-700 hover:text-blue-600"}`}
-                  onClick={() => handleMenuClick(menu.path)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  {menu.name}
-                </button>
-              ))}
-            </div>
-            <div className="flex flex-col gap-2 mt-6 border-t pt-4">
-              {user ? (
-                <>
-                  <Button
-                    className="bg-gray-100 text-blue-600 hover:bg-gray-200 w-full cursor-pointer"
-                    onClick={() => handleMenuClick("/mypage")}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    마이페이지
-                  </Button>
-                  <Button
-                    className="bg-blue-600 text-white hover:bg-blue-700 w-full cursor-pointer"
-                    onClick={() => {
-                      clearUser();
-                      handleMenuClick("/login");
-                    }}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    로그아웃
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button variant="ghost" className="text-gray-700 w-full cursor-pointer" onClick={() => handleMenuClick("/login")}>로그인</Button>
-                  <Button className="bg-blue-600 text-white hover:bg-blue-700 w-full cursor-pointer" onClick={() => handleMenuClick("/signup")}>회원가입</Button>
-                </>
-              )}
-            </div>
-          </div>
+          ))}
         </div>
-      )}
+        <div className="flex flex-col gap-2 mt-6 border-t pt-4">
+          {user ? (
+            <>
+              <Button
+                className="bg-gray-100 text-blue-600 hover:bg-gray-200 w-full cursor-pointer"
+                onClick={() => handleMenuClick("/mypage")}
+                style={{ cursor: 'pointer' }}
+              >
+                마이페이지
+              </Button>
+              <Button
+                className="bg-blue-600 text-white hover:bg-blue-700 w-full cursor-pointer"
+                onClick={() => {
+                  clearUser();
+                  handleMenuClick("/login");
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                로그아웃
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" className="text-gray-700 w-full cursor-pointer" onClick={() => handleMenuClick("/login")}>로그인</Button>
+              <Button className="bg-blue-600 text-white hover:bg-blue-700 w-full cursor-pointer" onClick={() => handleMenuClick("/signup")}>회원가입</Button>
+            </>
+          )}
+        </div>
+      </MobileMenuModal>
     </header>
   );
 };
