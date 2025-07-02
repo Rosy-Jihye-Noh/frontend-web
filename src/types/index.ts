@@ -1,7 +1,21 @@
 export interface User {
+    id: number; 
     name: string;
     goal: string;
-    profileImageUrl: string;
+    profileImageUrl: string | null;
+}
+
+export interface ProfileUser {
+  id: number;
+  email: string;
+  name: string;
+  role: 'MEMBER' | 'ADMIN';
+  goal: string | null;
+  birthday: string | null;
+  gender: string | null;
+  weight: number | null;
+  height: number | null;
+  profileImageUrl: string | null;
 }
 
 export interface RoutineExercise {

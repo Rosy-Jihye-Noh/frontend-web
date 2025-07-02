@@ -2,10 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '@/types/auth';
 
-export enum Role {
-    MEMBER = 'MEMBER',
-    ADMIN = 'ADMIN',
-  }
+export type Role = 'MEMBER' | 'ADMIN';
 
 
 // 응답의 메타데이터

@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { findEmail, checkEmailExists, sendVerificationCode, verifyCode, changePassword } from '@/api/authApi';
+import { findEmail, sendVerificationCode, verifyCode, changePassword } from '@/api/authApi';
 import type { FindEmailRequest, ChangePasswordRequest } from '@/types/auth';
 
 const FindCredentials = () => {
