@@ -1,18 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { User } from '@/types/auth';
 
 export enum Role {
     MEMBER = 'MEMBER',
     ADMIN = 'ADMIN',
   }
 
-// user 필드
-export interface User {
-  id: number;
-  email: string;
-  name: string;
-  role: Role;
-}
 
 // 응답의 메타데이터
 export interface LoginResponse {
