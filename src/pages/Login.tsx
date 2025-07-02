@@ -4,11 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { login } from "@/api/authApi";
-import type { LoginRequest, User } from "@/types/auth";
+import type { LoginRequest } from "@/types/auth";
 import { useUserStore } from "@/store/userStore";
 
 const LoginPage = () => {
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const setUser = useUserStore((state) => state.setUser);
@@ -29,17 +28,9 @@ const LoginPage = () => {
       if (responseData.success) {
         localStorage.setItem('jwt_token', responseData.token);
         setUser(responseData.user);
-
-        const userInfo: User = {
-          id: responseData.user.id,
-          email: responseData.user.email,
-          name: responseData.user.name,
-          role: responseData.user.role
-        };
-        setUser(userInfo);
         
-        navigate("/");
-        alert(`🎉 로그인 성공!\n환영합니다!`);
+        navigate("/"); // 또는 '/mypage' 등 원하는 경로로 이동
+        alert(`🎉 로그인 성공!\n환영합니다, ${responseData.user.name}님!`);
       } else {
         alert(`❌ 로그인 실패: ${responseData.message}`);
       }
@@ -50,12 +41,7 @@ const LoginPage = () => {
     }
   };
 
-  /**
-   * 아이디/비밀번호 찾기 페이지로 이동하는 함수
-   * @param tab 이동 후 활성화할 탭의 이름 ('find-email' 또는 'find-password')
-   */
   const goToFindCredentials = (tab: 'find-email' | 'find-password') => {
-    // navigate 함수의 state 옵션을 사용하여 이동할 페이지에 데이터를 전달합니다.
     navigate('/find-credentials', { state: { initialTab: tab } });
   };
 
@@ -113,7 +99,6 @@ const LoginPage = () => {
               </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-              {/* 각 버튼은 백엔드의 OAuth2 인증 시작 URL로 연결되는 a 태그입니다. */}
               <Button variant="outline" asChild>
                   <a href="http://localhost:8081/oauth2/authorization/google">Google</a>
               </Button>

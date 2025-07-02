@@ -7,20 +7,24 @@ import FindCredentials from './pages/FindCredentials';
 import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
 import SocialSignupPage from './pages/SocialSignupPage';
 import MyPage from './pages/MyPage';
-
+import EditProfilePage from './pages/EditProfilePage';
+import { AuthProvider } from './contexts/AuthContext';
 
 const App = () => {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/signup2" element={<Signup2 />} />
-      <Route path="/find-credentials" element={<FindCredentials />} />
-      <Route path="/oauth/redirect" element={<OAuth2RedirectHandler />} />
-      <Route path="/social-signup" element={<SocialSignupPage />} />
-      <Route path="/mypage" element={<MyPage />} />
-    </Routes>
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/signup2" element={<Signup2 />} />
+        <Route path="/find-credentials" element={<FindCredentials />} />
+        <Route path="/oauth/redirect" element={<OAuth2RedirectHandler />} />
+        <Route path="/social-signup" element={<SocialSignupPage />} />
+        <Route path="/mypage" element={<MyPage />} />
+        <Route path="/mypage/edit" element={<EditProfilePage />} />
+      </Routes>
+    </AuthProvider>
   )
 }
 

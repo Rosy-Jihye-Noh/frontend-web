@@ -1,10 +1,10 @@
 import React from 'react';
 import { Button } from '../ui/button';
 import { HiUser } from 'react-icons/hi';
-import type { User } from '@/types/index'; // 타입 정의 임포트
+import type { ProfileUser } from '@/types/index'; // 타입 정의 임포트
 
 interface ProfileHeaderProps {
-    user: User;
+    user: ProfileUser;
     onEdit: () => void;
 }
 
