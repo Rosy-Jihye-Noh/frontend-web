@@ -27,15 +27,21 @@ export interface RoutineExercise {
 export interface Routine {
   id: number;
   name: string;
-  description: string;
+  description: string | null;
+  userId: number;         
   exercises: RoutineExercise[];
 }
 
 export interface Exercise {
-    id: number;
-    name: string;
-    thumbnail: string;
-    liked: boolean;
+  id: number;
+  name: string;
+  category: string | null;
+  description: string | null;
+  difficulty: string | null;
+  posture: string | null;
+  bodyPart: string | null;
+  thumbnailUrl: string | null;
+  liked?: boolean;
 }
 
 export interface AnalysisHistoryItem {
