@@ -8,6 +8,13 @@ import ProfileHeader from '../components/mypage/ProfileHeader';
 import AnalysisHistorySection from '../components/mypage/AnalysisHistorySection';
 import MyRoutineSection from '../components/mypage/MyRoutineSection';
 import LikedExerciseSection from '../components/mypage/LikedExerciseSection';
+import { deleteRoutineById } from '@/services/api/routineApi';
+import {
+  fetchUserProfile,
+  fetchUserRoutines,
+  fetchUserAnalysisHistory,
+  fetchFullLikedExercises
+} from '@/services/api/myPageApi'; // 분리된 API 함수들을 import
 
 const TabButton = ({ id, activeTab, setActiveTab, children }: { id: string, activeTab: string, setActiveTab: (id: string) => void, children: React.ReactNode }) => (
     <button
@@ -33,11 +40,9 @@ const MyPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState('routines');
 
     useEffect(() => {
-        // 1. 데이터 로딩 중에는 아무것도 하지 않고 대기
         if (!hasHydrated) {
             return;
         }
-        // 2. 로딩 완료 후, 로그인 상태가 아니라면 로그인 페이지로 이동
         if (!user) {
             alert('로그인이 필요합니다.');
             navigate('/login');
@@ -46,33 +51,21 @@ const MyPage: React.FC = () => {
 
         const fetchDataForUser = async (userId: number) => {
             setIsPageLoading(true);
+            setError(null);
             try {
-                const [profileRes, routinesRes, historyRes, likedRes] = await Promise.all([
-                    fetch(`http://localhost:8081/api/users/${userId}`),
-                    fetch(`http://localhost:8081/api/routines/user/${userId}`),
-                    fetch(`http://localhost:8081/api/analysis-histories/user/${userId}`),
-                    fetch(`http://localhost:8081/api/exercise-likes/user/${userId}`)
+                // 분리된 API 서비스 함수를 사용하여 데이터를 병렬로 요청합니다.
+                const [profileData, routinesData, historyData, likedData] = await Promise.all([
+                    fetchUserProfile(userId),
+                    fetchUserRoutines(userId),
+                    fetchUserAnalysisHistory(userId),
+                    fetchFullLikedExercises(userId),
                 ]);
-
-                if (!profileRes.ok || !routinesRes.ok || !historyRes.ok || !likedRes.ok) {
-                    throw new Error('마이페이지 데이터를 불러오는 데 실패했습니다.');
-                }
-
-                const profileData: ProfileUser = await profileRes.json();
-                const routinesData: Routine[] = await routinesRes.json();
-                const historyData: AnalysisHistoryItem[] = await historyRes.json();
-                const likedData = await likedRes.json();
-
-                const likedExercisesDetails = await Promise.all(
-                    likedData.map((like: { exerciseId: number }) =>
-                        fetch(`http://localhost:8081/api/exercises/${like.exerciseId}`).then(res => res.json())
-                    )
-                );
 
                 setProfile(profileData);
                 setRoutines(routinesData);
                 setHistory(historyData);
-                setLikedExercises(likedExercisesDetails.map(ex => ({ ...ex, liked: true })));
+                setLikedExercises(likedData);
+
             } catch (err) {
                 setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
             } finally {
@@ -83,14 +76,26 @@ const MyPage: React.FC = () => {
         fetchDataForUser(user.id);
     }, [hasHydrated, user, navigate]);
 
-    // 데이터 로딩 중에는 로딩 화면 표시
-    if (!hasHydrated) {
-        return <div className="flex justify-center items-center h-screen">로딩 중...</div>;
+    const handleDeleteRoutine = async (routineId: number) => {
+      try {
+        await deleteRoutineById(routineId);
+        // 상태 업데이트: 삭제된 루틴을 목록에서 제거
+        setRoutines(prevRoutines => prevRoutines.filter(r => r.id !== routineId));
+        alert('루틴이 삭제되었습니다.');
+      } catch (error) {
+        console.error('루틴 삭제 실패:', error);
+        alert('루틴 삭제에 실패했습니다.');
+      }
+    };
+
+    if (isPageLoading) {
+        return <div className="flex justify-center items-center h-screen">마이페이지 정보를 불러오는 중...</div>;
     }
+    
     if (error) {
         return <div className="flex justify-center items-center h-screen">에러: {error}</div>;
     }
-    // 로딩이 끝났는데도 프로필 정보가 없다면 에러 메시지 표시
+    
     if (!profile) {
         return <div className="flex justify-center items-center h-screen">사용자 정보를 찾을 수 없습니다.</div>;
     }
@@ -113,7 +118,7 @@ const MyPage: React.FC = () => {
                 </div>
 
                 <div>
-                    {activeTab === 'routines' && <MyRoutineSection routines={routines} onAddRoutine={() => console.log("새 루틴 추가하기")} />}
+                    {activeTab === 'routines' && <MyRoutineSection routines={routines} onDeleteRoutine={handleDeleteRoutine} />}
                     {activeTab === 'history' && <AnalysisHistorySection history={history} />}
                     {activeTab === 'liked' && <LikedExerciseSection likedExercises={likedExercises} />}
                 </div>

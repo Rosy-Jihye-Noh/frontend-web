@@ -11,6 +11,11 @@ import EditProfilePage from './pages/EditProfilePage';
 import AnalysisResultPage from './pages/AnalysisResultPage';
 import Dashboard from './pages/Dashboard';
 import PhotoUpload from './pages/PhotoUpload';
+import ExerciseListPage from './pages/ExerciseListPage';
+import RoutineCreatePage from './pages/RoutineCreatePage';
+import RoutineDetailPage from './pages/RoutineDetailPage';
+import RoutineEditPage from './pages/RoutineEditPage';
+
 
 const App = () => {
   return (
@@ -27,6 +32,11 @@ const App = () => {
         <Route path="/analysis-result/:historyId" element={<AnalysisResultPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/photoupload" element={<PhotoUpload />} />
+        <Route path="/exercises" element={<ExerciseListPage />} />
+        <Route path="/routines/new" element={<RoutineCreatePage />} />
+        <Route path="/routines/:routineId" element={<RoutineDetailPage />} />
+        <Route path="/routines/edit/:routineId" element={<RoutineEditPage />} />
+
       </Routes>
   )
 }

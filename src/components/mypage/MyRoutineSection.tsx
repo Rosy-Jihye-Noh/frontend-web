@@ -1,60 +1,86 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Routine } from '@/types/index';
-import { Button } from '../ui/button';
-import { HiPlus, HiPencil, HiTrash, HiX } from 'react-icons/hi'; // HiX 아이콘 추가
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { PlusCircle, Trash2, Edit, Eye } from 'lucide-react';
 
-interface MyRoutinesSectionProps {
-    routines: Routine[];
-    onAddRoutine: () => void;
+interface MyRoutineSectionProps {
+  routines: Routine[];
+  onDeleteRoutine: (routineId: number) => void; // 삭제 핸들러 prop 추가
 }
 
-const MyRoutinesSection: React.FC<MyRoutinesSectionProps> = ({ routines, onAddRoutine }) => (
+const MyRoutineSection: React.FC<MyRoutineSectionProps> = ({ routines, onDeleteRoutine }) => {
+  const navigate = useNavigate();
+
+  const handleDeleteClick = (e: React.MouseEvent, routineId: number) => {
+    e.stopPropagation(); // 카드 전체 클릭 방지
+    if (window.confirm('정말로 이 루틴을 삭제하시겠습니까?')) {
+      onDeleteRoutine(routineId);
+    }
+  };
+
+  const handleEditClick = (e: React.MouseEvent, routineId: number) => {
+    e.stopPropagation();
+    navigate(`/routines/edit/${routineId}`);
+  };
+
+  return (
     <div className="space-y-6">
-        {routines.map(routine => (
-            <div key={routine.id} className="bg-white dark:bg-gray-800 p-6 border dark:border-gray-700 rounded-lg shadow-sm">
-                {/* ✨ 2. 루틴 수정/삭제 버튼 */}
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">{routine.name}</h3>
-                    <div className="flex items-center space-x-2">
-                        <button className="p-2 text-gray-400 hover:text-blue-500 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <HiPencil className="w-5 h-5" />
-                        </button>
-                        <button className="p-2 text-red-500/80 hover:text-red-500 rounded-md bg-red-100/80 dark:bg-red-900/40">
-                            <HiTrash className="w-5 h-5" />
-                        </button>
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    {routine.exercises.map((exercise) => ( // 'exercise'는 { exerciseId, exerciseName, order } 형태의 객체
-                        <div key={exercise.exerciseId} className="flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md">
-                            {/* ✨ 해결: exercise 객체의 'exerciseName' 프로퍼티를 렌더링 */}
-                            <span className="text-sm text-gray-700 dark:text-gray-300">
-                                {exercise.exerciseName}
-                            </span>
-                            <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-                                <HiX className="w-4 h-4" />
-                            </button>
-                        </div>
-                    ))}
-                </div>
-
-                {/* ✨ 2. 운동 추가 버튼 */}
-                <button className="mt-4 w-full flex items-center justify-center p-3 text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 rounded-md transition-colors">
-                    <HiPlus className="w-4 h-4 mr-2" />
-                    운동 추가하기
-                </button>
-            </div>
-        ))}
-
-        {/* ✨ 3. 새 루틴 추가하기 버튼 */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">내 루틴 관리</h2>
         <Button
-            onClick={onAddRoutine}
-            className="w-full !py-3 !text-base !font-bold mt-6 bg-blue-600 text-white hover:bg-blue-700"
+        className="bg-blue-600 hover:bg-blue-700 text-white"
+        onClick={() => navigate('/routines/new')}
         >
-            새 루틴 추가하기
+        <PlusCircle className="mr-2 h-4 w-4" /> 새 루틴 추가하기
         </Button>
-    </div>
-);
+      </div>
 
-export default MyRoutinesSection;
+      {routines.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {routines.map(routine => (
+            <Card 
+              key={routine.id} 
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => navigate(`/routines/${routine.id}`)}
+            >
+              <CardHeader>
+                <CardTitle className="truncate">{routine.name}</CardTitle>
+                <CardDescription className="truncate">{routine.description || '설명 없음'}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <h4 className="font-semibold mb-2 text-sm">포함된 운동:</h4>
+                <ul className="space-y-1 text-sm text-gray-600">
+                  {routine.exercises && routine.exercises.slice(0, 3).map(ex => (
+                    <li key={ex.exerciseId} className="truncate">- {ex.exerciseName}</li>
+                  ))}
+                  {routine.exercises && routine.exercises.length > 3 && (
+                    <li className="text-gray-500">... 외 {routine.exercises.length - 3}개</li>
+                  )}
+                </ul>
+              </CardContent>
+              <CardFooter className="flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={(e) => handleEditClick(e, routine.id)}>
+                  <Edit className="mr-1 h-4 w-4 text-green-500" /> 편집
+              </Button>
+              <Button variant="outline" size="sm" onClick={(e) => handleEditClick(e, routine.id)}>
+                  <Trash2 className="mr-1 h-4 w-4 text-red-500" /> 삭제
+              </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-10 border-2 border-dashed rounded-lg">
+          <p>생성된 루틴이 없습니다.</p>
+          <Button className="mt-4" onClick={() => navigate('/routines/new')}>
+            첫 루틴 만들러 가기
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default MyRoutineSection;
