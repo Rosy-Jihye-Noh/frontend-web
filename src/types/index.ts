@@ -38,8 +38,13 @@ export interface Exercise {
     liked: boolean;
 }
 
-export interface AnalysisHistory {
-    id: string;
-    date: string;
-    score: number;
+export interface AnalysisHistoryItem {
+  id: number;
+  createdAt: string; // 날짜
+  // 각 부위별 점수
+  spineCurvScore: number;
+  spineScolScore: number;
+  pelvicScore: number;
+  neckScore: number;
+  shoulderScore: number;
 }

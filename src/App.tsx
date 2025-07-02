@@ -8,11 +8,10 @@ import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
 import SocialSignupPage from './pages/SocialSignupPage';
 import MyPage from './pages/MyPage';
 import EditProfilePage from './pages/EditProfilePage';
-import { AuthProvider } from './contexts/AuthContext';
+import AnalysisResultPage from './pages/AnalysisResultPage';
 
 const App = () => {
   return (
-    <AuthProvider>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
@@ -23,8 +22,8 @@ const App = () => {
         <Route path="/social-signup" element={<SocialSignupPage />} />
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/mypage/edit" element={<EditProfilePage />} />
+        <Route path="/analysis-result/:historyId" element={<AnalysisResultPage />} />
       </Routes>
-    </AuthProvider>
   )
 }
 
