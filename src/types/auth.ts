@@ -1,6 +1,16 @@
 // 백엔드의 DTO와 일치하는 프론트엔드 타입을 정의합니다.
 
 /**
+ * 사용자 정보 타입
+ */
+export interface User {
+  id: number;
+  email: string;
+  name: string;
+  role: 'MEMBER' | 'ADMIN';
+}
+
+/**
  * 로그인 요청 시 사용될 타입
  */
 export interface LoginRequest {
@@ -34,7 +44,7 @@ export interface ChangePasswordRequest {
  * 로그인 성공 시 백엔드로부터 받는 응답 타입
  */
 export interface LoginResponse {
-    id: number;
+    user: User;
     token: string;
     success: boolean;
     message: string;
