@@ -10,6 +10,7 @@ import MyPage from './pages/MyPage';
 import EditProfilePage from './pages/EditProfilePage';
 import AnalysisResultPage from './pages/AnalysisResultPage';
 import Dashboard from './pages/Dashboard';
+import PhotoUpload from './pages/PhotoUpload';
 
 const App = () => {
   return (
@@ -25,6 +26,7 @@ const App = () => {
         <Route path="/mypage/edit" element={<EditProfilePage />} />
         <Route path="/analysis-result/:historyId" element={<AnalysisResultPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/photoupload" element={<PhotoUpload />} />
       </Routes>
   )
 }

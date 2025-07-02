@@ -86,7 +86,7 @@ const Dashboard: React.FC = () => {
             onStart={() => alert('운동 기록 시작!')}
           />
           <MainFeaturesCard
-            onPostureAnalysis={() => alert('자세 분석 이동')}
+            onPostureAnalysis={() => navigate('/photoupload')}
             onWorkoutRecommend={() => alert('운동 추천 이동')}
           />
         </div>
