@@ -9,6 +9,7 @@ import SocialSignupPage from './pages/SocialSignupPage';
 import MyPage from './pages/MyPage';
 import EditProfilePage from './pages/EditProfilePage';
 import AnalysisResultPage from './pages/AnalysisResultPage';
+import Dashboard from './pages/Dashboard';
 
 const App = () => {
   return (
@@ -23,6 +24,7 @@ const App = () => {
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/mypage/edit" element={<EditProfilePage />} />
         <Route path="/analysis-result/:historyId" element={<AnalysisResultPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
   )
 }
