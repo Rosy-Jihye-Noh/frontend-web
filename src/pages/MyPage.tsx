@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '@/store/userStore';
-import type { ProfileUser, Routine, Exercise, AnalysisHistory } from '../types/index';
+import type { ProfileUser, Routine, Exercise, AnalysisHistoryItem } from '../types/index';
 import Header from '@/components/common/Header';
 import { HiChatAlt2 } from 'react-icons/hi';
 import ProfileHeader from '../components/mypage/ProfileHeader';
@@ -25,7 +25,7 @@ const MyPage: React.FC = () => {
 
     const [profile, setProfile] = useState<ProfileUser | null>(null);
     const [routines, setRoutines] = useState<Routine[]>([]);
-    const [history, setHistory] = useState<AnalysisHistory[]>([]);
+    const [history, setHistory] = useState<AnalysisHistoryItem[]>([]);
     const [likedExercises, setLikedExercises] = useState<Exercise[]>([]);
     
     const [isPageLoading, setIsPageLoading] = useState(true);
@@ -60,7 +60,7 @@ const MyPage: React.FC = () => {
 
                 const profileData: ProfileUser = await profileRes.json();
                 const routinesData: Routine[] = await routinesRes.json();
-                const historyData: AnalysisHistory[] = await historyRes.json();
+                const historyData: AnalysisHistoryItem[] = await historyRes.json();
                 const likedData = await likedRes.json();
 
                 const likedExercisesDetails = await Promise.all(
