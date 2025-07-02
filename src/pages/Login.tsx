@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { login } from "@/api/authApi";
-import type { LoginRequest } from "@/types/auth";
+import type { LoginRequest, User } from "@/types/auth";
 import { useUserStore } from "@/store/userStore";
 
 const LoginPage = () => {
@@ -28,8 +28,16 @@ const LoginPage = () => {
       if (responseData.success) {
         localStorage.setItem('jwt_token', responseData.token);
         setUser(responseData.user);
+
+        const userInfo: User = {
+          id: responseData.user.id,
+          email: responseData.user.email,
+          name: responseData.user.name,
+          role: responseData.user.role
+        };
+        setUser(userInfo);
         
-        navigate("/"); // 또는 '/mypage' 등 원하는 경로로 이동
+        navigate("/dashboard");
         alert(`🎉 로그인 성공!\n환영합니다, ${responseData.user.name}님!`);
       } else {
         alert(`❌ 로그인 실패: ${responseData.message}`);
