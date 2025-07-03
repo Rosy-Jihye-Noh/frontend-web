@@ -13,7 +13,6 @@ interface ExerciseGridProps {
 const ExerciseGrid: React.FC<ExerciseGridProps> = ({
   exercises, likedExerciseIds, onLikeToggle, onAddToRoutine,
 }) => {
-
   // 버튼 클릭 시 링크 이동을 막는 핸들러
   const handleAddToRoutineClick = (e: React.MouseEvent, exercise: Exercise) => {
     e.preventDefault();
@@ -26,16 +25,15 @@ const ExerciseGrid: React.FC<ExerciseGridProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch">
       {exercises.map((exercise) => (
-        <Link to={`/exercises/${exercise.id}`} key={exercise.id} className="block">
-          <ExerciseCard
-            exercise={exercise}
-            isLiked={likedExerciseIds.has(exercise.id)}
-            onLikeToggle={(e) => handleLikeToggleClick(e, exercise.id)}
-            onAddToRoutine={(e) => handleAddToRoutineClick(e, exercise)}
-          />
-        </Link>
+        <ExerciseCard
+          key={exercise.id}
+          exercise={exercise}
+          isLiked={likedExerciseIds.has(exercise.id)}
+          onLikeToggle={(e) => handleLikeToggleClick(e, exercise.id)}
+          onAddToRoutine={(e) => handleAddToRoutineClick(e, exercise)}
+        />
       ))}
     </div>
   );
