@@ -7,7 +7,7 @@ import MobileMenuModal from './MobileMenuModal';
 
 const menus = [
   { name: "홈", path: "/dashboard" },
-  { name: "커뮤니티", path: "/posts" },
+  { name: "커뮤니티", path: "/community" },
   { name: "운동 목록", path: "/exercises" },
   { name: "운동 기록", path: "/exercise-logs" },
 ];
