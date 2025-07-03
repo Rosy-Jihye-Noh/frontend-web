@@ -17,6 +17,7 @@ import RoutineDetailPage from './pages/RoutineDetailPage';
 import RoutineEditPage from './pages/RoutineEditPage';
 import ExerciseDetailPage from './pages/ExerciseDetailPage';
 import PhotoUploadLoading from './pages/PhotoUploadLoading';
+import LogPage from './pages/log';
 
 const App = () => {
   return (
@@ -39,7 +40,8 @@ const App = () => {
         <Route path="/routines/edit/:routineId" element={<RoutineEditPage />} />
         <Route path="/exercises/:exerciseId" element={<ExerciseDetailPage />} />
         <Route path="/photoanalysis-loading" element={<PhotoUploadLoading />} />
-        
+        <Route path="/exercise-logs" element={<LogPage />} />
+
       </Routes>
   )
 }

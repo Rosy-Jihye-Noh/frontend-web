@@ -54,3 +54,19 @@ export interface AnalysisHistoryItem {
   neckScore: number;
   shoulderScore: number;
 }
+
+export interface ExerciseLog {
+  // Response용 필드
+  id?: number;
+  createdAt?: string; // ISO 8601 형식의 날짜 문자열 (예: "2025-07-03T15:30:00")
+  updatedAt?: string;
+  useYn?: 'Y' | 'N';
+
+  // Request/Response 공통 필드
+  userId: number;
+  exerciseDate: string; // "YYYY-MM-DD" 형식
+  completionRate: number;
+  memo: string;
+  routineIds: number[];
+  routineNames?: string[]; // BE에서 조회 시 채워주는 필드
+}
