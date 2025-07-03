@@ -15,7 +15,7 @@ import ExerciseListPage from './pages/ExerciseListPage';
 import RoutineCreatePage from './pages/RoutineCreatePage';
 import RoutineDetailPage from './pages/RoutineDetailPage';
 import RoutineEditPage from './pages/RoutineEditPage';
-
+import ExerciseDetailPage from './pages/ExerciseDetailPage';
 
 const App = () => {
   return (
@@ -36,7 +36,8 @@ const App = () => {
         <Route path="/routines/new" element={<RoutineCreatePage />} />
         <Route path="/routines/:routineId" element={<RoutineDetailPage />} />
         <Route path="/routines/edit/:routineId" element={<RoutineEditPage />} />
-
+        <Route path="/exercises/:exerciseId" element={<ExerciseDetailPage />} />
+        
       </Routes>
   )
 }

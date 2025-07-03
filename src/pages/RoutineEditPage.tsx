@@ -22,6 +22,25 @@ const RoutineEditPage: React.FC = () => {
   const [selectedExercises, setSelectedExercises] = useState<Exercise[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [notification, setNotification] = useState<string | null>(null);
+
+  const handleMoveUp = (index: number) => {
+    if (index === 0) return; // 맨 위 항목은 이동 불가
+    const newExercises = [...selectedExercises];
+    // 배열 요소 위치 교환
+    [newExercises[index - 1], newExercises[index]] = [newExercises[index], newExercises[index - 1]];
+    setSelectedExercises(newExercises);
+    setNotification('순서가 변경되었습니다.');
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (index === selectedExercises.length - 1) return; // 맨 아래 항목은 이동 불가
+    const newExercises = [...selectedExercises];
+    // 배열 요소 위치 교환
+    [newExercises[index + 1], newExercises[index]] = [newExercises[index], newExercises[index + 1]];
+    setSelectedExercises(newExercises);
+    setNotification('순서가 변경되었습니다.');
+  };
 
   useEffect(() => {
     // 기존 루틴 데이터와 전체 운동 목록을 불러옵니다.
@@ -124,6 +143,8 @@ const RoutineEditPage: React.FC = () => {
           <SelectedExercisesList
             exercises={selectedExercises}
             onRemoveExercise={handleRemoveExercise}
+            onMoveUp={handleMoveUp}
+            onMoveDown={handleMoveDown}
           />
         </div>
       </main>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-// DropResult import 제거
 import { useUserStore } from '@/store/userStore';
 import type { Exercise } from '@/types/index';
 import { fetchAllExercises } from '@/services/api/exerciseApi';
@@ -117,6 +116,28 @@ const RoutineCreatePage: React.FC = () => {
           <SelectedExercisesList
             exercises={selectedExercises}
             onRemoveExercise={handleRemoveExercise}
+            onMoveUp={(exerciseId: number) => {
+              setSelectedExercises(prev => {
+                const idx = prev.findIndex(ex => ex.id === exerciseId);
+                if (idx > 0) {
+                  const newArr = [...prev];
+                  [newArr[idx - 1], newArr[idx]] = [newArr[idx], newArr[idx - 1]];
+                  return newArr;
+                }
+                return prev;
+              });
+            }}
+            onMoveDown={(exerciseId: number) => {
+              setSelectedExercises(prev => {
+                const idx = prev.findIndex(ex => ex.id === exerciseId);
+                if (idx !== -1 && idx < prev.length - 1) {
+                  const newArr = [...prev];
+                  [newArr[idx], newArr[idx + 1]] = [newArr[idx + 1], newArr[idx]];
+                  return newArr;
+                }
+                return prev;
+              });
+            }}
           />
         </div>
       </main>

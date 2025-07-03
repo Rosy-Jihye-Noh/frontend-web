@@ -2,10 +2,17 @@ import React, { useState, useEffect, useMemo } from 'react';
 import type { Exercise, Routine } from '@/types/index';
 import { useUserStore } from '@/store/userStore';
 import Header from '@/components/common/Header';
-import Pagination from '@/components/common/Pagination';
 import ExerciseFilter from '@/components/exercise/ExerciseFilter';
 import ExerciseGrid from '@/components/exercise/ExerciseGrid';
 import AddToRoutineModal from '@/components/exercise/AddToRoutineModal';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 import { 
   fetchAllExercises, 
   fetchUserLikes, 
@@ -17,6 +24,7 @@ import {
 
 const CATEGORIES = ["전체", "전신", "다리", "옆구리", "허리", "허벅지", "엉덩이", "종아리", "팔", "가슴", "등", "어깨", "복부"] as const;
 const EXERCISES_PER_PAGE = 12; 
+const MAX_VISIBLE_PAGES = 8;
 
 const ExerciseListPage: React.FC = () => {
   const { user } = useUserStore();
@@ -106,6 +114,25 @@ const ExerciseListPage: React.FC = () => {
     const startIndex = exercisePage * EXERCISES_PER_PAGE;
     return filteredExercises.slice(startIndex, startIndex + EXERCISES_PER_PAGE);
   }, [filteredExercises, exercisePage]);
+  const pageNumbers = useMemo(() => {
+    if (totalExercisePages <= MAX_VISIBLE_PAGES) {
+      return Array.from({ length: totalExercisePages }, (_, i) => i);
+    }
+    
+    let startPage = Math.max(0, exercisePage - Math.floor((MAX_VISIBLE_PAGES - 1) / 2));
+    let endPage = startPage + MAX_VISIBLE_PAGES - 1;
+
+    if (endPage >= totalExercisePages) {
+      endPage = totalExercisePages - 1;
+      startPage = endPage - MAX_VISIBLE_PAGES + 1;
+    }
+    
+    const pages = [];
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }, [exercisePage, totalExercisePages]);
 
   if (isLoading) return <div>로딩 중...</div>;
 
@@ -118,7 +145,6 @@ const ExerciseListPage: React.FC = () => {
       >
         <h1 className="text-3xl font-bold mb-6">운동 목록</h1>
         
-        {/* ExerciseFilter에 전달하는 props에서 페이지네이션 관련 항목들을 제거합니다. */}
         <ExerciseFilter
           searchTerm={searchTerm}
           onSearchTermChange={setSearchTerm}
@@ -137,11 +163,39 @@ const ExerciseListPage: React.FC = () => {
         {/* 페이지네이션 UI 추가 */}
         {totalExercisePages > 1 && (
           <div className="mt-8 flex justify-center">
-            <Pagination
-              currentPage={exercisePage}
-              totalPages={totalExercisePages}
-              onPageChange={setExercisePage}
-            />
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setExercisePage(prev => Math.max(0, prev - 1));
+                    }}
+                    className={exercisePage === 0 ? "pointer-events-none opacity-50" : undefined}
+                  />
+                </PaginationItem>
+                {pageNumbers.map((pageIndex) => (
+                  <PaginationItem key={pageIndex}>
+                    <PaginationLink 
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); setExercisePage(pageIndex); }}
+                      isActive={exercisePage === pageIndex}
+                    >
+                      {pageIndex + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+
+                <PaginationItem>
+                  <PaginationNext 
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); setExercisePage(prev => Math.min(totalExercisePages - 1, prev + 1)); }}
+                    className={exercisePage === totalExercisePages - 1 ? "pointer-events-none opacity-50" : undefined}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         )}
         

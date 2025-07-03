@@ -31,7 +31,17 @@ export const createRoutine = (routineData: Omit<Routine, 'id' | 'userId'>, userI
  * @param routineId - 루틴 ID
  */
 export const fetchRoutineById = (routineId: number): Promise<Routine> => {
-  return fetch(`${API_BASE_URL}/routines/${routineId}`).then(handleResponse);
+  return fetch(`${API_BASE_URL}/routines/${routineId}`)
+    .then(res => {
+      // 응답이 404 Not Found일 경우, 특정 에러를 발생시킵니다.
+      if (res.status === 404) {
+        throw new Error('Not Found');
+      }
+      if (!res.ok) {
+        throw new Error('루틴 정보를 불러오는 데 실패했습니다.');
+      }
+      return res.json();
+    });
 };
 
 /**
@@ -62,4 +72,23 @@ export const updateRoutine = (routineId: number, routineData: Omit<Routine, 'id'
     },
     body: JSON.stringify(routineData),
   }).then(handleResponse);
+};
+
+/**
+ * 루틴에 운동을 추가합니다.
+ * @param routineId - 루틴 ID
+ * @param exerciseId - 운동 ID
+ */
+export const addExerciseToRoutineApi = (routineId: number, exerciseId: number): Promise<void> => {
+  return fetch(`${API_BASE_URL}/routines/${routineId}/exercises`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ exerciseId }),
+  }).then(response => {
+    if (!response.ok) {
+      throw new Error('운동 추가 실패');
+    }
+  });
 };
