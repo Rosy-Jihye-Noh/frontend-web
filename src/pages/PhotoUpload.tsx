@@ -1,14 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@/components/common/Header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { HiUpload } from 'react-icons/hi';
+import { useUserStore } from '@/store/userStore';
 
 const PhotoUpload: React.FC = () => {
   const [frontPhoto, setFrontPhoto] = useState<File | null>(null);
   const [sidePhoto, setSidePhoto] = useState<File | null>(null);
   const navigate = useNavigate();
+  const { user } = useUserStore();
+
+  useEffect(() => {
+    // 로그인 상태 확인
+    if (!user) {
+      navigate('/login', { state: { from: '/photoupload' } });
+    }
+  }, [user, navigate]);
 
   const PhotoUploader = ({ photo, setPhoto, title, exampleUrl }: { photo: File | null, setPhoto: (f: File) => void, title: string, exampleUrl: string }) => (
     <div className="text-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 h-full flex flex-col justify-center">
@@ -27,6 +36,18 @@ const PhotoUpload: React.FC = () => {
     </div>
   );
 
+  // 로그인하지 않은 경우 로딩 화면 표시
+  if (!user) {
+    return (
+      <div className="bg-slate-50 min-h-screen flex justify-center items-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-dashed rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">로그인 확인 중...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-slate-50 min-h-screen">
       <Header />
@@ -40,7 +61,13 @@ const PhotoUpload: React.FC = () => {
             <PhotoUploader photo={sidePhoto} setPhoto={setSidePhoto} title="옆모습 사진" exampleUrl="https://placehold.co/300x400/BFDBFE/1E40AF?text=Side+View" />
           </div>
           <Button
-            onClick={() => { if (frontPhoto && sidePhoto) navigate('/photoanalysis-loading', { state: { frontPhoto, sidePhoto } }); }}
+            onClick={() => { 
+              if (frontPhoto && sidePhoto) {
+                navigate('/photoanalysis-loading', { 
+                  state: { frontPhoto, sidePhoto } 
+                }); 
+              }
+            }}
             disabled={!frontPhoto || !sidePhoto}
             className="w-full text-lg bg-blue-600 text-white hover:bg-blue-700"
           >
