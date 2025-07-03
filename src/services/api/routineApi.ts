@@ -92,3 +92,16 @@ export const addExerciseToRoutineApi = (routineId: number, exerciseId: number): 
     }
   });
 };
+
+/**
+ * @description 특정 사용자의 모든 루틴 목록을 조회합니다.
+ * @param userId 사용자 ID
+ * @returns 사용자의 루틴 목록
+ */
+export const getRoutinesByUser = async (userId: number): Promise<Routine[]> => {
+  const response = await fetch(`${API_BASE_URL}/routines/user/${userId}`);
+  if (!response.ok) {
+    throw new Error('루틴 목록을 불러오는 데 실패했습니다.');
+  }
+  return response.json();
+};

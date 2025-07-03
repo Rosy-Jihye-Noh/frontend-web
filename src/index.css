@@ -110,6 +110,27 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* src/app/globals.css */
+
+/* .has-log-dot 클래스를 가진 날짜 버튼을 찾습니다. */
+.has-log-dot {
+  position: relative;
+  overflow: visible !important;
+}
+
+/* ::after 가상 요소를 사용해 점을 만듭니다. */
+.has-log-dot::after {
+  content: '';
+  position: absolute;
+  bottom: 6px; /* 위치 조정 */
+  left: 50%;
+  transform: translateX(-50%);
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  background-color: hsl(var(--primary)); /* shadcn/ui의 primary 색상 사용 */
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
