@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,6 +12,10 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const setUser = useUserStore((state) => state.setUser);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // 로그인 후 돌아갈 페이지 (기본값: dashboard)
+  const from = location.state?.from || '/dashboard';
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -37,7 +41,7 @@ const LoginPage = () => {
         };
         setUser(userInfo);
         
-        navigate("/dashboard");
+        navigate(from);
         alert(`🎉 로그인 성공!\n환영합니다, ${responseData.user.name}님!`);
       } else {
         alert(`❌ 로그인 실패: ${responseData.message}`);
