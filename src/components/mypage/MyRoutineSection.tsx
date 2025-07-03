@@ -14,12 +14,11 @@ const MyRoutineSection: React.FC<MyRoutineSectionProps> = ({ routines, onDeleteR
   const navigate = useNavigate();
 
   const handleDeleteClick = (e: React.MouseEvent, routineId: number) => {
-    e.stopPropagation(); // 카드 전체 클릭 방지
+    e.stopPropagation();
     if (window.confirm('정말로 이 루틴을 삭제하시겠습니까?')) {
-      onDeleteRoutine(routineId);
+      onDeleteRoutine(routineId); // 부모 컴포넌트의 삭제 함수 호출
     }
   };
-
   const handleEditClick = (e: React.MouseEvent, routineId: number) => {
     e.stopPropagation();
     navigate(`/routines/edit/${routineId}`);
@@ -64,7 +63,7 @@ const MyRoutineSection: React.FC<MyRoutineSectionProps> = ({ routines, onDeleteR
               <Button variant="outline" size="sm" onClick={(e) => handleEditClick(e, routine.id)}>
                   <Edit className="mr-1 h-4 w-4 text-green-500" /> 편집
               </Button>
-              <Button variant="outline" size="sm" onClick={(e) => handleEditClick(e, routine.id)}>
+              <Button variant="outline" size="sm" onClick={(e) => handleDeleteClick(e, routine.id)}>
                   <Trash2 className="mr-1 h-4 w-4 text-red-500" /> 삭제
               </Button>
               </CardFooter>

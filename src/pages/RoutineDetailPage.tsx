@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import type { Routine } from '@/types/index';
 import { fetchRoutineById } from '@/services/api/routineApi';
 import Header from '@/components/common/Header';
@@ -65,13 +65,18 @@ const RoutineDetailPage: React.FC = () => {
             <h3 className="text-xl font-bold mt-4 mb-4 border-t pt-6">운동 목록</h3>
             <div className="space-y-3">
               {routine.exercises?.sort((a,b) => a.order - b.order).map((ex, index) => (
-                <div key={ex.exerciseId} className="flex items-center bg-slate-100 p-4 rounded-lg">
-                  <span className="text-lg font-bold text-blue-600 mr-4">{index + 1}</span>
-                  <div className="flex-grow">
-                    <p className="font-semibold text-lg">{ex.exerciseName}</p>
-                    {/* 필요 시 운동 상세 정보 추가 */}
+                <Link 
+                  to={`/exercises/${ex.exerciseId}`} 
+                  key={ex.exerciseId} 
+                  className="block p-4 bg-slate-100 rounded-lg transition-colors hover:bg-slate-200"
+                >
+                  <div className="flex items-center">
+                    <span className="text-lg font-bold text-blue-600 mr-4">{index + 1}</span>
+                    <div className="flex-grow">
+                      <p className="font-semibold text-lg">{ex.exerciseName}</p>
+                    </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </CardContent>

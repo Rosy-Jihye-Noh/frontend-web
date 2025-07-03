@@ -7,16 +7,26 @@ import { HiOutlineHeart, HiHeart, HiPlus } from 'react-icons/hi';
 interface ExerciseCardProps {
   exercise: Exercise;
   isLiked: boolean;
-  onLikeToggle: () => void;
-  onAddToRoutine: () => void;
+  onLikeToggle: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onAddToRoutine: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, isLiked, onLikeToggle, onAddToRoutine }) => {
   return (
     <Card className="flex flex-col">
       {/* 썸네일 이미지 */}
-      <div className="w-full h-32 bg-blue-500 flex items-center justify-center rounded-t-lg">
-        <h3 className="text-white text-3xl font-bold">{exercise.name}</h3>
+      <div className="relative w-full h-40 bg-gray-200">
+        {exercise.thumbnailUrl ? (
+          <img 
+            src={exercise.thumbnailUrl} 
+            alt={`${exercise.name} thumbnail`}
+            className="w-full h-full object-cover" 
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-blue-500">
+            <h3 className="text-white text-2xl font-bold px-2 text-center">{exercise.name}</h3>
+          </div>
+        )}
       </div>
       {/* 운동 정보 */}
       <div className="p-4 flex-grow">
