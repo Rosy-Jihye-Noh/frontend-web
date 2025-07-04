@@ -1,15 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useUserStore } from '@/store/userStore';
-import { HiMenu, HiX } from "react-icons/hi";
+import { HiMenu, HiX, HiSun, HiMoon } from "react-icons/hi";
 import MobileMenuModal from './MobileMenuModal';
 
 const menus = [
   { name: "홈", path: "/dashboard" },
   { name: "커뮤니티", path: "/community" },
   { name: "운동 목록", path: "/exercises" },
-  { name: "운동 기록", path: "/exercise-logs" },
+  { name: "자세 분석", path: "/photoupload" },
 ];
 
 const Header: React.FC = () => {
@@ -17,11 +17,35 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(() =>
+    typeof window !== 'undefined' && document.documentElement.classList.contains('dark')
+  );
+
+  // 다크모드 상태 동기화 (초기)
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   // 메뉴 클릭 시 닫기
   const handleMenuClick = (path: string) => {
     navigate(path);
     setMobileOpen(false);
+  };
+
+  const handleDarkModeToggle = () => {
+    setDarkMode((prev) => {
+      const next = !prev;
+      if (next) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      return next;
+    });
   };
 
   return (
@@ -51,6 +75,15 @@ const Header: React.FC = () => {
           ))}
         </nav>
         <div className="hidden [@media(min-width:1025px)]:flex flex-1 justify-end items-center gap-2">
+          {/* 다크모드 토글 버튼 */}
+          <button
+            onClick={handleDarkModeToggle}
+            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            aria-label="다크모드 토글"
+            style={{ marginRight: 8 }}
+          >
+            {darkMode ? <HiSun className="w-6 h-6 text-yellow-400" /> : <HiMoon className="w-6 h-6 text-gray-700" />}
+          </button>
           {user ? (
             <>
               <Button
@@ -93,6 +126,14 @@ const Header: React.FC = () => {
       {/* 모바일 메뉴 드로어 */}
       <MobileMenuModal open={mobileOpen} onClose={() => setMobileOpen(false)}>
         <div className="flex flex-col gap-2 mt-8">
+          {/* 다크모드 토글 버튼 */}
+          <button
+            onClick={handleDarkModeToggle}
+            className="self-end p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors mb-2"
+            aria-label="다크모드 토글"
+          >
+            {darkMode ? <HiSun className="w-6 h-6 text-yellow-400" /> : <HiMoon className="w-6 h-6 text-gray-700" />}
+          </button>
           {menus.map((menu) => (
             <button
               key={menu.name}
