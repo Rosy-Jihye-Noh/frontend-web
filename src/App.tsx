@@ -17,7 +17,6 @@ import RoutineDetailPage from './pages/RoutineDetailPage';
 import RoutineEditPage from './pages/RoutineEditPage';
 import ExerciseDetailPage from './pages/ExerciseDetailPage';
 import PhotoUploadLoading from './pages/PhotoUploadLoading';
-import LogPage from './pages/log';
 import CommunityPage from './pages/CommunityPage';
 import CommunityDetailPage from './pages/CommunityDetailPage';
 import CommunityWritePage from './pages/CommunityWritePage';
@@ -43,7 +42,6 @@ const App = () => {
         <Route path="/routines/edit/:routineId" element={<RoutineEditPage />} />
         <Route path="/exercises/:exerciseId" element={<ExerciseDetailPage />} />
         <Route path="/photoanalysis-loading" element={<PhotoUploadLoading />} />
-        <Route path="/exercise-logs" element={<LogPage />} />
         <Route path="/community" element={<CommunityPage />} />
         <Route path="/community/:id" element={<CommunityDetailPage />} />
         <Route path="/community/write" element={<CommunityWritePage />} />

@@ -4,6 +4,7 @@ import { useUserStore } from '@/store/userStore';
 import type { Exercise } from '@/types/index';
 import { fetchAllExercises } from '@/services/api/exerciseApi';
 import { createRoutine } from '@/services/api/routineApi';
+import { fetchFullLikedExercises } from '@/services/api/myPageApi';
 
 import Header from '@/components/common/Header';
 import RoutinePageHeader from '@/components/routine/RoutinePageHeader';
@@ -20,15 +21,30 @@ const RoutineCreatePage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
+  const [likedExercises, setLikedExercises] = useState<Exercise[]>([]);
   const [selectedExercises, setSelectedExercises] = useState<Exercise[]>([]);
   
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    fetchAllExercises()
-      .then(setAvailableExercises)
-      .catch(err => console.error("운동 목록 로딩 실패:", err));
-  }, []);
+    const loadData = async () => {
+      try {
+        // 모든 운동 데이터 로드
+        const exercises = await fetchAllExercises();
+        setAvailableExercises(exercises);
+        
+        // 사용자가 좋아요한 운동 데이터 로드 (사용자가 로그인된 경우에만)
+        if (user?.id) {
+          const liked = await fetchFullLikedExercises(user.id);
+          setLikedExercises(liked);
+        }
+      } catch (err) {
+        console.error("데이터 로딩 실패:", err);
+      }
+    };
+
+    loadData();
+  }, [user]);
 
   const filteredAvailableExercises = useMemo(() => {
     const selectedIds = new Set(selectedExercises.map(ex => ex.id));
@@ -109,6 +125,7 @@ const RoutineCreatePage: React.FC = () => {
               searchTerm={searchTerm}
               onSearchTermChange={setSearchTerm}
               exercises={filteredAvailableExercises}
+              likedExercises={likedExercises}
               onAddExercise={handleAddExercise}
             />
           </div>

@@ -8,9 +8,10 @@ import { useLogStore } from '@/store/logStore';
 import { useNavigate } from 'react-router-dom';
 import CommunityHotPosts from '@/components/dashboard/CommunityHotPosts';
 import TodayRoutineCard from '@/components/dashboard/TodayRoutineCard';
-import MainFeaturesCard from '@/components/dashboard/MainFeaturesCard';
 import PostureScoreCard from '@/components/dashboard/PostureScoreCard';
 import WeeklyReportCard from '@/components/dashboard/WeeklyReportCard';
+import PopularLikedExercisesCarousel from '@/components/dashboard/PopularLikedExercisesCarousel';
+import PopularRoutineExercisesCarousel from '@/components/dashboard/PopularRoutineExercisesCarousel';
 import axiosInstance from '@/api/axiosInstance';
 import type { Routine } from '@/types/index';
 
@@ -170,7 +171,7 @@ const Dashboard: React.FC = () => {
     <div className="bg-slate-50 min-h-screen">
       <Header />
       <main className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8" style={{ paddingTop: '72px' }}>
-        {/* 오늘의 운동 + 주요 기능 */}
+        {/* 오늘의 운동 + 인기 운동들 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <TodayRoutineCard
             selectedRoutines={todaySelectedRoutines}
@@ -178,16 +179,16 @@ const Dashboard: React.FC = () => {
             onRoutineSelect={handleRoutineSelection}
             onStart={handleWorkoutStart}
           />
-          <MainFeaturesCard
-            onPostureAnalysis={() => navigate('/photoupload')}
-            onWorkoutRecommend={() => alert('운동 추천 이동')}
-          />
+          <PopularLikedExercisesCarousel />
+          <PopularRoutineExercisesCarousel />
         </div>
+        
         {/* 자세 변화 그래프 + 주간 운동 리포트 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <PostureScoreCard />
           <WeeklyReportCard />
         </div>
+        
         {/* 커뮤니티 인기글 (카테고리별) */}
         <Card className="p-6 shadow-lg">
           <h2 className="text-xl font-bold mb-6 text-center">커뮤니티 인기글</h2>
