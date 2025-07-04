@@ -73,7 +73,10 @@ const MyRoutineSection: React.FC<MyRoutineSectionProps> = ({ routines, onDeleteR
       ) : (
         <div className="text-center py-10 border-2 border-dashed rounded-lg">
           <p>생성된 루틴이 없습니다.</p>
-          <Button className="mt-4" onClick={() => navigate('/routines/new')}>
+          <Button 
+            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white" 
+            onClick={() => navigate('/routines/new')}
+          >
             첫 루틴 만들러 가기
           </Button>
         </div>

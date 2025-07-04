@@ -36,6 +36,7 @@ export const ExerciseCalendar: React.FC<ExerciseCalendarProps> = ({ userId }) =>
   useEffect(() => {
     // [수정됨] props로 전달받은 userId를 사용
     if (userId) {
+      console.log('달력에서 사용자', userId, '의 기록을 가져오는 중...');
       fetchPastLogs(userId);
     }
   }, [userId, fetchPastLogs]);
@@ -43,8 +44,12 @@ export const ExerciseCalendar: React.FC<ExerciseCalendarProps> = ({ userId }) =>
   const modifiers = React.useMemo(() => {
     if (!Array.isArray(pastLogs)) return {};
     
+    // 해당 사용자의 로그만 필터링
+    const userLogs = pastLogs.filter(log => log.userId === userId);
+    console.log('달력 표시용 사용자', userId, '로그:', userLogs.length, '개');
+    
     const logsByDate: Record<string, { totalRate: number; count: number }> = {};
-    pastLogs.forEach(log => {
+    userLogs.forEach(log => {
       if (!logsByDate[log.exerciseDate]) {
         logsByDate[log.exerciseDate] = { totalRate: 0, count: 0 };
       }
@@ -63,7 +68,7 @@ export const ExerciseCalendar: React.FC<ExerciseCalendarProps> = ({ userId }) =>
     });
 
     return mods;
-  }, [pastLogs]);
+  }, [pastLogs, userId]);
 
   return (
     <Card className="shadow-sm w-full max-w-md mx-auto">

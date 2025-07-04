@@ -35,7 +35,18 @@ export const createLog = async (logData: ExerciseLog): Promise<number> => {
  * @param logId 삭제할 운동 기록 ID
  */
 export const deleteLog = async (logId: number): Promise<void> => {
-  await apiClient.delete(`/${logId}`); // DELETE /api/exercise-logs/{id}
+  if (!logId || logId <= 0) {
+    console.warn('유효하지 않은 로그 ID:', logId);
+    throw new Error('유효하지 않은 로그 ID입니다.');
+  }
+  
+  try {
+    await apiClient.delete(`/${logId}`); // DELETE /api/logs/{id}
+    console.log('로그 삭제 성공:', logId);
+  } catch (error) {
+    console.error('로그 삭제 실패:', logId, error);
+    throw error;
+  }
 };
 
 /**

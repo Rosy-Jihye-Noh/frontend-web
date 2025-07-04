@@ -16,7 +16,13 @@ import type { Routine } from '@/types/index';
 
 const Dashboard: React.FC = () => {
   const { user } = useUserStore();
-  const { todaySelectedRoutines, setTodaySelectedRoutines } = useDashboardStore();
+  const { 
+    todaySelectedRoutines, 
+    setTodaySelectedRoutines, 
+    setCurrentUser, 
+    getTodayRoutines, 
+    clearUserData 
+  } = useDashboardStore();
   const { startOrLoadSession, setSelectedDate } = useLogStore();
   const navigate = useNavigate();
 
@@ -26,15 +32,41 @@ const Dashboard: React.FC = () => {
   const [communityHotPosts, setCommunityHotPosts] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !user.id) {
+      console.log('사용자가 로그인되지 않음, 로그인 페이지로 이동');
+      clearUserData(); // 사용자 데이터 초기화
       navigate('/login');
       return;
     }
 
-    // 1. 루틴 불러오기
+    // 현재 사용자 설정
+    setCurrentUser(user.id);
+    
+    // 해당 사용자의 선택된 루틴 가져오기
+    const userSelectedRoutines = getTodayRoutines(user.id);
+    console.log('사용자', user.id, '의 기존 선택 루틴:', userSelectedRoutines.length, '개');
+
+    // 1. 로그인한 사용자의 루틴만 불러오기 (인증된 사용자만)
+    console.log('로그인한 사용자 ID:', user.id, '의 루틴을 가져오는 중...');
     axiosInstance.get(`/routines/user/${user.id}`)
-      .then(res => setRoutines(res.data))
-      .catch(console.error);
+      .then(res => {
+        // 응답 데이터가 배열인지 확인하고, 해당 사용자의 루틴인지 검증
+        const userRoutines = Array.isArray(res.data) ? res.data.filter((routine: any) => 
+          routine.userId === user.id
+        ) : [];
+        console.log('사용자 루틴 로드 성공:', userRoutines.length, '개의 루틴');
+        setRoutines(userRoutines);
+      })
+      .catch(error => {
+        console.error('사용자 루틴 로드 실패:', error);
+        // 인증 오류인 경우 로그인 페이지로 이동
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          console.log('인증 오류로 인한 로그인 페이지 이동');
+          clearUserData();
+          navigate('/login');
+        }
+        setRoutines([]);
+      });
 
     // 2. 카테고리 불러오기 및 각 카테고리별 인기글 불러오기
     axiosInstance.get('/categories')
@@ -61,27 +93,60 @@ const Dashboard: React.FC = () => {
   }, [user, navigate]);
 
   const handleRoutineSelection = (selectedRoutines: Routine[]) => {
-    setTodaySelectedRoutines(selectedRoutines);
-  };
-
-  const handleWorkoutStart = () => {
-    if (todaySelectedRoutines.length === 0) {
-      alert('먼저 오늘 수행할 루틴을 선택해주세요.');
-      return;
-    }
-    
-    if (!user) {
+    // 로그인한 사용자 확인
+    if (!user || !user.id) {
       alert('로그인이 필요합니다.');
       navigate('/login');
       return;
     }
 
+    // 선택된 루틴이 모두 해당 사용자의 루틴인지 검증
+    const validSelectedRoutines = selectedRoutines.filter(selectedRoutine => 
+      routines.some(userRoutine => userRoutine.id === selectedRoutine.id)
+    );
+
+    if (validSelectedRoutines.length !== selectedRoutines.length) {
+      console.warn('유효하지 않은 루틴 선택 시도');
+      alert('선택할 수 없는 루틴이 포함되어 있습니다.');
+      return;
+    }
+
+    console.log('사용자', user.id, '의 루틴 선택:', validSelectedRoutines.map(r => r.name));
+    setTodaySelectedRoutines(validSelectedRoutines, user.id);
+  };
+
+  const handleWorkoutStart = () => {
+    // 사용자 인증 확인
+    if (!user || !user.id) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
+    if (todaySelectedRoutines.length === 0) {
+      alert('먼저 오늘 수행할 루틴을 선택해주세요.');
+      return;
+    }
+    
+    // 선택된 루틴이 실제로 해당 사용자의 루틴인지 확인
+    const validRoutines = todaySelectedRoutines.filter(routine => 
+      routines.some(userRoutine => userRoutine.id === routine.id)
+    );
+    
+    if (validRoutines.length !== todaySelectedRoutines.length) {
+      console.warn('유효하지 않은 루틴이 포함되어 있습니다.');
+      alert('유효하지 않은 루틴이 포함되어 있습니다. 다시 선택해주세요.');
+      return;
+    }
+
+    console.log('사용자', user.id, '의 운동 세션 시작:', validRoutines.map(r => r.name));
+
     // 오늘 날짜로 설정하고 운동기록 페이지로 이동
     const today = new Date().toISOString().split('T')[0];
     setSelectedDate(today);
     
-    // 선택된 루틴으로 세션 시작
-    startOrLoadSession(user.id, todaySelectedRoutines);
+    // 검증된 루틴으로 세션 시작
+    startOrLoadSession(user.id, validRoutines);
     
     // 운동기록 페이지로 이동
     navigate('/exercise-logs');

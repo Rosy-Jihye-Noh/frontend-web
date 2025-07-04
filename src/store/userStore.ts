@@ -27,7 +27,22 @@ export const useUserStore = create<UserStore>()(
       user: null,
       setUser: (userData) => set({ user: userData }),
       clearUser: () => {
+        console.log('사용자 로그아웃, 모든 데이터 정리');
         localStorage.removeItem('jwt_token');
+        
+        // 다른 스토어들의 데이터도 정리
+        try {
+          // dashboard store 데이터 정리
+          const dashboardStore = require('./dashboardStore').useDashboardStore;
+          dashboardStore.getState().clearUserData();
+          
+          // localStorage에서 관련 데이터 정리
+          localStorage.removeItem('dashboard-storage');
+          localStorage.removeItem('log-storage');
+        } catch (error) {
+          console.warn('스토어 정리 중 오류:', error);
+        }
+        
         set({ user: null });
       },
       loginUser: (loginResponse) => {
