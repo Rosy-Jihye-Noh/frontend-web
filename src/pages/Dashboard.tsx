@@ -3,6 +3,8 @@ import Header from '@/components/common/Header';
 import { Card } from '@/components/ui/card';
 import { HiCamera, HiUser, HiChatAlt2, HiLightBulb, HiCheckCircle } from 'react-icons/hi';
 import { useUserStore } from '@/store/userStore';
+import { useDashboardStore } from '@/store/dashboardStore';
+import { useLogStore } from '@/store/logStore';
 import { useNavigate } from 'react-router-dom';
 import CommunityHotPosts from '@/components/dashboard/CommunityHotPosts';
 import TodayRoutineCard from '@/components/dashboard/TodayRoutineCard';
@@ -10,16 +12,18 @@ import MainFeaturesCard from '@/components/dashboard/MainFeaturesCard';
 import PostureScoreCard from '@/components/dashboard/PostureScoreCard';
 import WeeklyReportCard from '@/components/dashboard/WeeklyReportCard';
 import axiosInstance from '@/api/axiosInstance';
+import type { Routine } from '@/types/index';
 
 const Dashboard: React.FC = () => {
   const { user } = useUserStore();
+  const { todaySelectedRoutines, setTodaySelectedRoutines } = useDashboardStore();
+  const { startOrLoadSession, setSelectedDate } = useLogStore();
   const navigate = useNavigate();
 
   // 상태
-  const [routines, setRoutines] = useState<any[]>([]);
+  const [routines, setRoutines] = useState<Routine[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [communityHotPosts, setCommunityHotPosts] = useState<any[]>([]);
-  const [analysisHistory, setAnalysisHistory] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) {
@@ -54,12 +58,34 @@ const Dashboard: React.FC = () => {
       })
       .catch(console.error);
 
-    // 3. 분석 기록 불러오기
-    axiosInstance.get(`/analysis-histories/user/${user.id}`)
-      .then(res => setAnalysisHistory(res.data))
-      .catch(console.error);
-
   }, [user, navigate]);
+
+  const handleRoutineSelection = (selectedRoutines: Routine[]) => {
+    setTodaySelectedRoutines(selectedRoutines);
+  };
+
+  const handleWorkoutStart = () => {
+    if (todaySelectedRoutines.length === 0) {
+      alert('먼저 오늘 수행할 루틴을 선택해주세요.');
+      return;
+    }
+    
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
+    // 오늘 날짜로 설정하고 운동기록 페이지로 이동
+    const today = new Date().toISOString().split('T')[0];
+    setSelectedDate(today);
+    
+    // 선택된 루틴으로 세션 시작
+    startOrLoadSession(user.id, todaySelectedRoutines);
+    
+    // 운동기록 페이지로 이동
+    navigate('/exercise-logs');
+  };
 
   // 카테고리 아이콘 매핑
   const CATEGORY_ICONS: Record<string, React.ReactNode> = {
@@ -82,8 +108,10 @@ const Dashboard: React.FC = () => {
         {/* 오늘의 운동 + 주요 기능 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <TodayRoutineCard
-            routineName={routines[0]?.name || ''}
-            onStart={() => alert('운동 기록 시작!')}
+            selectedRoutines={todaySelectedRoutines}
+            allUserRoutines={routines}
+            onRoutineSelect={handleRoutineSelection}
+            onStart={handleWorkoutStart}
           />
           <MainFeaturesCard
             onPostureAnalysis={() => navigate('/photoupload')}

@@ -5,7 +5,6 @@ import { persist } from 'zustand/middleware';
 import { toast } from 'sonner';
 import * as exerciseLogApi from '@/services/api/exerciseLogApi';
 import type { Routine, RoutineExercise, ExerciseLog } from '@/types/index';
-import { useUserStore } from './userStore';
 
 // --- Type Definitions ---
 interface SessionExercise {
@@ -24,14 +23,18 @@ interface LogSessionState {
   selectedDate: string;
   sessions: Record<string, SessionRoutine[]>; 
   pastLogs: ExerciseLog[];
+  currentDayMemo: string;
   isLoading: boolean;
   fetchPastLogs: (userId: number) => Promise<void>;
   setSelectedDate: (date: string) => void;
   startOrLoadSession: (userId: number, routines: Routine[]) => Promise<void>;
-  // ▼▼▼ This line was missing. Add it here. ▼▼▼
   addRoutinesToSession: (routines: Routine[]) => void;
   toggleExerciseCheck: (userId: number, routineId: number, exerciseId: number) => Promise<void>;
   clearSessionRoutines: () => void;
+  updateMemo: (memo: string) => void;
+  saveMemo: (userId: number) => Promise<void>;
+  deleteCurrentDayLogs: (userId: number) => Promise<void>;
+  deleteRoutineFromSession: (userId: number, routineId: number) => Promise<void>;
 }
 
 export const useLogStore = create<LogSessionState>()(
@@ -40,22 +43,35 @@ export const useLogStore = create<LogSessionState>()(
       selectedDate: new Date().toISOString().split('T')[0],
       sessions: {},
       pastLogs: [] as ExerciseLog[],
+      currentDayMemo: '',
       isLoading: false,
 
       fetchPastLogs: async (userId) => {
         try {
           const logs = await exerciseLogApi.getLogsByUser(userId);
-          set({ pastLogs: logs || [] });
+          const { selectedDate } = get();
+          
+          // 선택된 날짜의 메모 로드
+          const todaysLog = logs?.find(log => log.exerciseDate === selectedDate);
+          const memo = todaysLog?.memo || '';
+          
+          set({ pastLogs: logs || [], currentDayMemo: memo });
         } catch (error) {
           console.error("Failed to fetch past logs:", error);
         }
       },
 
       setSelectedDate: (date) => {
-        set({ selectedDate: date });
+        const { pastLogs } = get();
+        
+        // 날짜 변경시 해당 날짜의 메모 로드
+        const selectedLog = pastLogs.find(log => log.exerciseDate === date);
+        const memo = selectedLog?.memo || '';
+        
+        set({ selectedDate: date, currentDayMemo: memo });
       },
 
-      startOrLoadSession: async (userId, routines) => {
+      startOrLoadSession: async (_userId, routines) => {
         const { selectedDate, pastLogs, sessions } = get();
         
         if (sessions[selectedDate] && sessions[selectedDate].length > 0) {
@@ -153,6 +169,108 @@ export const useLogStore = create<LogSessionState>()(
         }
       },
       
+      updateMemo: (memo) => {
+        set({ currentDayMemo: memo });
+      },
+
+      saveMemo: async (userId) => {
+        const { selectedDate, currentDayMemo, pastLogs, sessions } = get();
+        
+        try {
+          // 해당 날짜의 기존 로그 찾기
+          let existingLog = pastLogs.find(log => log.exerciseDate === selectedDate);
+          
+          if (existingLog?.id) {
+            // 기존 로그가 있으면 메모만 업데이트
+            await exerciseLogApi.updateMemo(existingLog.id, currentDayMemo);
+          } else {
+            // 기존 로그가 없으면 새로 생성 (세션이 있을 경우에만)
+            const todaysSession = sessions[selectedDate];
+            if (todaysSession && todaysSession.length > 0) {
+              const routineIds = todaysSession.map(session => session.routineId);
+              const createData = { 
+                userId, 
+                exerciseDate: selectedDate, 
+                completionRate: 0, 
+                routineIds, 
+                memo: currentDayMemo 
+              };
+              await exerciseLogApi.createLog(createData);
+            }
+          }
+          
+          // 메모 저장 후 다시 로그 데이터 fetch
+          await get().fetchPastLogs(userId);
+          toast.success("메모가 저장되었습니다.");
+        } catch (error) {
+          console.error("Failed to save memo:", error);
+          toast.error("메모 저장에 실패했습니다.");
+        }
+      },
+
+      deleteCurrentDayLogs: async (userId) => {
+        const { selectedDate, pastLogs } = get();
+        
+        try {
+          // 해당 날짜의 모든 로그를 찾아서 개별적으로 삭제
+          const logsToDelete = pastLogs.filter(log => log.exerciseDate === selectedDate);
+          
+          if (logsToDelete.length === 0) {
+            toast.info("삭제할 운동 기록이 없습니다.");
+            return;
+          }
+
+          // 각 로그를 개별적으로 삭제
+          for (const log of logsToDelete) {
+            if (log.id) {
+              await exerciseLogApi.deleteLog(log.id);
+            }
+          }
+          
+          // 로컬 상태도 업데이트
+          set(state => ({
+            sessions: { ...state.sessions, [selectedDate]: [] },
+            currentDayMemo: '',
+          }));
+          
+          // 전체 로그 다시 가져오기
+          await get().fetchPastLogs(userId);
+          toast.success(`${logsToDelete.length}개의 운동 기록이 삭제되었습니다.`);
+        } catch (error) {
+          console.error("Failed to delete logs:", error);
+          toast.error("운동 기록 삭제에 실패했습니다.");
+        }
+      },
+
+      deleteRoutineFromSession: async (userId: number, routineId: number) => {
+        const { selectedDate, sessions } = get();
+        
+        try {
+          // 해당 루틴의 로그 ID 찾기
+          const currentSession = sessions[selectedDate] || [];
+          const targetRoutine = currentSession.find(r => r.routineId === routineId);
+          
+          if (targetRoutine && targetRoutine.logId) {
+            // 서버에서 삭제
+            await exerciseLogApi.deleteLog(targetRoutine.logId);
+          }
+          
+          // 로컬 세션에서 해당 루틴 제거
+          const updatedSession = currentSession.filter(r => r.routineId !== routineId);
+          
+          set(state => ({
+            sessions: { ...state.sessions, [selectedDate]: updatedSession }
+          }));
+          
+          // 전체 로그 다시 가져오기
+          await get().fetchPastLogs(userId);
+          toast.success("루틴이 삭제되었습니다.");
+        } catch (error) {
+          console.error("Failed to delete routine:", error);
+          toast.error("루틴 삭제에 실패했습니다.");
+        }
+      },
+
       clearSessionRoutines: () => {
         const { selectedDate } = get();
         set(state => ({
@@ -164,7 +282,8 @@ export const useLogStore = create<LogSessionState>()(
       name: 'exercise-log-storage',
       partialize: (state) => ({ 
         selectedDate: state.selectedDate,
-        sessions: state.sessions, 
+        sessions: state.sessions,
+        currentDayMemo: state.currentDayMemo, // 메모도 persist에 포함
       }),
     }
   )

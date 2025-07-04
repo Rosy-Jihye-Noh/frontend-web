@@ -28,15 +28,19 @@ const ExerciseFilter: React.FC<ExerciseFilterProps> = ({
         className="w-full"
       />
       <div 
-        className="flex space-x-2 overflow-x-auto pb-2 "
+        className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide"
         aria-label="운동 카테고리"
       >
         {categories.map((category) => (
           <Button
             key={category}
-            variant={selectedCategory === category ? 'default' : 'outline'}
+            variant="outline"
             onClick={() => onCategorySelect(category)}
-            className="flex-shrink-0"
+            className={`flex-shrink-0 px-4 py-2 rounded-full font-medium transition-all duration-200 ${
+              selectedCategory === category 
+                ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600 shadow-md transform scale-105' 
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-600 hover:text-blue-600 dark:hover:text-blue-400 shadow-sm'
+            }`}
           >
             {category}
           </Button>

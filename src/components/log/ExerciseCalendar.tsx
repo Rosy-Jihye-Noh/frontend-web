@@ -68,7 +68,7 @@ export const ExerciseCalendar: React.FC<ExerciseCalendarProps> = ({ userId }) =>
   return (
     <Card className="shadow-sm w-full max-w-md mx-auto">
       <CardHeader><CardTitle className="text-xl text-center"></CardTitle></CardHeader>
-      <CardContent className="p-2 flex justify-center">
+      <CardContent className="p-3 flex justify-center">
         <Calendar
           mode="single"
           selected={new Date(`${selectedDate}T12:00:00`)}
