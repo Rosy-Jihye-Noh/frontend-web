@@ -32,9 +32,14 @@ const LogPage: React.FC = () => {
       style={{ paddingTop: 'var(--header-height, 90px)' }}>
         <h1 className="text-3xl font-bold mb-6 text-slate-800">운동 기록</h1>
 
-        <div className="flex flex-col gap-6">
-          <ExerciseCalendar userId={user.id} />
-          <DailyLogComponent />
+        <div className="grid grid-cols-1 xl:grid-cols-10 gap-6">
+          <div className="xl:col-span-5 xl:sticky xl:top-24 xl:h-fit">
+            <ExerciseCalendar userId={user.id} />
+          </div>
+          
+          <div className="xl:col-span-5">
+            <DailyLogComponent />
+          </div>
         </div>
       </main>
     </div>

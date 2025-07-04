@@ -55,3 +55,12 @@ export const getLogsByUser = async (userId: number): Promise<ExerciseLog[]> => {
 export const updateLog = async (logId: number, logData: Partial<ExerciseLog>): Promise<void> => {
   await apiClient.patch(`/${logId}`, logData);
 };
+
+/**
+ * @description 운동 기록의 메모를 저장/수정합니다.
+ * @param logId 운동 기록 ID
+ * @param memo 저장할 메모
+ */
+export const updateMemo = async (logId: number, memo: string): Promise<void> => {
+  await apiClient.patch(`/${logId}`, { memo });
+};
