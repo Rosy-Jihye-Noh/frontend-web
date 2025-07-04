@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 interface PaginationProps {
   currentPage: number; // 0-based index
@@ -53,9 +53,20 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
       <Button
         variant="outline"
         size="icon"
+        onClick={() => onPageChange(0)}
+        disabled={currentPage === 0}
+        className="h-9 w-9"
+        aria-label="맨 처음 페이지"
+      >
+        <ChevronsLeft className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="outline"
+        size="icon"
         onClick={handlePrevious}
         disabled={currentPage === 0}
         className="h-9 w-9"
+        aria-label="이전 페이지"
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
@@ -76,8 +87,19 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
         onClick={handleNext}
         disabled={currentPage === totalPages - 1}
         className="h-9 w-9"
+        aria-label="다음 페이지"
       >
         <ChevronRight className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => onPageChange(totalPages - 1)}
+        disabled={currentPage === totalPages - 1}
+        className="h-9 w-9"
+        aria-label="맨 끝 페이지"
+      >
+        <ChevronsRight className="h-4 w-4" />
       </Button>
     </nav>
   );

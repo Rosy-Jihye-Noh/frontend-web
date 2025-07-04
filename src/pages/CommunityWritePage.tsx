@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { fetchCategories, createPost, updatePost, fetchPostDetail } from '../services/api/communityApi';
 import type { PostDTO, CategoryDTO } from '../types/community';
 import { Input } from '../components/ui/input';
@@ -11,6 +11,7 @@ import Header from '../components/common/Header';
 const CommunityWritePage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const isEdit = Boolean(id);
   const { user } = useUserStore();
   const userId = user?.id;
@@ -20,8 +21,10 @@ const CommunityWritePage: React.FC = () => {
   const [content, setContent] = useState('');
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [imageUrl, setImageUrl] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     fetchCategories().then(setCategories);
@@ -50,28 +53,77 @@ const CommunityWritePage: React.FC = () => {
       setError('제목, 내용, 카테고리를 모두 입력하세요.');
       return;
     }
+    if (!userId) {
+      setError('로그인이 필요합니다.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
       const postData: Partial<PostDTO> = {
+        userId,
         title,
         content,
         categoryId,
         imageUrl: imageUrl.trim() || undefined,
-        // userId 등은 백엔드에서 인증정보로 처리한다고 가정
       };
       if (isEdit && id) {
         await updatePost(Number(id), postData);
-        navigate(`/community/${id}`);
+        const returnPath = location.state?.from ? `/community/${id}${location.state.from}` : `/community/${id}`;
+        navigate(returnPath);
       } else {
-        const newId = await createPost(postData);
-        navigate(`/community/${newId}`);
+        const result = await createPost(postData);
+        let newId: number | null = null;
+        if (typeof result === 'object' && result !== null && 'id' in result) {
+          newId = Number(result.id);
+        } else if (typeof result === 'number') {
+          newId = result;
+        } else if (typeof result === 'string' && !isNaN(Number(result))) {
+          newId = Number(result);
+        }
+        
+        if (!newId || isNaN(newId)) {
+          setError('글 작성에 실패했습니다. (id 반환 오류)');
+          return;
+        }
+        const returnPath = location.state?.from ? `/community/${newId}${location.state.from}` : `/community/${newId}`;
+        navigate(returnPath);
       }
-    } catch {
-      setError('저장에 실패했습니다.');
+    } catch (e) {
+      setError('글 작성에 실패했습니다. (서버 오류)');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setImageUrl('');
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch('http://localhost:8081/api/cloudinary/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!res.ok) throw new Error('이미지 업로드 실패');
+        const url = await res.text();
+        setImageUrl(url);
+      } catch (err) {
+        setError('이미지 업로드에 실패했습니다.');
+      }
+    }
+  };
+
+  const handlePhotoUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleCancel = () => {
+    const returnPath = location.state?.from ? `/community${location.state.from}` : '/community';
+    navigate(returnPath);
   };
 
   return (
@@ -107,13 +159,25 @@ const CommunityWritePage: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block mb-1 font-medium">이미지 URL (선택)</label>
-            <Input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="이미지 URL을 입력하세요" />
+            <label className="block mb-1 font-medium">이미지 (선택)</label>
+            <Button type="button" onClick={handlePhotoUploadClick}>
+              사진 업로드
+            </Button>
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              style={{ display: 'none' }}
+            />
+            {imageUrl && (
+              <img src={imageUrl} alt="미리보기" className="mt-2 max-h-40 rounded" />
+            )}
           </div>
           {error && <div className="text-red-500 text-sm">{error}</div>}
           <div className="flex gap-2 mt-2">
             <Button type="submit" disabled={loading}>{isEdit ? '수정' : '등록'}</Button>
-            <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={loading}>취소</Button>
+            <Button type="button" variant="outline" onClick={handleCancel} disabled={loading}>취소</Button>
           </div>
         </form>
       </div>
