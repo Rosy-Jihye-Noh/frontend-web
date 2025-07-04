@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const DUMMY_REVIEWS = [
   { id: 1, text: "Health AI 덕분에 운동 루틴 완전 바뀌었어요!", author: "Rosy" },
@@ -9,6 +10,7 @@ const DUMMY_REVIEWS = [
 
 const Section4 = () => {
   const [currentReview, setCurrentReview] = useState(0);
+  const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -19,8 +21,12 @@ const Section4 = () => {
   }, []);
 
   return (
-    <section className="bg-blue-50 dark:bg-gray-900 py-16">
-      <div className="container mx-auto px-4">
+    <section ref={ref} className="bg-blue-50 dark:bg-gray-900 py-16">
+      <div className={`container mx-auto px-4 transition-all duration-1000 ease-out ${
+        isVisible 
+          ? 'translate-y-0 opacity-100' 
+          : 'translate-y-10 opacity-0'
+      }`}>
         <h3 className="text-3xl font-bold text-center mb-12 text-gray-800 dark:text-gray-900">
           사용자들의 생생한 후기
         </h3>
