@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { HiCheckCircle, HiTrendingUp, HiPlus } from 'react-icons/hi';
+import { useUserStore } from '@/store/userStore';
 import type { Routine } from '@/types/index';
 
 interface TodayWorkoutCardProps {
@@ -18,6 +19,7 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
   onRoutineSelect, 
   onStart 
 }) => {
+  const { user } = useUserStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [tempSelectedRoutines, setTempSelectedRoutines] = useState<Routine[]>(selectedRoutines);
 
@@ -32,11 +34,43 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
   };
 
   const handleConfirmSelection = () => {
-    onRoutineSelect(tempSelectedRoutines);
+    // 로그인한 사용자의 루틴만 선택되었는지 확인
+    if (!user || !user.id) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    // 선택된 루틴이 모두 사용자의 루틴인지 검증
+    const validRoutines = tempSelectedRoutines.filter(routine => 
+      allUserRoutines.some(userRoutine => 
+        userRoutine.id === routine.id && userRoutine.userId === user.id
+      )
+    );
+
+    if (validRoutines.length !== tempSelectedRoutines.length) {
+      console.warn('유효하지 않은 루틴 선택');
+      alert('선택할 수 없는 루틴이 포함되어 있습니다.');
+      return;
+    }
+
+    console.log('사용자', user.id, '의 루틴 확인:', validRoutines.map(r => r.name));
+    onRoutineSelect(validRoutines);
     setIsDialogOpen(false);
   };
 
   const handleDialogOpen = () => {
+    // 로그인 상태 확인
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    // 사용자의 루틴이 있는지 확인
+    if (allUserRoutines.length === 0) {
+      alert('먼저 루틴을 생성해주세요.');
+      return;
+    }
+
     setTempSelectedRoutines(selectedRoutines);
     setIsDialogOpen(true);
   };
@@ -73,16 +107,26 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
                   <DialogTitle>오늘 수행할 루틴을 선택하세요</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-2 py-4 max-h-[50vh] overflow-y-auto">
-                  {allUserRoutines.map(routine => (
-                    <div 
-                      key={routine.id} 
-                      className="flex items-center space-x-3 p-2 rounded-md hover:bg-secondary cursor-pointer transition-colors" 
-                      onClick={() => handleRoutineToggle(routine)}
-                    >
-                      <Checkbox checked={tempSelectedRoutines.some(r => r.id === routine.id)} />
-                      <span className="font-medium">{routine.name}</span>
+                  {allUserRoutines.length === 0 ? (
+                    <div className="text-center py-4 text-gray-500">
+                      <p>생성된 루틴이 없습니다.</p>
+                      <p className="text-sm">먼저 루틴을 생성해주세요.</p>
                     </div>
-                  ))}
+                  ) : (
+                    allUserRoutines.map(routine => (
+                      <div 
+                        key={routine.id} 
+                        className="flex items-center space-x-3 p-2 rounded-md hover:bg-secondary cursor-pointer transition-colors" 
+                        onClick={() => handleRoutineToggle(routine)}
+                      >
+                        <Checkbox checked={tempSelectedRoutines.some(r => r.id === routine.id)} />
+                        <span className="font-medium">{routine.name}</span>
+                        <span className="text-sm text-gray-500">
+                          ({routine.exercises?.length || 0}개 운동)
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
                 <DialogFooter>
                   <Button 
@@ -116,16 +160,26 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
                 <DialogTitle>오늘 수행할 루틴을 선택하세요</DialogTitle>
               </DialogHeader>
               <div className="space-y-2 py-4 max-h-[50vh] overflow-y-auto">
-                {allUserRoutines.map(routine => (
-                  <div 
-                    key={routine.id} 
-                    className="flex items-center space-x-3 p-2 rounded-md hover:bg-secondary cursor-pointer transition-colors" 
-                    onClick={() => handleRoutineToggle(routine)}
-                  >
-                    <Checkbox checked={tempSelectedRoutines.some(r => r.id === routine.id)} />
-                    <span className="font-medium">{routine.name}</span>
+                {allUserRoutines.length === 0 ? (
+                  <div className="text-center py-4 text-gray-500">
+                    <p>생성된 루틴이 없습니다.</p>
+                    <p className="text-sm">먼저 루틴을 생성해주세요.</p>
                   </div>
-                ))}
+                ) : (
+                  allUserRoutines.map(routine => (
+                    <div 
+                      key={routine.id} 
+                      className="flex items-center space-x-3 p-2 rounded-md hover:bg-secondary cursor-pointer transition-colors" 
+                      onClick={() => handleRoutineToggle(routine)}
+                    >
+                      <Checkbox checked={tempSelectedRoutines.some(r => r.id === routine.id)} />
+                      <span className="font-medium">{routine.name}</span>
+                      <span className="text-sm text-gray-500">
+                        ({routine.exercises?.length || 0}개 운동)
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
               <DialogFooter>
                 <Button 

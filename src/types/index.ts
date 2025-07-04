@@ -70,3 +70,41 @@ export interface ExerciseLog {
   routineIds: number[];
   routineNames?: string[]; // BE에서 조회 시 채워주는 필드
 }
+
+// 사용자 작성 글
+export interface UserPost {
+  id: number;
+  title: string;
+  content: string;
+  authorId: number;
+  authorName: string;
+  createdAt: string;
+  updatedAt: string;
+  likesCount: number;
+  commentsCount: number;
+  category: string;
+}
+
+// 사용자 작성 댓글
+export interface UserComment {
+  id: number;
+  content: string;
+  postId: number;
+  postTitle: string;
+  authorId: number;
+  authorName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 알림
+export interface Notification {
+  id: number;
+  type: 'COMMENT' | 'LIKE' | 'REPLY';
+  title: string;
+  message: string;
+  postId?: number;
+  postTitle?: string;
+  isRead: boolean;
+  createdAt: string;
+}

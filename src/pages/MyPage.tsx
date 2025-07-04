@@ -8,6 +8,9 @@ import ProfileHeader from '../components/mypage/ProfileHeader';
 import AnalysisHistorySection from '../components/mypage/AnalysisHistorySection';
 import MyRoutineSection from '../components/mypage/MyRoutineSection';
 import LikedExerciseSection from '../components/mypage/LikedExerciseSection';
+import PostsCommentsTabsSection from '../components/mypage/PostsCommentsTabsSection';
+import ExerciseRecordsSection from '../components/mypage/ExerciseRecordsSection';
+import NotificationsSection from '../components/mypage/NotificationsSection';
 import { deleteRoutineById } from '@/services/api/routineApi';
 import {
   fetchUserProfile,
@@ -89,7 +92,20 @@ const MyPage: React.FC = () => {
     };
 
     if (isPageLoading) {
-        return <div className="flex justify-center items-center h-screen">마이페이지 정보를 불러오는 중...</div>;
+        return (
+            <div className="bg-slate-50 min-h-screen">
+                <Header />
+                <div 
+                    className="flex justify-center items-center" 
+                    style={{ height: 'calc(100vh - var(--header-height, 90px))', paddingTop: 'var(--header-height, 90px)' }}
+                >
+                    <div className="text-center text-gray-500">
+                        <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-2"></div>
+                        <p>마이페이지 정보를 불러오는 중...</p>
+                    </div>
+                </div>
+            </div>
+        );
     }
     
     if (error) {
@@ -110,10 +126,13 @@ const MyPage: React.FC = () => {
                 <ProfileHeader user={profile} onEdit={() => navigate('/mypage/edit')} />
                 
                 <div className="border-b border-slate-200 mb-6">
-                    <div className="flex space-x-8">
+                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                         <TabButton id="routines" activeTab={activeTab} setActiveTab={setActiveTab}>내 루틴 관리</TabButton>
                         <TabButton id="history" activeTab={activeTab} setActiveTab={setActiveTab}>사진 분석 기록</TabButton>
+                        <TabButton id="exercise-records" activeTab={activeTab} setActiveTab={setActiveTab}>운동 기록</TabButton>
                         <TabButton id="liked" activeTab={activeTab} setActiveTab={setActiveTab}>좋아요한 운동</TabButton>
+                        <TabButton id="posts-comments" activeTab={activeTab} setActiveTab={setActiveTab}>내 글/댓글</TabButton>
+                        <TabButton id="notifications" activeTab={activeTab} setActiveTab={setActiveTab}>알림</TabButton>
                     </div>
                 </div>
 
@@ -121,6 +140,9 @@ const MyPage: React.FC = () => {
                     {activeTab === 'routines' && <MyRoutineSection routines={routines} onDeleteRoutine={handleDeleteRoutine} />}
                     {activeTab === 'history' && <AnalysisHistorySection history={history} />}
                     {activeTab === 'liked' && <LikedExerciseSection likedExercises={likedExercises} />}
+                    {activeTab === 'posts-comments' && <PostsCommentsTabsSection userId={user!.id} />}
+                    {activeTab === 'exercise-records' && <ExerciseRecordsSection userId={user!.id} />}
+                    {activeTab === 'notifications' && <NotificationsSection userId={user!.id} />}
                 </div>
             </main>
             <button

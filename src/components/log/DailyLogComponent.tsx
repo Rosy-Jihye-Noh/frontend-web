@@ -71,26 +71,45 @@ const DailyLogComponent = () => {
 
   useEffect(() => {
     if (user?.id) {
-      // 페이지 로드 시 과거 로그를 가져와서 메모도 함께 로드
+      // 로그인한 사용자의 과거 로그를 가져와서 메모도 함께 로드
+      console.log('사용자', user.id, '의 운동 기록 로드 시작');
       fetchPastLogs(user.id);
-      routineApi.getRoutinesByUser(user.id).then(setUserRoutines);
+      routineApi.getRoutinesByUser(user.id)
+        .then(routines => {
+          // 해당 사용자의 루틴만 필터링
+          const userOwnedRoutines = routines.filter(routine => routine.userId === user.id);
+          console.log('로그인한 사용자의 루틴 로드:', userOwnedRoutines.length, '개');
+          setUserRoutines(userOwnedRoutines);
+        })
+        .catch(error => {
+          console.error('사용자 루틴 로드 실패:', error);
+          setUserRoutines([]);
+        });
+    } else {
+      // 로그인하지 않은 경우 초기화
+      console.log('로그인되지 않은 상태, 데이터 초기화');
+      setUserRoutines([]);
     }
   }, [user, fetchPastLogs]);
 
-  // 날짜가 변경될 때마다 해당 날짜의 세션 정보 다시 로드
+  // 날짜가 변경될 때마다 로그인한 사용자의 해당 날짜 세션 정보 다시 로드
   useEffect(() => {
     if (user?.id && selectedDate) {
       const sessionExists = useLogStore.getState().sessions[selectedDate];
       if (!sessionExists || sessionExists.length === 0) {
-        // 해당 날짜의 기존 로그가 있는지 확인하고 세션 복원
-        const pastLog = useLogStore.getState().pastLogs.find(log => log.exerciseDate === selectedDate);
+        // 해당 날짜의 기존 로그가 있는지 확인하고 세션 복원 (로그인한 사용자만)
+        const pastLog = useLogStore.getState().pastLogs.find(log => 
+          log.exerciseDate === selectedDate && log.userId === user.id
+        );
         if (pastLog && pastLog.routineIds && pastLog.routineIds.length > 0) {
-          // 기존 로그에서 루틴 정보를 가져와서 세션 복원
+          // 기존 로그에서 루틴 정보를 가져와서 세션 복원 (사용자 소유 루틴만)
           routineApi.getRoutinesByUser(user.id).then(allRoutines => {
-            const routinesForThisLog = allRoutines.filter(routine => 
+            const userOwnedRoutines = allRoutines.filter(routine => routine.userId === user.id);
+            const routinesForThisLog = userOwnedRoutines.filter(routine => 
               pastLog.routineIds.includes(routine.id)
             );
             if (routinesForThisLog.length > 0) {
+              console.log('사용자', user.id, '의 세션 복원:', routinesForThisLog.map(r => r.name));
               startOrLoadSession(user.id, routinesForThisLog);
             }
           });
@@ -169,13 +188,35 @@ const DailyLogComponent = () => {
   };
 
   const handleDeleteRoutine = async (routineId: number) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    // 삭제할 루틴이 현재 세션에 있는지 확인
+    const currentSession = sessions[selectedDate] || [];
+    const targetRoutine = currentSession.find(r => r.routineId === routineId);
+    
+    if (!targetRoutine) {
+      console.warn('삭제할 루틴을 찾을 수 없습니다:', routineId);
+      alert('삭제할 루틴을 찾을 수 없습니다.');
+      return;
+    }
+
+    const confirmMessage = targetRoutine.logId 
+      ? '이 루틴과 관련된 운동 기록이 영구적으로 삭제됩니다. 계속하시겠습니까?'
+      : '이 루틴을 오늘의 운동에서 제거하시겠습니까?';
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
     
     try {
+      console.log('루틴 삭제 시도:', { routineId, logId: targetRoutine.logId, date: selectedDate });
       await deleteRoutineFromSession(user.id, routineId);
     } catch (error) {
       console.error('루틴 삭제 실패:', error);
-      alert('루틴 삭제에 실패했습니다. 다시 시도해주세요.');
+      // 사용자에게는 이미 store에서 처리된 메시지가 표시됨
     }
   };
 
@@ -416,19 +457,16 @@ const DailyLogComponent = () => {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
-              <div className="p-1 bg-red-100 rounded-full">
-                <Trash2 className="h-4 w-4 text-red-600" />
-              </div>
+            <DialogTitle className="text-gray-800">
               운동 기록 삭제
             </DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-              <p className="text-sm text-red-700 font-medium">
-                ⚠️ {dateTitle}의 모든 운동 기록과 메모가 삭제됩니다.
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-sm text-gray-800 font-medium">
+                {dateTitle}의 모든 운동 기록과 메모가 삭제됩니다.
               </p>
-              <p className="text-xs text-red-600 mt-2">
+              <p className="text-xs text-gray-600 mt-2">
                 이 작업은 되돌릴 수 없습니다.
               </p>
             </div>

@@ -4,6 +4,7 @@ import { useUserStore } from '@/store/userStore';
 import type { ProfileUser } from '@/types/index';
 import { Button } from '@/components/ui/button';
 import { HiArrowLeft, HiUser } from 'react-icons/hi';
+import { toast } from 'sonner';
 
 const EditProfilePage: React.FC = () => {
     const navigate = useNavigate();
@@ -78,11 +79,11 @@ const EditProfilePage: React.FC = () => {
 
         try {
             await fetch(`http://localhost:8081/api/users/${user.id}`, { method: 'PUT', body: formData });
-            alert('프로필이 저장되었습니다.');
+            toast.success('프로필이 변경되었습니다');
             navigate('/mypage');
         } catch (error) {
             console.error(error);
-            alert('저장에 실패했습니다.');
+            toast.error('저장에 실패했습니다');
         } finally {
             setIsSaving(false);
         }
@@ -95,61 +96,96 @@ const EditProfilePage: React.FC = () => {
     return (
         <div className="max-w-md mx-auto p-4 bg-white min-h-screen">
             <header className="relative flex items-center justify-center py-4 mb-6">
-                <button onClick={() => navigate(-1)} className="absolute left-0 p-2">
-                    <HiArrowLeft className="w-6 h-6" />
+                <button onClick={() => navigate(-1)} className="absolute left-0 p-2 hover:bg-gray-100 rounded-full transition-colors">
+                    <HiArrowLeft className="w-6 h-6 text-gray-600" />
                 </button>
-                <h1 className="text-xl font-bold">프로필 수정</h1>
+                <h1 className="text-xl font-bold text-gray-800">프로필 수정</h1>
             </header>
 
             <div className="flex flex-col items-center mb-8">
-                <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                <div className="w-28 h-28 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center overflow-hidden shadow-lg ring-4 ring-blue-100">
                     {previewImage ? (
                         <img src={previewImage} alt="프로필" className="w-full h-full object-cover" />
                     ) : (
-                        <HiUser className="w-14 h-14 text-gray-400" />
+                        <HiUser className="w-16 h-16 text-blue-400" />
                     )}
                 </div>
-                <label htmlFor="imageUpload" className="mt-2 text-sm font-semibold text-blue-600 cursor-pointer">
+                <label htmlFor="imageUpload" className="mt-3 px-4 py-2 text-sm font-semibold text-blue-600 bg-blue-50 rounded-full cursor-pointer hover:bg-blue-100 transition-colors">
                     사진 변경
                 </label>
                 <input id="imageUpload" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
                 <div>
-                    <label className="text-sm font-medium text-gray-700">닉네임</label>
-                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">닉네임</label>
+                    <input 
+                        type="text" 
+                        value={name} 
+                        onChange={(e) => setName(e.target.value)} 
+                        className="w-full border-2 border-gray-200 rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                        placeholder="닉네임을 입력하세요"
+                    />
                 </div>
                 <div>
-                    <label className="text-sm font-medium text-gray-700">목표</label>
-                    <input type="text" value={goal} onChange={(e) => setGoal(e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">목표</label>
+                    <input 
+                        type="text" 
+                        value={goal} 
+                        onChange={(e) => setGoal(e.target.value)} 
+                        className="w-full border-2 border-gray-200 rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                        placeholder="운동 목표를 입력하세요"
+                    />
                 </div>
                 <div>
-                    <label className="text-sm font-medium text-gray-700">생년월일</label>
-                    <input type="date" value={birthday || ''} onChange={(e) => setBirthday(e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">생년월일</label>
+                    <input 
+                        type="date" 
+                        value={birthday || ''} 
+                        onChange={(e) => setBirthday(e.target.value)} 
+                        className="w-full border-2 border-gray-200 rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                    />
                 </div>
                 <div>
-                    <label className="text-sm font-medium text-gray-700">성별</label>
-                    <select value={gender || ''} onChange={(e) => setGender(e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">성별</label>
+                    <select 
+                        value={gender || ''} 
+                        onChange={(e) => setGender(e.target.value)} 
+                        className="w-full border-2 border-gray-200 rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                    >
                         <option value="">선택 안 함</option>
                         <option value="MALE">남성</option>
                         <option value="FEMALE">여성</option>
                     </select>
                 </div>
-                <div>
-                    <label className="text-sm font-medium text-gray-700">몸무게 (kg)</label>
-                    <input type="number" value={weight || ''} onChange={(e) => setWeight(e.target.value ? Number(e.target.value) : null)} className="mt-1 block w-full border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
-                </div>
-                <div>
-                    <label className="text-sm font-medium text-gray-700">키 (cm)</label>
-                    <input type="number" value={height || ''} onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : null)} className="mt-1 block w-full border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">몸무게 (kg)</label>
+                        <input 
+                            type="number" 
+                            value={weight || ''} 
+                            onChange={(e) => setWeight(e.target.value ? Number(e.target.value) : null)} 
+                            className="w-full border-2 border-gray-200 rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                            placeholder="kg"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">키 (cm)</label>
+                        <input 
+                            type="number" 
+                            value={height || ''} 
+                            onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : null)} 
+                            className="w-full border-2 border-gray-200 rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                            placeholder="cm"
+                        />
+                    </div>
                 </div>
             </div>
 
             <div className="mt-8">
                 <Button 
                     onClick={handleSave} 
-                    className="w-full !py-3 !text-base !font-bold bg-blue-600 hover:bg-blue-700 text-white" 
+                    className="w-full py-4 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all shadow-lg hover:shadow-xl" 
                     disabled={isSaving}
                 >
                     {isSaving ? '저장 중...' : '저장하기'}
