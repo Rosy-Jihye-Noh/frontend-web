@@ -53,6 +53,31 @@ export const findEmail = (findData: FindEmailRequest) => {
     return apiClient.post<string>('/find-email', findData);
 };
 
+export const getCurrentUser = () => {
+    const token = localStorage.getItem('jwt_token');
+    
+    if (!token) {
+        throw new Error('JWT 토큰이 없습니다.');
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const email = payload.sub || payload.email; // 토큰에서 이메일 추출
+        
+        if (!email) {
+            throw new Error('토큰에서 이메일을 찾을 수 없습니다.');
+        }
+        
+        return axios.get(`http://localhost:8081/api/users/social/${email}`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+    } catch (error) {
+        throw new Error('JWT 토큰 파싱에 실패했습니다.');
+    }
+};
+
 // 소셜 회원가입 완료 요청
 export const socialSignup = (signupData: SocialSignupRequest) => {
     return apiClient.post<LoginResponse>('/social-signup', signupData);

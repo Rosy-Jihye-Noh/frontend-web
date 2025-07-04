@@ -4,13 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { login } from "@/api/authApi";
-import type { LoginRequest, User } from "@/types/auth";
+import type { LoginRequest } from "@/types/auth";
 import { useUserStore } from "@/store/userStore";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const setUser = useUserStore((state) => state.setUser);
+  const { loginUser } = useUserStore();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -30,16 +30,16 @@ const LoginPage = () => {
       const responseData = response.data;
 
       if (responseData.success) {
-        localStorage.setItem('jwt_token', responseData.token);
-        setUser(responseData.user);
-
-        const userInfo: User = {
-          id: responseData.user.id,
-          email: responseData.user.email,
-          name: responseData.user.name,
-          role: responseData.user.role
+        // loginUser 함수를 사용해서 통합 로그인 처리
+        const loginResponse = {
+          user: responseData.user,
+          token: responseData.token,
+          success: responseData.success,
+          message: responseData.message,
+          isSocialLogin: false
         };
-        setUser(userInfo);
+        
+        loginUser(loginResponse);
         
         navigate(from);
         alert(`🎉 로그인 성공!\n환영합니다, ${responseData.user.name}님!`);

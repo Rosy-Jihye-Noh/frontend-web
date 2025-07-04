@@ -11,12 +11,14 @@ export interface LoginResponse {
   token: string;
   success: boolean;
   message: string;
+  isSocialLogin: boolean;
 }
 
 interface UserStore {
   user: User | null;
   setUser: (userData: User) => void;
   clearUser: () => void;
+  loginUser: (loginResponse: LoginResponse) => void;
 }
 
 export const useUserStore = create<UserStore>()(
@@ -24,7 +26,18 @@ export const useUserStore = create<UserStore>()(
     (set) => ({
       user: null,
       setUser: (userData) => set({ user: userData }),
-      clearUser: () => set({ user: null }),
+      clearUser: () => {
+        localStorage.removeItem('jwt_token');
+        set({ user: null });
+      },
+      loginUser: (loginResponse) => {
+        // JWT 토큰을 localStorage에 저장
+        if (loginResponse.token) {
+          localStorage.setItem('jwt_token', loginResponse.token);
+        }
+        // 유저 정보를 store에 저장
+        set({ user: loginResponse.user });
+      },
     }),
     {
       name: 'user-storage', // localStorage에 저장되는 key
