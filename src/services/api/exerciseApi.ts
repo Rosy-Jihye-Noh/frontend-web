@@ -33,3 +33,39 @@ export const fetchExerciseById = (exerciseId: number): Promise<Exercise> => {
       return res.json();
     });
 };
+
+/**
+ * 좋아요가 많은 인기 운동을 가져옵니다.
+ * @param limit - 가져올 운동 개수 (기본값: 5)
+ */
+export const fetchPopularExercisesByLikes = async (limit: number = 5): Promise<(Exercise & { likeCount: number })[]> => {
+  try {
+    const response = await fetch(`http://localhost:8081/api/exercises/popular/likes?limit=${limit}`);
+    if (!response.ok) {
+      throw new Error('인기 운동을 불러오는 데 실패했습니다.');
+    }
+    return response.json();
+  } catch (error) {
+    console.error('fetchPopularExercisesByLikes 실패:', error);
+    // 에러 시 빈 배열 반환
+    return [];
+  }
+};
+
+/**
+ * 루틴에 많이 추가된 인기 운동을 가져옵니다.
+ * @param limit - 가져올 운동 개수 (기본값: 5)
+ */
+export const fetchPopularExercisesByRoutineAdditions = async (limit: number = 5): Promise<(Exercise & { routineCount: number })[]> => {
+  try {
+    const response = await fetch(`http://localhost:8081/api/exercises/popular/routines?limit=${limit}`);
+    if (!response.ok) {
+      throw new Error('루틴 인기 운동을 불러오는 데 실패했습니다.');
+    }
+    return response.json();
+  } catch (error) {
+    console.error('fetchPopularExercisesByRoutineAdditions 실패:', error);
+    // 에러 시 빈 배열 반환
+    return [];
+  }
+};

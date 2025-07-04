@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import type { Exercise } from '@/types/index';
 import { fetchAllExercises } from '@/services/api/exerciseApi';
 import { fetchRoutineById, updateRoutine } from '@/services/api/routineApi';
+import { fetchFullLikedExercises } from '@/services/api/myPageApi';
+import { useUserStore } from '@/store/userStore';
 
 // 재사용할 컴포넌트들
 import Header from '@/components/common/Header';
@@ -14,15 +16,16 @@ import { Button } from '@/components/ui/button';
 const RoutineEditPage: React.FC = () => {
   const navigate = useNavigate();
   const { routineId } = useParams<{ routineId: string }>();
+  const { user } = useUserStore();
 
   const [routineName, setRoutineName] = useState('');
   const [description, setDescription] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
+  const [likedExercises, setLikedExercises] = useState<Exercise[]>([]);
   const [selectedExercises, setSelectedExercises] = useState<Exercise[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [notification, setNotification] = useState<string | null>(null);
 
   const handleMoveUp = (index: number) => {
     if (index === 0) return; // 맨 위 항목은 이동 불가
@@ -30,7 +33,6 @@ const RoutineEditPage: React.FC = () => {
     // 배열 요소 위치 교환
     [newExercises[index - 1], newExercises[index]] = [newExercises[index], newExercises[index - 1]];
     setSelectedExercises(newExercises);
-    setNotification('순서가 변경되었습니다.');
   };
 
   const handleMoveDown = (index: number) => {
@@ -39,29 +41,41 @@ const RoutineEditPage: React.FC = () => {
     // 배열 요소 위치 교환
     [newExercises[index + 1], newExercises[index]] = [newExercises[index], newExercises[index + 1]];
     setSelectedExercises(newExercises);
-    setNotification('순서가 변경되었습니다.');
   };
 
   useEffect(() => {
-    // 기존 루틴 데이터와 전체 운동 목록을 불러옵니다.
-    Promise.all([
-      fetchRoutineById(Number(routineId)),
-      fetchAllExercises()
-    ]).then(([routineData, allExercises]) => {
-      setRoutineName(routineData.name);
-      setDescription(routineData.description || '');
-      // 정렬된 운동 목록으로 상태 설정
-      const sortedExercises = routineData.exercises.sort((a, b) => a.order - b.order);
-      const exerciseDetails = sortedExercises.map(re => allExercises.find((e: Exercise) => e.id === re.exerciseId)).filter(Boolean) as Exercise[];
-      setSelectedExercises(exerciseDetails);
-      setAvailableExercises(allExercises);
-      setIsLoading(false);
-    }).catch(err => {
-      console.error("데이터 로딩 실패:", err);
-      alert("루틴 정보를 불러오는데 실패했습니다.");
-      setIsLoading(false);
-    });
-  }, [routineId]);
+    const loadData = async () => {
+      try {
+        // 기존 루틴 데이터와 전체 운동 목록을 불러옵니다.
+        const [routineData, allExercises] = await Promise.all([
+          fetchRoutineById(Number(routineId)),
+          fetchAllExercises()
+        ]);
+        
+        setRoutineName(routineData.name);
+        setDescription(routineData.description || '');
+        // 정렬된 운동 목록으로 상태 설정
+        const sortedExercises = routineData.exercises.sort((a, b) => a.order - b.order);
+        const exerciseDetails = sortedExercises.map(re => allExercises.find((e: Exercise) => e.id === re.exerciseId)).filter(Boolean) as Exercise[];
+        setSelectedExercises(exerciseDetails);
+        setAvailableExercises(allExercises);
+        
+        // 사용자가 좋아요한 운동 데이터 로드 (사용자가 로그인된 경우에만)
+        if (user?.id) {
+          const liked = await fetchFullLikedExercises(user.id);
+          setLikedExercises(liked);
+        }
+        
+        setIsLoading(false);
+      } catch (err) {
+        console.error("데이터 로딩 실패:", err);
+        alert("루틴 정보를 불러오는데 실패했습니다.");
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [routineId, user]);
 
   const filteredAvailableExercises = useMemo(() => {
     const selectedIds = new Set(selectedExercises.map(ex => ex.id));
@@ -137,6 +151,7 @@ const RoutineEditPage: React.FC = () => {
               searchTerm={searchTerm}
               onSearchTermChange={setSearchTerm}
               exercises={filteredAvailableExercises}
+              likedExercises={likedExercises}
               onAddExercise={handleAddExercise}
             />
           </div>
