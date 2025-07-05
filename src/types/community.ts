@@ -11,6 +11,8 @@ export interface PostDTO {
   content: string;
   imageUrl: string;
   likeCount: number;
+  commentCount: number;
+  viewCount: number;
 }
 
 export interface CommentDTO {
@@ -37,4 +39,11 @@ export interface PostLikeDTO {
   userName: string;
   postId: number;
   postTitle: string;
+}
+
+export interface PostCounterDTO {
+  postId: number;
+  likeCount: number;
+  commentCount: number;
+  viewCount: number;
 } 
