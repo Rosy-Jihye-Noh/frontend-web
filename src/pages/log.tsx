@@ -34,7 +34,7 @@ const LogPage: React.FC = () => {
 
         <div className="grid grid-cols-1 xl:grid-cols-10 gap-6">
           <div className="xl:col-span-5 xl:sticky xl:top-24 xl:h-fit">
-            <ExerciseCalendar userId={user.id} />
+            <ExerciseCalendar />
           </div>
           
           <div className="xl:col-span-5">

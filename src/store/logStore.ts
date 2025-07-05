@@ -48,28 +48,40 @@ export const useLogStore = create<LogSessionState>()(
 
       fetchPastLogs: async (userId) => {
         if (!userId) {
-          console.warn('사용자 ID가 없습니다.');
           set({ pastLogs: [], currentDayMemo: '' });
           return;
         }
         
         try {
-          console.log('사용자', userId, '의 운동 기록을 가져오는 중...');
           const logs = await exerciseLogApi.getLogsByUser(userId);
           
           // 사용자 ID로 한번 더 필터링 (보안 강화)
           const filteredLogs = logs?.filter(log => log.userId === userId) || [];
-          console.log('필터링된 로그:', filteredLogs.length, '개');
+          
+          // 날짜별로 unique한 로그만 유지 (가장 최근 로그 우선)
+          const uniqueLogsByDate = filteredLogs.reduce((acc, log) => {
+            const existingLogIndex = acc.findIndex(existingLog => existingLog.exerciseDate === log.exerciseDate);
+            if (existingLogIndex === -1) {
+              // 해당 날짜의 첫 번째 로그
+              acc.push(log);
+            } else {
+              // 해당 날짜에 이미 로그가 있는 경우, ID가 더 큰(최신) 로그로 대체
+              if (log.id && acc[existingLogIndex].id && log.id > acc[existingLogIndex].id) {
+                acc[existingLogIndex] = log;
+              }
+            }
+            return acc;
+          }, [] as ExerciseLog[]);
           
           const { selectedDate } = get();
           
           // 선택된 날짜의 메모 로드 (해당 사용자의 것만)
-          const todaysLog = filteredLogs.find(log => 
+          const todaysLog = uniqueLogsByDate.find(log => 
             log.exerciseDate === selectedDate && log.userId === userId
           );
           const memo = todaysLog?.memo || '';
           
-          set({ pastLogs: filteredLogs, currentDayMemo: memo });
+          set({ pastLogs: uniqueLogsByDate, currentDayMemo: memo });
         } catch (error) {
           console.error("사용자", userId, "의 기록 로드 실패:", error);
           set({ pastLogs: [], currentDayMemo: '' });
@@ -83,7 +95,6 @@ export const useLogStore = create<LogSessionState>()(
         const selectedLog = pastLogs.find(log => log.exerciseDate === date);
         const memo = selectedLog?.memo || '';
         
-        console.log('날짜 변경:', date, '메모:', memo);
         set({ selectedDate: date, currentDayMemo: memo });
       },
 
@@ -93,32 +104,86 @@ export const useLogStore = create<LogSessionState>()(
           return;
         }
         
-        const { selectedDate, pastLogs, sessions } = get();
-        
-        if (sessions[selectedDate] && sessions[selectedDate].length > 0) {
-          toast.info("이미 진행 중인 운동이 있습니다.");
+        // 보안 검증: 전달받은 모든 루틴이 현재 사용자 소유인지 확인
+        const invalidRoutines = routines.filter(routine => routine.userId !== userId);
+        if (invalidRoutines.length > 0) {
+          console.error('보안 위험: 다른 사용자의 루틴이 포함됨', invalidRoutines);
+          toast.error('권한이 없는 루틴이 포함되어 있습니다.');
           return;
         }
+        
+        const { selectedDate, pastLogs } = get();
 
         // 해당 날짜의 로그를 사용자 ID로 필터링
         const logsForSelectedDate = pastLogs.filter(log => 
           log.exerciseDate === selectedDate && log.userId === userId
         );
 
-        console.log('사용자', userId, '의', selectedDate, '날짜 세션 시작, 로그:', logsForSelectedDate.length, '개');
+        console.log('사용자', userId, '의', selectedDate, '날짜 세션 시작 (보안 검증 후), 로그:', logsForSelectedDate.length, '개');
 
         const newSessionRoutines = routines.map(routine => {
           const existingLog = logsForSelectedDate.find(log => log.routineIds.includes(routine.id));
-          const isCompleted = existingLog?.completionRate === 100;
+          
+          // 세션 상태가 이미 저장되어 있는지 확인 (localStorage에서)
+          const sessionStorageKey = `session_${userId}_${selectedDate}_${routine.id}`;
+          const savedExerciseStates = localStorage.getItem(sessionStorageKey);
+          
+          let exercises: SessionExercise[];
+          
+          if (savedExerciseStates) {
+            // 저장된 개별 운동 상태가 있으면 복원
+            try {
+              const parsedStates = JSON.parse(savedExerciseStates);
+              exercises = routine.exercises.map((ex: RoutineExercise) => {
+                const savedState = parsedStates.find((state: any) => state.exerciseId === ex.exerciseId);
+                return {
+                  exerciseId: ex.exerciseId,
+                  exerciseName: ex.exerciseName,
+                  isCompleted: savedState ? savedState.isCompleted : false,
+                };
+              });
+              console.log(`${routine.name}: 저장된 운동 상태 복원`);
+            } catch (error) {
+              console.error('저장된 운동 상태 파싱 실패:', error);
+              exercises = routine.exercises.map((ex: RoutineExercise) => ({
+                exerciseId: ex.exerciseId,
+                exerciseName: ex.exerciseName,
+                isCompleted: false,
+              }));
+            }
+          } else if (existingLog && existingLog.completionRate !== undefined) {
+            // 저장된 상태가 없으면 완료율 기반으로 추정
+            exercises = routine.exercises.map((ex: RoutineExercise, index) => {
+              let isCompleted = false;
+              if (existingLog.completionRate === 100) {
+                isCompleted = true;
+              } else if (existingLog.completionRate > 0) {
+                const totalExercises = routine.exercises.length;
+                const completedCount = Math.floor((existingLog.completionRate / 100) * totalExercises);
+                isCompleted = index < completedCount;
+              }
+              return {
+                exerciseId: ex.exerciseId,
+                exerciseName: ex.exerciseName,
+                isCompleted: isCompleted,
+              };
+            });
+            console.log(`${routine.name}: 완료율(${existingLog.completionRate}%) 기반 상태 추정`);
+          } else {
+            // 새로운 세션
+            exercises = routine.exercises.map((ex: RoutineExercise) => ({
+              exerciseId: ex.exerciseId,
+              exerciseName: ex.exerciseName,
+              isCompleted: false,
+            }));
+            console.log(`${routine.name}: 새로운 세션 시작`);
+          }
+          
           return {
             logId: existingLog?.id || null,
             routineId: routine.id,
             routineName: routine.name,
-            exercises: routine.exercises.map((ex: RoutineExercise) => ({
-              exerciseId: ex.exerciseId,
-              exerciseName: ex.exerciseName,
-              isCompleted: isCompleted,
-            })),
+            exercises: exercises,
             completionRate: existingLog?.completionRate || 0,
           };
         });
@@ -131,6 +196,10 @@ export const useLogStore = create<LogSessionState>()(
       addRoutinesToSession: (routinesToAdd) => {
         const { selectedDate, sessions } = get();
         const currentRoutines = sessions[selectedDate] || [];
+        
+        // 보안 참고: 이 함수는 userId를 받지 않으므로 호출부에서 사전 검증 필요
+        console.log('루틴 세션 추가:', routinesToAdd.map(r => r.name).join(', '));
+        
         const newRoutines = routinesToAdd
           .filter(newRoutine => !currentRoutines.some(existing => existing.routineId === newRoutine.id))
           .map(routine => ({
@@ -152,9 +221,9 @@ export const useLogStore = create<LogSessionState>()(
               [selectedDate]: [...currentRoutines, ...newRoutines]
             }
           }));
-          toast.info(`${newRoutines.length} routine(s) added.`);
+          toast.info(`${newRoutines.length}개 루틴이 추가되었습니다.`);
         } else {
-          toast.info("This routine has already been added.");
+          toast.info("이미 추가된 루틴입니다.");
         }
       },
 
@@ -175,6 +244,15 @@ export const useLogStore = create<LogSessionState>()(
         
         const newSession = originalSession.map(r => r.routineId === routineId ? updatedRoutine : r);
         set(state => ({ sessions: { ...state.sessions, [selectedDate]: newSession } }));
+
+        // 개별 운동 상태를 localStorage에 저장
+        const sessionStorageKey = `session_${userId}_${selectedDate}_${routineId}`;
+        const exerciseStates = updatedExercises.map(ex => ({
+          exerciseId: ex.exerciseId,
+          isCompleted: ex.isCompleted
+        }));
+        localStorage.setItem(sessionStorageKey, JSON.stringify(exerciseStates));
+        console.log(`운동 상태 저장: ${targetRoutine.routineName} - 완료율 ${newCompletionRate.toFixed(1)}%`);
 
         try {
           let newLogId = updatedRoutine.logId;
@@ -260,6 +338,17 @@ export const useLogStore = create<LogSessionState>()(
             currentDayMemo: '',
           }));
           
+          // localStorage에서 해당 날짜의 모든 세션 상태 삭제
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(`session_${userId}_${selectedDate}_`)) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach(key => localStorage.removeItem(key));
+          console.log(`${selectedDate} 날짜의 모든 세션 상태 정리:`, keysToRemove.length, '개');
+          
           // 전체 로그 다시 가져오기
           await get().fetchPastLogs(userId);
           toast.success(`${logsToDelete.length}개의 운동 기록이 삭제되었습니다.`);
@@ -292,6 +381,11 @@ export const useLogStore = create<LogSessionState>()(
             sessions: { ...state.sessions, [selectedDate]: updatedSession }
           }));
           
+          // localStorage에서 해당 루틴의 세션 상태 삭제
+          const sessionStorageKey = `session_${userId}_${selectedDate}_${routineId}`;
+          localStorage.removeItem(sessionStorageKey);
+          console.log(`루틴 ${routineId}의 세션 상태 정리 완료`);
+          
           // 전체 로그 다시 가져오기
           await get().fetchPastLogs(userId);
           toast.success("루틴이 삭제되었습니다.");
@@ -308,6 +402,10 @@ export const useLogStore = create<LogSessionState>()(
               sessions: { ...state.sessions, [selectedDate]: updatedSession }
             }));
             
+            // localStorage에서 해당 루틴의 세션 상태 삭제 (에러 케이스에서도)
+            const sessionStorageKey = `session_${userId}_${selectedDate}_${routineId}`;
+            localStorage.removeItem(sessionStorageKey);
+            
             await get().fetchPastLogs(userId);
             toast.success("루틴이 삭제되었습니다.");
           } else {
@@ -318,6 +416,7 @@ export const useLogStore = create<LogSessionState>()(
 
       clearSessionRoutines: () => {
         const { selectedDate } = get();
+        console.log('세션 루틴 초기화:', selectedDate);
         set(state => ({
           sessions: { ...state.sessions, [selectedDate]: [] }
         }));

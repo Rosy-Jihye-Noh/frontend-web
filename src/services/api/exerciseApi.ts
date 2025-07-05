@@ -35,6 +35,20 @@ export const fetchExerciseById = (exerciseId: number): Promise<Exercise> => {
 };
 
 /**
+ * 운동의 전체 좋아요 수를 가져옵니다.
+ * @param exerciseId - 운동 ID
+ */
+export const fetchExerciseLikeCount = (exerciseId: number): Promise<{ likeCount: number }> => {
+  return fetch(`http://localhost:8081/api/exercises/${exerciseId}/with-stats`)
+    .then(res => {
+      if (!res.ok) {
+        throw new Error('좋아요 수를 불러오는 데 실패했습니다.');
+      }
+      return res.json();
+    });
+};
+
+/**
  * 좋아요가 많은 인기 운동을 가져옵니다.
  * @param limit - 가져올 운동 개수 (기본값: 5)
  */

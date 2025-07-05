@@ -39,8 +39,19 @@ const WeeklyReportCard: React.FC = () => {
           
           // 현재 날짜 기준으로 이번주와 이번달 계산
           const now = new Date();
-          const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-          const endOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 6));
+          const today = new Date(now);
+          
+          // 이번주 시작: 금주 월요일 (0=일요일, 1=월요일)
+          const dayOfWeek = now.getDay();
+          const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 일요일인 경우 6일 전이 월요일
+          const startOfWeek = new Date(now);
+          startOfWeek.setDate(now.getDate() - daysFromMonday);
+          startOfWeek.setHours(0, 0, 0, 0);
+          
+          // 이번주 끝: 현재 날짜까지 (오늘 포함)
+          const endOfWeek = new Date(today);
+          endOfWeek.setHours(23, 59, 59, 999);
+          
           const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
           const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
           
@@ -64,14 +75,45 @@ const WeeklyReportCard: React.FC = () => {
         }
 
         // 이번주 통계 계산
-        const thisWeekTotal = weekData.length;
-        const thisWeekCompleted = weekData.filter((log: any) => log.completionRate >= 100).length;
+        // 월요일부터 현재 요일까지의 총 날짜 수 계산
+        const currentDayOfWeek = new Date().getDay();
+        const thisWeekTotal = currentDayOfWeek === 0 ? 7 : currentDayOfWeek; // 일요일이면 7일, 아니면 현재 요일 번호
+        
+        // 날짜별로 그룹화하여 완료 여부 확인
+        const weekLogsByDate = weekData.reduce((acc: Record<string, any[]>, log: any) => {
+          if (!acc[log.exerciseDate]) {
+            acc[log.exerciseDate] = [];
+          }
+          acc[log.exerciseDate].push(log);
+          return acc;
+        }, {});
+        
+        // 모든 로그가 100% 완료인 날짜만 카운트
+        const thisWeekCompleted = Object.values(weekLogsByDate).filter((logsForDate: any[]) => 
+          logsForDate.every(log => log.completionRate === 100)
+        ).length;
+        
         const thisWeekCompletionRate = thisWeekTotal > 0 ? Math.round((thisWeekCompleted / thisWeekTotal) * 100) : 0;
 
         // 이번달 통계 계산
-        const thisMonthTotal = monthData.length;
-        const thisMonthCompleted = monthData.filter((log: any) => log.completionRate >= 100).length;
-        const thisMonthCompletionRate = thisMonthTotal > 0 ? Math.round((thisMonthCompleted / thisMonthTotal) * 100) : 0;
+        // 이번달 1일부터 오늘까지의 총 날짜 수
+        const today = new Date();
+        const thisMonthTotalDays = today.getDate(); // 1일부터 오늘까지의 날짜 수
+        
+        const monthLogsByDate = monthData.reduce((acc: Record<string, any[]>, log: any) => {
+          if (!acc[log.exerciseDate]) {
+            acc[log.exerciseDate] = [];
+          }
+          acc[log.exerciseDate].push(log);
+          return acc;
+        }, {});
+        
+        // 운동 기록이 있는 날짜 중에서 모든 로그가 100% 완료인 날짜만 카운트
+        const thisMonthCompleted = Object.values(monthLogsByDate).filter((logsForDate: any[]) => 
+          logsForDate.every(log => log.completionRate === 100)
+        ).length;
+        
+        const thisMonthCompletionRate = thisMonthTotalDays > 0 ? Math.round((thisMonthCompleted / thisMonthTotalDays) * 100) : 0;
 
         setStats({
           thisWeek: {
@@ -80,7 +122,7 @@ const WeeklyReportCard: React.FC = () => {
             completionRate: thisWeekCompletionRate
           },
           thisMonth: {
-            totalWorkouts: thisMonthTotal,
+            totalWorkouts: thisMonthTotalDays,
             completedWorkouts: thisMonthCompleted,
             completionRate: thisMonthCompletionRate
           }
@@ -137,12 +179,13 @@ const WeeklyReportCard: React.FC = () => {
           </div>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats?.thisWeek.totalWorkouts || 0}</div>
-              <div className="text-gray-600">총 운동</div>
+              <div className="text-2xl font-bold text-gray-600">{stats?.thisWeek.totalWorkouts || 0}</div>
+              <div className="text-gray-600">이번주 총 일수</div>
+              <div className="text-xs text-gray-500">(월~오늘)</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{stats?.thisWeek.completedWorkouts || 0}</div>
-              <div className="text-gray-600">완료한 운동</div>
+              <div className="text-2xl font-bold text-blue-600">{stats?.thisWeek.completedWorkouts || 0}</div>
+              <div className="text-blue-600">완료한 날짜</div>
             </div>
           </div>
         </div>
@@ -160,12 +203,13 @@ const WeeklyReportCard: React.FC = () => {
           </div>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{stats?.thisMonth.totalWorkouts || 0}</div>
-              <div className="text-gray-600">총 운동</div>
+              <div className="text-2xl font-bold text-gray-600">{stats?.thisMonth.totalWorkouts || 0}</div>
+              <div className="text-gray-600">이번달 총 일수</div>
+              <div className="text-xs text-gray-500">(1일~오늘)</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats?.thisMonth.completedWorkouts || 0}</div>
-              <div className="text-gray-600">완료한 운동</div>
+              <div className="text-2xl font-bold text-green-600">{stats?.thisMonth.completedWorkouts || 0}</div>
+              <div className="text-green-600">완료한 날짜</div>
             </div>
           </div>
         </div>

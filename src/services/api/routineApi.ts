@@ -103,5 +103,21 @@ export const getRoutinesByUser = async (userId: number): Promise<Routine[]> => {
   if (!response.ok) {
     throw new Error('루틴 목록을 불러오는 데 실패했습니다.');
   }
-  return response.json();
+  
+  const routines = await response.json();
+  
+  // 클라이언트 사이드 보안 검증: 모든 루틴이 요청한 사용자 소유인지 확인
+  const validRoutines = routines.filter((routine: Routine) => {
+    if (routine.userId !== userId) {
+      console.error(`보안 위험: API에서 다른 사용자의 루틴 반환됨 - routineId=${routine.id}, routineUserId=${routine.userId}, requestedUserId=${userId}`);
+      return false;
+    }
+    return true;
+  });
+  
+  if (validRoutines.length !== routines.length) {
+    console.error(`보안 검증 실패: ${routines.length - validRoutines.length}개의 잘못된 루틴 필터링됨`);
+  }
+  
+  return validRoutines;
 };

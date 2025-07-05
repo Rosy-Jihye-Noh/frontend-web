@@ -42,6 +42,7 @@ export interface Exercise {
   bodyPart: string | null;
   thumbnailUrl: string | null;
   liked?: boolean;
+  likeCount?: number;
 }
 
 export interface AnalysisHistoryItem {

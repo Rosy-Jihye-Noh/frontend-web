@@ -3,13 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import type { Exercise, Routine } from '@/types/index';
 import { useUserStore } from '@/store/userStore';
 // ✨ 1. exerciseApi와 routineApi에서 필요한 함수들을 각각 import 합니다.
-import { fetchExerciseById } from '@/services/api/exerciseApi';
+import { fetchExerciseById, fetchUserLikes, addLikeApi, removeLikeApi, fetchExerciseLikeCount } from '@/services/api/exerciseApi';
 import { fetchUserRoutines, addExerciseToRoutineApi } from '@/services/api/exerciseApi';
 import Header from '@/components/common/Header';
 import AddToRoutineModal from '@/components/exercise/AddToRoutineModal';
 import { Badge } from "@/components/ui/badge"
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, PlusCircle } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Heart } from 'lucide-react';
 
 const DetailItem = ({ label, value }: { label: string; value?: string | null }) => (
   <div className="flex items-center">
@@ -29,6 +29,9 @@ const ExerciseDetailPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
 
   useEffect(() => {
     if (!exerciseId) {
@@ -41,11 +44,29 @@ const ExerciseDetailPage: React.FC = () => {
       try {
         const exerciseData = await fetchExerciseById(Number(exerciseId));
         setExercise(exerciseData);
+        
+        // 서버에서 실제 좋아요 수 가져오기
+        try {
+          const likeCountData = await fetchExerciseLikeCount(Number(exerciseId));
+          console.log('API 응답 전체:', likeCountData);
+          const finalLikeCount = likeCountData.likeCount ?? 0; // null이나 undefined면 0
+          setLikeCount(finalLikeCount);
+          console.log('좋아요 수 설정:', finalLikeCount);
+        } catch (likeError) {
+          console.error('좋아요 수 로드 실패:', likeError);
+          setLikeCount(0);
+        }
+        
         if (user?.id) {
           // ✨ 2. 올바른 함수(fetchUserRoutines)를 호출하여 사용자의 루틴 목록을 가져옵니다.
           const routinesData = await fetchUserRoutines(user.id);
           // ✨ 3. 가져온 루틴 목록을 상태에 올바르게 설정합니다.
           setUserRoutines(routinesData);
+          
+          // 사용자의 좋아요 상태 확인
+          const userLikes = await fetchUserLikes(user.id);
+          const isCurrentExerciseLiked = userLikes.some((like: any) => like.exerciseId === Number(exerciseId));
+          setIsLiked(isCurrentExerciseLiked);
         }
       } catch (err) {
         setError('데이터를 불러오는 데 실패했습니다.');
@@ -76,6 +97,40 @@ const ExerciseDetailPage: React.FC = () => {
     }
   };
 
+  const handleLikeToggle = async () => {
+    if (!user || !exercise) return;
+    
+    setIsLikeLoading(true);
+    try {
+      if (isLiked) {
+        await removeLikeApi(user.id, exercise.id);
+        setIsLiked(false);
+        setNotification("좋아요를 취소했습니다.");
+      } else {
+        await addLikeApi(user.id, exercise.id);
+        setIsLiked(true);
+        setNotification("좋아요를 추가했습니다.");
+      }
+      
+      // 좋아요 처리 후 최신 좋아요 수를 서버에서 다시 가져오기
+      try {
+        const updatedLikeCount = await fetchExerciseLikeCount(exercise.id);
+        console.log('업데이트된 API 응답:', updatedLikeCount);
+        const finalLikeCount = updatedLikeCount.likeCount ?? 0; // null이나 undefined면 0
+        setLikeCount(finalLikeCount);
+        console.log('업데이트된 좋아요 수 설정:', finalLikeCount);
+      } catch (countError) {
+        console.error('좋아요 수 업데이트 실패:', countError);
+      }
+      
+    } catch (error) {
+      console.error('좋아요 처리 실패:', error);
+      setNotification("좋아요 처리에 실패했습니다.");
+    } finally {
+      setIsLikeLoading(false);
+    }
+  };
+
   if (isLoading) return <div className="flex justify-center items-center h-screen">로딩 중...</div>;
   if (error) return <div className="flex justify-center items-center h-screen">에러: {error}</div>;
   if (!exercise) return <div className="flex justify-center items-center h-screen">운동 정보를 찾을 수 없습니다.</div>;
@@ -101,7 +156,29 @@ const ExerciseDetailPage: React.FC = () => {
           <div className="flex flex-col space-y-6">
             <div>
               <p className="text-sm font-semibold text-blue-600">{exercise.category}</p>
-              <h1 className="text-4xl font-bold mt-1">{exercise.name}</h1>
+              <div className="flex items-center justify-between mt-1">
+                <h1 className="text-4xl font-bold">{exercise.name}</h1>
+                {user && (
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant={isLiked ? "default" : "outline"}
+                      size="sm"
+                      onClick={handleLikeToggle}
+                      disabled={isLikeLoading}
+                      className={`flex items-center space-x-1 ${
+                        isLiked 
+                          ? 'bg-red-500 hover:bg-red-600 text-white' 
+                          : 'border-red-300 text-red-500 hover:bg-red-50'
+                      }`}
+                    >
+                      <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
+                      <span className="min-w-[20px] text-center">
+                        {isLikeLoading ? '...' : likeCount}
+                      </span>
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
             <dl className="space-y-3">
               <DetailItem label="운동 부위" value={exercise.bodyPart} />

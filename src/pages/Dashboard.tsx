@@ -31,6 +31,7 @@ const Dashboard: React.FC = () => {
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [communityHotPosts, setCommunityHotPosts] = useState<any[]>([]);
+  const [completedRoutineIds, setCompletedRoutineIds] = useState<number[]>([]);
 
   useEffect(() => {
     if (!user || !user.id) {
@@ -92,6 +93,33 @@ const Dashboard: React.FC = () => {
       .catch(console.error);
 
   }, [user, navigate]);
+
+  // 오늘 날짜가 바뀔 때 완료된 루틴 초기화
+  useEffect(() => {
+    const today = new Date().toDateString();
+    const savedDate = localStorage.getItem('lastRoutineDate');
+    
+    if (savedDate !== today) {
+      setCompletedRoutineIds([]);
+      localStorage.setItem('lastRoutineDate', today);
+      console.log('새로운 날짜로 루틴 완료 상태 초기화');
+    } else {
+      // 같은 날짜면 저장된 완료 상태 복원
+      const savedCompleted = localStorage.getItem('completedRoutineIds');
+      if (savedCompleted) {
+        try {
+          setCompletedRoutineIds(JSON.parse(savedCompleted));
+        } catch (error) {
+          console.error('완료된 루틴 데이터 복원 실패:', error);
+        }
+      }
+    }
+  }, []);
+
+  // 완료된 루틴 상태를 localStorage에 저장
+  useEffect(() => {
+    localStorage.setItem('completedRoutineIds', JSON.stringify(completedRoutineIds));
+  }, [completedRoutineIds]);
 
   const handleRoutineSelection = (selectedRoutines: Routine[]) => {
     // 로그인한 사용자 확인

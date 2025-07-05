@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useLogStore } from '@/store/logStore';
 import { useUserStore } from '@/store/userStore';
 import { useDashboardStore } from '@/store/dashboardStore';
 import * as routineApi from '@/services/api/routineApi';
 import type { Routine } from '@/types/index';
-import { PlusCircle, CheckCircle2, Dumbbell, CalendarPlus, Trash2, Save, X } from 'lucide-react';
+import { PlusCircle, CheckCircle2, Dumbbell, CalendarPlus, Trash2, Save } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 const DailyLogComponent = () => {
@@ -19,22 +19,13 @@ const DailyLogComponent = () => {
     selectedDate, 
     currentDayMemo,
     sessions,
-    startOrLoadSession, 
     toggleExerciseCheck, 
     addRoutinesToSession,
     updateMemo,
     saveMemo,
     deleteCurrentDayLogs,
-    deleteRoutineFromSession,
-    fetchPastLogs
+    deleteRoutineFromSession
   } = useLogStore();
-  
-  // sessions 실시간 업데이트
-  const sessionRoutines = sessions[selectedDate] || [];
-
-  useEffect(() => {
-    console.log('SessionRoutines 변화:', sessionRoutines.length, selectedDate);
-  }, [sessionRoutines, selectedDate]);
 
   const [userRoutines, setUserRoutines] = useState<Routine[]>([]);
   const [selectedRoutines, setSelectedRoutines] = useState<Routine[]>([]);
@@ -44,41 +35,75 @@ const DailyLogComponent = () => {
   const [isSavingMemo, setIsSavingMemo] = useState(false);
   const [lastSavedMemo, setLastSavedMemo] = useState(currentDayMemo);
 
+  // 해당 날짜의 모든 로그가 100% 완료인지 확인
+  const isDateFullyCompleted = () => {
+    if (!user?.id) return false;
+    
+    // pastLogs에서 해당 사용자의 선택된 날짜 로그들 가져오기
+    const allUserLogs = useLogStore.getState().pastLogs.filter(log => 
+      log.userId === user.id && log.exerciseDate === selectedDate
+    );
+    
+    // 로그가 없으면 완료 아님
+    if (allUserLogs.length === 0) return false;
+    
+    // 모든 로그가 100% 완료인지 확인
+    return allUserLogs.every(log => log.completionRate === 100);
+  };
+
+  // sessions 실시간 업데이트 - 현재 사용자의 세션만 필터링
+  const sessionRoutines = user?.id ? (sessions[selectedDate] || []).filter(routine => {
+    // 세션의 루틴이 현재 로그인한 사용자의 루틴인지 확인
+    const ownerRoutine = userRoutines.find(r => r.id === routine.routineId);
+    const isValid = ownerRoutine && ownerRoutine.userId === user.id;
+    if (!isValid && routine.routineId) {
+      console.warn(`다른 사용자의 세션 루틴 필터링됨: routineId=${routine.routineId}, currentUserId=${user.id}`);
+    }
+    return isValid;
+  }) : [];
+
   // 메모 텍스트 동기화
   useEffect(() => {
     setMemoText(currentDayMemo);
     setLastSavedMemo(currentDayMemo);
   }, [currentDayMemo]);
 
-  // 실시간 상태 동기화를 위한 useEffect 추가
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const currentState = useLogStore.getState();
-      const currentSessionRoutines = currentState.sessions[selectedDate] || [];
-      const currentMemo = currentState.currentDayMemo;
-      
-      if (JSON.stringify(sessionRoutines) !== JSON.stringify(currentSessionRoutines)) {
-        console.log('세션 상태 동기화');
-      }
-      
-      if (currentMemo !== memoText && currentMemo !== '') {
-        setMemoText(currentMemo);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [selectedDate, sessionRoutines, memoText]);
-
   useEffect(() => {
     if (user?.id) {
-      // 로그인한 사용자의 과거 로그를 가져와서 메모도 함께 로드
-      console.log('사용자', user.id, '의 운동 기록 로드 시작');
-      fetchPastLogs(user.id);
+      // 로그인한 사용자의 과거 로그를 가져와서 메모도 함께 로드 (중복 호출 방지)
+      useLogStore.getState().fetchPastLogs(user.id);
+      
       routineApi.getRoutinesByUser(user.id)
         .then(routines => {
-          // 해당 사용자의 루틴만 필터링
-          const userOwnedRoutines = routines.filter(routine => routine.userId === user.id);
-          console.log('로그인한 사용자의 루틴 로드:', userOwnedRoutines.length, '개');
+          // 서버 응답을 강력하게 검증: 사용자 ID가 일치하는 루틴만 허용
+          const userOwnedRoutines = routines.filter(routine => {
+            const isValidRoutine = routine.userId === user.id;
+            if (!isValidRoutine) {
+              console.warn(`잘못된 루틴 필터링됨: routineId=${routine.id}, routineUserId=${routine.userId}, currentUserId=${user.id}`);
+            }
+            return isValidRoutine;
+          });
+          
+          // 보안 검증: 모든 루틴이 현재 사용자 소유인지 재확인
+          const hasInvalidRoutines = userOwnedRoutines.some(routine => routine.userId !== user.id);
+          if (hasInvalidRoutines) {
+            console.error('보안 위험: 다른 사용자의 루틴이 포함됨');
+            setUserRoutines([]);
+            return;
+          }
+          
+          // 현재 로그스토어에서 중복 제거된 로그 정보도 함께 표시
+          const currentLogs = useLogStore.getState().pastLogs.filter(log => log.userId === user.id);
+          const uniqueLogsByDate = new Map<string, any>();
+          currentLogs.forEach(log => {
+            const existingLog = uniqueLogsByDate.get(log.exerciseDate);
+            if (!existingLog || new Date(log.createdAt || log.exerciseDate) > new Date(existingLog.createdAt || existingLog.exerciseDate)) {
+              uniqueLogsByDate.set(log.exerciseDate, log);
+            }
+          });
+          const uniqueLogsCount = uniqueLogsByDate.size;
+          
+          console.log(`사용자 ${user.id}: 검증된 루틴 ${userOwnedRoutines.length}개, 운동기록 ${uniqueLogsCount}개 (중복제거 후)`);
           setUserRoutines(userOwnedRoutines);
         })
         .catch(error => {
@@ -90,48 +115,97 @@ const DailyLogComponent = () => {
       console.log('로그인되지 않은 상태, 데이터 초기화');
       setUserRoutines([]);
     }
-  }, [user, fetchPastLogs]);
+  }, [user?.id]); // fetchPastLogs 의존성 제거
 
   // 날짜가 변경될 때마다 로그인한 사용자의 해당 날짜 세션 정보 다시 로드
   useEffect(() => {
     if (user?.id && selectedDate) {
-      const sessionExists = useLogStore.getState().sessions[selectedDate];
-      if (!sessionExists || sessionExists.length === 0) {
-        // 해당 날짜의 기존 로그가 있는지 확인하고 세션 복원 (로그인한 사용자만)
-        const pastLog = useLogStore.getState().pastLogs.find(log => 
-          log.exerciseDate === selectedDate && log.userId === user.id
-        );
+      // 더 안전한 방법: 실제 사용자 루틴을 확인한 후 세션 복원 여부 결정
+      routineApi.getRoutinesByUser(user.id).then(allUserRoutines => {
+        // 현재 사용자의 세션만 확인
+        const allSessions = useLogStore.getState().sessions[selectedDate] || [];
+        const userSessions = allSessions.filter(session => {
+          return allUserRoutines.some(routine => 
+            routine.id === session.routineId && routine.userId === user.id
+          );
+        });
+        
+        if (userSessions.length === 0) {
+          // 현재 사용자의 세션이 없는 경우에만 세션 복원 시도
+          const allUserLogs = useLogStore.getState().pastLogs.filter(log => log.userId === user.id);
+        
+        // 중복 제거: 동일 날짜의 로그 중 최신 것만 선택
+        const uniqueLogsByDate = new Map<string, any>();
+        allUserLogs.forEach(log => {
+          const existingLog = uniqueLogsByDate.get(log.exerciseDate);
+          if (!existingLog || new Date(log.createdAt || log.exerciseDate) > new Date(existingLog.createdAt || existingLog.exerciseDate)) {
+            uniqueLogsByDate.set(log.exerciseDate, log);
+          }
+        });
+        
+        const pastLog = uniqueLogsByDate.get(selectedDate);
+        
         if (pastLog && pastLog.routineIds && pastLog.routineIds.length > 0) {
-          // 기존 로그에서 루틴 정보를 가져와서 세션 복원 (사용자 소유 루틴만)
-          routineApi.getRoutinesByUser(user.id).then(allRoutines => {
-            const userOwnedRoutines = allRoutines.filter(routine => routine.userId === user.id);
-            const routinesForThisLog = userOwnedRoutines.filter(routine => 
-              pastLog.routineIds.includes(routine.id)
-            );
-            if (routinesForThisLog.length > 0) {
-              console.log('사용자', user.id, '의 세션 복원:', routinesForThisLog.map(r => r.name));
-              startOrLoadSession(user.id, routinesForThisLog);
+          // 보안 검증: 서버에서 받은 모든 루틴이 현재 사용자 소유인지 확인
+          const userOwnedRoutines = allUserRoutines.filter(routine => {
+            const isValid = routine.userId === user.id;
+            if (!isValid) {
+              console.error(`보안 위험: 다른 사용자의 루틴 감지 - routineId=${routine.id}, routineUserId=${routine.userId}, currentUserId=${user.id}`);
             }
+            return isValid;
           });
+          
+          // 보안 검증 실패시 세션 복원 중단
+          if (userOwnedRoutines.length !== allUserRoutines.length) {
+            console.error('보안 검증 실패: 세션 복원 중단');
+            return;
+          }
+          
+          // 로그에 포함된 루틴 ID 중에서 현재 사용자 소유 루틴만 필터링
+          const routinesForThisLog = userOwnedRoutines.filter(routine => 
+            pastLog.routineIds.includes(routine.id)
+          );
+          
+          if (routinesForThisLog.length > 0) {
+            console.log(`${selectedDate} 세션 복원 (보안 검증 후): ${routinesForThisLog.map(r => r.name).join(', ')}`);
+            useLogStore.getState().startOrLoadSession(user.id, routinesForThisLog);
+          } else {
+            console.log(`${selectedDate}: 복원할 루틴이 없음 (로그에 기록된 루틴: ${pastLog.routineIds.join(', ')})`);
+          }
+        } else {
+          console.log(`${selectedDate}: 복원할 과거 로그가 없음`);
         }
+      } else {
+        console.log(`${selectedDate}: 현재 사용자의 세션 이미 존재 (${userSessions.length}개)`);
       }
+      }).catch(error => {
+        console.error('루틴 데이터 로드 실패로 세션 복원 중단:', error);
+      });
     }
-  }, [selectedDate, user, startOrLoadSession]);
+  }, [selectedDate, user?.id]); // startOrLoadSession 의존성 제거
 
-  // 대시보드에서 선택한 루틴이 있고, 오늘 날짜이고, 아직 세션이 없으면 자동 시작
+  // 대시보드에서 선택한 루틴이 있고, 오늘 날짜이고, 아직 현재 사용자의 세션이 없으면 자동 시작
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     if (
       user?.id && 
       todaySelectedRoutines.length > 0 && 
       selectedDate === today && 
-      sessionRoutines.length === 0
+      sessionRoutines.length === 0 // 이미 필터링된 사용자 세션이므로 안전
     ) {
-      startOrLoadSession(user.id, todaySelectedRoutines);
+      console.log('대시보드에서 자동 세션 시작:', todaySelectedRoutines.map(r => r.name));
+      useLogStore.getState().startOrLoadSession(user.id, todaySelectedRoutines);
     }
-  }, [user, todaySelectedRoutines, selectedDate, sessionRoutines.length, startOrLoadSession]);
+  }, [user?.id, todaySelectedRoutines, selectedDate]); // sessionRoutines는 실시간 계산되므로 의존성에서 제거
 
   const handleRoutineSelect = (routine: Routine) => {
+    // 보안 검증: 선택하려는 루틴이 현재 사용자의 소유인지 확인
+    if (!user?.id || routine.userId !== user.id) {
+      console.error(`보안 위험: 다른 사용자의 루틴 선택 시도 - routineId=${routine.id}, routineUserId=${routine.userId}, currentUserId=${user?.id}`);
+      alert('권한이 없습니다.');
+      return;
+    }
+    
     setSelectedRoutines(prev => 
       prev.some(r => r.id === routine.id) ? prev.filter(r => r.id !== routine.id) : [...prev, routine]
     );
@@ -139,7 +213,16 @@ const DailyLogComponent = () => {
 
   const handleSessionStart = () => {
     if (user && selectedRoutines.length > 0) {
-      startOrLoadSession(user.id, selectedRoutines);
+      // 보안 검증: 선택된 모든 루틴이 현재 사용자 소유인지 재확인
+      const hasInvalidRoutines = selectedRoutines.some(routine => routine.userId !== user.id);
+      if (hasInvalidRoutines) {
+        console.error('보안 위험: 다른 사용자의 루틴으로 세션 시작 시도');
+        alert('권한이 없는 루틴이 포함되어 있습니다.');
+        setSelectedRoutines([]);
+        return;
+      }
+      
+      useLogStore.getState().startOrLoadSession(user.id, selectedRoutines);
       setIsDialogOpen(false);
       setSelectedRoutines([]);
     }
@@ -147,6 +230,21 @@ const DailyLogComponent = () => {
 
   const handleAddRoutines = () => {
     if (selectedRoutines.length > 0) {
+      // 보안 검증: 추가하려는 모든 루틴이 현재 사용자 소유인지 재확인
+      if (!user?.id) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+      
+      const hasInvalidRoutines = selectedRoutines.some(routine => routine.userId !== user.id);
+      if (hasInvalidRoutines) {
+        console.error('보안 위험: 다른 사용자의 루틴 추가 시도');
+        alert('권한이 없는 루틴이 포함되어 있습니다.');
+        setSelectedRoutines([]);
+        return;
+      }
+      
+      console.log('루틴 추가 (보안 검증 후):', selectedRoutines.map(r => r.name));
       addRoutinesToSession(selectedRoutines);
       setIsDialogOpen(false);
       setSelectedRoutines([]);
@@ -174,6 +272,13 @@ const DailyLogComponent = () => {
 
   const handleDeleteLogs = async () => {
     if (!user?.id) return;
+    
+    // 실제 삭제할 로그가 있는지 다시 한번 확인
+    if (!hasActualLogs()) {
+      alert('삭제할 운동 기록이 없습니다.');
+      setIsDeleteDialogOpen(false);
+      return;
+    }
     
     try {
       await deleteCurrentDayLogs(user.id);
@@ -203,6 +308,14 @@ const DailyLogComponent = () => {
       return;
     }
 
+    // 보안 검증: 삭제하려는 루틴이 현재 사용자 소유인지 확인
+    const userOwnedRoutine = userRoutines.find(r => r.id === routineId);
+    if (!userOwnedRoutine || userOwnedRoutine.userId !== user.id) {
+      console.error(`보안 위험: 다른 사용자의 루틴 삭제 시도 - routineId=${routineId}, userId=${user.id}`);
+      alert('권한이 없습니다.');
+      return;
+    }
+
     const confirmMessage = targetRoutine.logId 
       ? '이 루틴과 관련된 운동 기록이 영구적으로 삭제됩니다. 계속하시겠습니까?'
       : '이 루틴을 오늘의 운동에서 제거하시겠습니까?';
@@ -212,7 +325,7 @@ const DailyLogComponent = () => {
     }
     
     try {
-      console.log('루틴 삭제 시도:', { routineId, logId: targetRoutine.logId, date: selectedDate });
+      console.log('루틴 삭제 시도 (보안 검증 후):', { routineId, logId: targetRoutine.logId, date: selectedDate, userId: user.id });
       await deleteRoutineFromSession(user.id, routineId);
     } catch (error) {
       console.error('루틴 삭제 실패:', error);
@@ -221,6 +334,73 @@ const DailyLogComponent = () => {
   };
 
   const dateTitle = new Date(selectedDate).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
+
+  // 해당 날짜에 실제 저장된 로그가 있는지 확인 (unique 로직 적용)
+  const hasActualLogs = () => {
+    if (!user?.id) return false;
+    
+    // pastLogs에서 해당 사용자의 모든 로그 가져오기
+    const allUserLogs = useLogStore.getState().pastLogs.filter(log => log.userId === user.id);
+    
+    // 중복 제거: 동일 날짜의 로그 중 최신 것만 선택 (검증된 루틴과 동일한 로직)
+    const uniqueLogsByDate = new Map<string, any>();
+    allUserLogs.forEach(log => {
+      const existingLog = uniqueLogsByDate.get(log.exerciseDate);
+      if (!existingLog || new Date(log.createdAt || log.exerciseDate) > new Date(existingLog.createdAt || existingLog.exerciseDate)) {
+        uniqueLogsByDate.set(log.exerciseDate, log);
+      }
+    });
+    
+    // 해당 날짜의 unique한 로그가 있는지 확인
+    const uniqueLogForDate = uniqueLogsByDate.get(selectedDate);
+    
+    // 세션에서 실제 logId가 있는 루틴이 있는지 확인
+    const hasSessionWithLogId = sessionRoutines.some(routine => 
+      routine.logId && routine.logId > 0
+    );
+    
+    return !!uniqueLogForDate || hasSessionWithLogId;
+  };
+
+  // 사용자 변경 감지 시 안전하게 세션 초기화
+  useEffect(() => {
+    const currentUserId = user?.id;
+    const storedUserId = sessionStorage.getItem('lastLoggedUserId');
+    
+    if (currentUserId) {
+      // 새로운 사용자 로그인 또는 사용자 변경 감지
+      if (storedUserId && storedUserId !== currentUserId.toString()) {
+        console.log('사용자 변경 감지, 세션 초기화:', storedUserId, '->', currentUserId);
+        // 이전 사용자의 세션 데이터 정리
+        const { sessions, selectedDate } = useLogStore.getState();
+        if (sessions[selectedDate]?.length > 0) {
+          useLogStore.getState().clearSessionRoutines();
+        }
+        
+        // 이전 사용자의 localStorage 세션 상태 정리
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith(`session_${storedUserId}_`)) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        console.log(`이전 사용자(${storedUserId})의 세션 상태 정리:`, keysToRemove.length, '개');
+      }
+      sessionStorage.setItem('lastLoggedUserId', currentUserId.toString());
+    } else {
+      // 사용자 로그아웃
+      if (storedUserId) {
+        console.log('사용자 로그아웃 감지, 세션 초기화');
+        sessionStorage.removeItem('lastLoggedUserId');
+        const { sessions, selectedDate } = useLogStore.getState();
+        if (sessions[selectedDate]?.length > 0) {
+          useLogStore.getState().clearSessionRoutines();
+        }
+      }
+    }
+  }, [user?.id]);
 
   return (
     <div className="space-y-4 w-full">
@@ -231,8 +411,15 @@ const DailyLogComponent = () => {
               <Dumbbell className="h-5 w-5 text-blue-600" />
             </div>
             <span className="text-gray-800">{dateTitle} 운동</span>
+            {/* 완료 뱃지 표시 */}
+            {isDateFullyCompleted() && (
+              <div className="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full flex items-center gap-1">
+                <CheckCircle2 className="h-4 w-4" />
+                완료
+              </div>
+            )}
           </CardTitle>
-          {sessionRoutines.length > 0 && (
+          {(sessionRoutines.length > 0 && hasActualLogs()) && (
             <Button
               variant="outline"
               size="sm"
@@ -267,6 +454,9 @@ const DailyLogComponent = () => {
                       </div>
                       수행할 루틴을 선택하세요
                     </DialogTitle>
+                    <DialogDescription>
+                      오늘 수행할 운동 루틴을 선택해서 운동을 시작하세요.
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-2 py-4 max-h-[50vh] overflow-y-auto">
                     {userRoutines.map(routine => (
@@ -334,7 +524,14 @@ const DailyLogComponent = () => {
                           checked={ex.isCompleted} 
                           onCheckedChange={(checked) => {
                             if (user) {
-                              console.log('체크박스 변경:', routine.routineId, ex.exerciseId, checked);
+                              // 보안 검증: 현재 사용자가 이 루틴의 소유자인지 확인
+                              const ownerRoutine = userRoutines.find(r => r.id === routine.routineId);
+                              if (!ownerRoutine || ownerRoutine.userId !== user.id) {
+                                console.error(`보안 위험: 다른 사용자의 운동 기록 수정 시도 - routineId=${routine.routineId}, userId=${user.id}`);
+                                alert('권한이 없습니다.');
+                                return;
+                              }
+                              console.log('체크박스 변경 (보안 검증 후):', routine.routineId, ex.exerciseId, checked);
                               toggleExerciseCheck(user.id, routine.routineId, ex.exerciseId);
                             }
                           }}
@@ -364,6 +561,9 @@ const DailyLogComponent = () => {
                       </div>
                       추가할 루틴을 선택하세요
                     </DialogTitle>
+                    <DialogDescription>
+                      현재 운동에 추가할 루틴을 선택하세요.
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-2 py-4 max-h-[50vh] overflow-y-auto">
                     {userRoutines
@@ -460,6 +660,9 @@ const DailyLogComponent = () => {
             <DialogTitle className="text-gray-800">
               운동 기록 삭제
             </DialogTitle>
+            <DialogDescription>
+              선택한 날짜의 모든 운동 기록과 메모를 영구적으로 삭제합니다.
+            </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
