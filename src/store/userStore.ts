@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { User } from '@/types/auth';
+import type { User } from '@/types/index';
 
 export type Role = 'MEMBER' | 'ADMIN';
 
@@ -17,6 +17,7 @@ export interface LoginResponse {
 interface UserStore {
   user: User | null;
   setUser: (userData: User) => void;
+  updateUser: (updates: Partial<User>) => void;
   clearUser: () => void;
   loginUser: (loginResponse: LoginResponse) => void;
 }
@@ -26,6 +27,9 @@ export const useUserStore = create<UserStore>()(
     (set) => ({
       user: null,
       setUser: (userData) => set({ user: userData }),
+      updateUser: (updates) => set((state) => ({
+        user: state.user ? { ...state.user, ...updates } : null
+      })),
       clearUser: () => {
         console.log('사용자 로그아웃, 모든 데이터 정리');
         localStorage.removeItem('jwt_token');

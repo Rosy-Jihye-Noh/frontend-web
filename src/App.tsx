@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -20,9 +21,11 @@ import PhotoUploadLoading from './pages/PhotoUploadLoading';
 import CommunityPage from './pages/CommunityPage';
 import CommunityDetailPage from './pages/CommunityDetailPage';
 import CommunityWritePage from './pages/CommunityWritePage';
+import LogPage from './pages/log';
 
 const App = () => {
   return (
+    <>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
@@ -35,6 +38,7 @@ const App = () => {
         <Route path="/mypage/edit" element={<EditProfilePage />} />
         <Route path="/analysis-result/:historyId" element={<AnalysisResultPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/log" element={<LogPage />} />
         <Route path="/photoupload" element={<PhotoUpload />} />
         <Route path="/exercises" element={<ExerciseListPage />} />
         <Route path="/routines/new" element={<RoutineCreatePage />} />
@@ -46,8 +50,16 @@ const App = () => {
         <Route path="/community/:id" element={<CommunityDetailPage />} />
         <Route path="/community/write" element={<CommunityWritePage />} />
         <Route path="/community/edit/:id" element={<CommunityWritePage />} />
-
       </Routes>
+
+      {/* Toast 알림을 위한 Toaster 컴포넌트 */}
+      <Toaster 
+        position="top-center" 
+        richColors 
+        closeButton 
+        expand={true}
+      />
+    </>
   )
 }
 

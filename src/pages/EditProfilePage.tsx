@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 const EditProfilePage: React.FC = () => {
     const navigate = useNavigate();
     const user = useUserStore((state) => state.user);
+    const updateUser = useUserStore((state) => state.updateUser);
     const hasHydrated = useUserStore.persist.hasHydrated();
 
     const [isSaving, setIsSaving] = useState(false);
@@ -60,8 +61,26 @@ const EditProfilePage: React.FC = () => {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
+            
+            // 파일 크기 체크 (5MB 제한)
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            if (file.size > maxSize) {
+                toast.error('프로필 이미지는 5MB 이하여야 합니다.');
+                e.target.value = ''; // 입력 초기화
+                return;
+            }
+            
+            // 파일 타입 체크
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+            if (!allowedTypes.includes(file.type)) {
+                toast.error('JPG, PNG, GIF 형식의 이미지만 업로드 가능합니다.');
+                e.target.value = ''; // 입력 초기화
+                return;
+            }
+            
             setProfileImage(file);
             setPreviewImage(URL.createObjectURL(file));
+            toast.success('이미지가 선택되었습니다.');
         }
     };
 
@@ -74,16 +93,57 @@ const EditProfilePage: React.FC = () => {
         formData.append('userDTO', new Blob([JSON.stringify(userDTO)], { type: 'application/json' }));
 
         if (profileImage) {
+            // 파일 크기 체크 (5MB 제한)
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            if (profileImage.size > maxSize) {
+                toast.error('프로필 이미지는 5MB 이하여야 합니다.');
+                setIsSaving(false);
+                return;
+            }
             formData.append('profileImage', profileImage);
         }
 
         try {
-            await fetch(`http://localhost:8081/api/users/${user.id}`, { method: 'PUT', body: formData });
-            toast.success('프로필이 변경되었습니다');
-            navigate('/mypage');
+            const response = await fetch(`http://localhost:8081/api/users/${user.id}`, { 
+                method: 'PUT', 
+                body: formData 
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                
+                // 파일 크기 초과 에러 체크
+                if (errorText.includes('MaxUploadSizeExceededException') || 
+                    errorText.includes('Maximum upload size exceeded') ||
+                    response.status === 413) {
+                    toast.error('업로드 파일 크기가 너무 큽니다. 5MB 이하의 이미지를 선택해주세요.');
+                    return;
+                }
+                
+                throw new Error('프로필 수정에 실패했습니다.');
+            }
+            
+            // 저장 성공 시 userStore 업데이트
+            updateUser({
+                name,
+                goal,
+                profileImageUrl: previewImage || user.profileImageUrl
+            });
+            
+            // 성공 메시지를 더 구체적으로 표시
+            toast.success('✅ 프로필이 성공적으로 변경되었습니다!', {
+                description: '변경사항이 저장되어 다른 페이지에서도 반영됩니다.',
+                duration: 4000,
+            });
+            
+            // 잠시 후 페이지 이동
+            setTimeout(() => {
+                navigate('/mypage');
+            }, 1500);
+            
         } catch (error) {
-            console.error(error);
-            toast.error('저장에 실패했습니다');
+            console.error('프로필 저장 실패:', error);
+            toast.error('저장에 실패했습니다. 다시 시도해주세요.');
         } finally {
             setIsSaving(false);
         }

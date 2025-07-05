@@ -18,10 +18,20 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
       const response = await fetch(`http://localhost:8081/api/users/${userId}/notifications`);
       if (response.ok) {
         const data = await response.json();
-        setNotifications(data);
+        // Ensure data is an array before setting notifications
+        if (Array.isArray(data)) {
+          setNotifications(data);
+        } else {
+          console.warn('API returned non-array data:', data);
+          setNotifications([]);
+        }
+      } else {
+        console.error('Failed to fetch notifications:', response.status, response.statusText);
+        setNotifications([]);
       }
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
+      setNotifications([]);
     } finally {
       setIsLoading(false);
     }
@@ -38,11 +48,11 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
       });
       if (response.ok) {
         setNotifications(prev => 
-          prev.map(notif => 
+          Array.isArray(prev) ? prev.map(notif => 
             notif.id === notificationId 
               ? { ...notif, isRead: true }
               : notif
-          )
+          ) : []
         );
       }
     } catch (error) {
@@ -57,7 +67,7 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
       });
       if (response.ok) {
         setNotifications(prev => 
-          prev.map(notif => ({ ...notif, isRead: true }))
+          Array.isArray(prev) ? prev.map(notif => ({ ...notif, isRead: true })) : []
         );
       }
     } catch (error) {
@@ -72,7 +82,7 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
       });
       if (response.ok) {
         setNotifications(prev => 
-          prev.filter(notif => notif.id !== notificationId)
+          Array.isArray(prev) ? prev.filter(notif => notif.id !== notificationId) : []
         );
       }
     } catch (error) {
@@ -109,7 +119,7 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
     }
   };
 
-  const unreadCount = notifications.filter(notif => !notif.isRead).length;
+  const unreadCount = Array.isArray(notifications) ? notifications.filter(notif => !notif.isRead).length : 0;
 
   const handleNotificationClick = (notification: Notification) => {
     if (!notification.isRead) {
@@ -151,7 +161,7 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
         </div>
       ) : (
         <div className="space-y-2">
-          {notifications.length === 0 ? (
+          {!Array.isArray(notifications) || notifications.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <HiBell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
               <p>새로운 알림이 없습니다.</p>

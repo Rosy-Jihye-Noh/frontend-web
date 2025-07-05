@@ -141,7 +141,7 @@ const MyPage: React.FC = () => {
                     {activeTab === 'history' && <AnalysisHistorySection history={history} />}
                     {activeTab === 'liked' && <LikedExerciseSection likedExercises={likedExercises} />}
                     {activeTab === 'posts-comments' && <PostsCommentsTabsSection userId={user!.id} />}
-                    {activeTab === 'exercise-records' && <ExerciseRecordsSection userId={user!.id} />}
+                    {activeTab === 'exercise-records' && <ExerciseRecordsSection />}
                     {activeTab === 'notifications' && <NotificationsSection userId={user!.id} />}
                 </div>
             </main>
