@@ -8,14 +8,8 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '.
 import { useUserStore } from '../store/userStore';
 import Header from '../components/common/Header';
 
-const CommunityWritePage: React.FC = () => {
-  const { id } = useParams<{ id?: string }>();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const isEdit = Boolean(id);
-  const { user } = useUserStore();
-  const userId = user?.id;
-
+// 커스텀 훅: 게시글 작성/수정 폼 관리
+const usePostForm = (isEdit: boolean, postId?: number, userId?: number) => {
   const [categories, setCategories] = useState<CategoryDTO[]>([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -24,18 +18,20 @@ const CommunityWritePage: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // 카테고리 로드
   useEffect(() => {
     fetchCategories().then(setCategories);
-    if (isEdit && id) {
+  }, []);
+
+  // 수정 모드일 때 기존 게시글 정보 로드
+  useEffect(() => {
+    if (isEdit && postId && userId) {
       setLoading(true);
-      fetchPostDetail(Number(id))
+      fetchPostDetail(postId)
         .then((post: PostDTO) => {
-          if (!userId || post.userId !== userId) {
-            alert('수정 권한이 없습니다.');
-            navigate('/community');
-            return;
+          if (post.userId !== userId) {
+            throw new Error('수정 권한이 없습니다.');
           }
           setTitle(post.title);
           setContent(post.content);
@@ -45,20 +41,22 @@ const CommunityWritePage: React.FC = () => {
         .catch(() => setError('게시글 정보를 불러오지 못했습니다.'))
         .finally(() => setLoading(false));
     }
-  }, [id, isEdit, userId, navigate]);
+  }, [isEdit, postId, userId]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<{ success: boolean; postId?: number }> => {
     e.preventDefault();
     if (!title.trim() || !content.trim() || !categoryId) {
       setError('제목, 내용, 카테고리를 모두 입력하세요.');
-      return;
+      return { success: false };
     }
     if (!userId) {
       setError('로그인이 필요합니다.');
-      return;
+      return { success: false };
     }
+
     setLoading(true);
     setError(null);
+
     try {
       const postData: Partial<PostDTO> = {
         userId,
@@ -67,15 +65,16 @@ const CommunityWritePage: React.FC = () => {
         categoryId,
         imageUrl: imageUrl.trim() || undefined,
       };
-      if (isEdit && id) {
-        await updatePost(Number(id), postData);
-        const returnPath = location.state?.from ? `/community/${id}${location.state.from}` : `/community/${id}`;
-        navigate(returnPath);
+
+      if (isEdit && postId) {
+        await updatePost(postId, postData);
+        return { success: true, postId };
       } else {
         const result = await createPost(postData);
         let newId: number | null = null;
+        
         if (typeof result === 'object' && result !== null && 'id' in result) {
-          newId = Number(result.id);
+          newId = Number((result as any).id);
         } else if (typeof result === 'number') {
           newId = result;
         } else if (typeof result === 'string' && !isNaN(Number(result))) {
@@ -83,14 +82,14 @@ const CommunityWritePage: React.FC = () => {
         }
         
         if (!newId || isNaN(newId)) {
-          setError('글 작성에 실패했습니다. (id 반환 오류)');
-          return;
+          throw new Error('글 작성에 실패했습니다. (id 반환 오류)');
         }
-        const returnPath = location.state?.from ? `/community/${newId}${location.state.from}` : `/community/${newId}`;
-        navigate(returnPath);
+        
+        return { success: true, postId: newId };
       }
     } catch (e) {
-      setError('글 작성에 실패했습니다. (서버 오류)');
+      setError('글 작성에 실패했습니다.');
+      return { success: false };
     } finally {
       setLoading(false);
     }
@@ -117,6 +116,59 @@ const CommunityWritePage: React.FC = () => {
     }
   };
 
+  return {
+    categories,
+    title,
+    content,
+    categoryId,
+    imageUrl,
+    loading,
+    error,
+    setTitle,
+    setContent,
+    setCategoryId,
+    setImageUrl,
+    handleSubmit,
+    handleImageChange
+  };
+};
+
+const CommunityWritePage: React.FC = () => {
+  const { id } = useParams<{ id?: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isEdit = Boolean(id);
+  const { user } = useUserStore();
+  const userId = user?.id;
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // 커스텀 훅 사용
+  const {
+    categories,
+    title,
+    content,
+    categoryId,
+    imageUrl,
+    loading,
+    error,
+    setTitle,
+    setContent,
+    setCategoryId,
+    setImageUrl,
+    handleSubmit,
+    handleImageChange
+  } = usePostForm(isEdit, Number(id), userId);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    const result = await handleSubmit(e);
+    if (result.success) {
+      const returnPath = location.state?.from 
+        ? `/community/${result.postId}${location.state.from}` 
+        : `/community/${result.postId}`;
+      navigate(returnPath);
+    }
+  };
+
   const handlePhotoUploadClick = () => {
     fileInputRef.current?.click();
   };
@@ -131,7 +183,7 @@ const CommunityWritePage: React.FC = () => {
       <Header />
       <div className="max-w-2xl mx-auto py-8 px-2 mt-16">
         <h1 className="text-2xl font-bold mb-6">{isEdit ? '게시글 수정' : '게시글 작성'}</h1>
-        <form className="grid gap-4" onSubmit={handleSubmit}>
+        <form className="grid gap-4" onSubmit={onSubmit}>
           <div>
             <label className="block mb-1 font-medium">카테고리</label>
             <Select value={categoryId?.toString() || ''} onValueChange={v => setCategoryId(Number(v))}>
