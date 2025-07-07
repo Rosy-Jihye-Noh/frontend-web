@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -21,7 +21,9 @@ import PhotoUploadLoading from './pages/PhotoUploadLoading';
 import CommunityPage from './pages/CommunityPage';
 import CommunityDetailPage from './pages/CommunityDetailPage';
 import CommunityWritePage from './pages/CommunityWritePage';
-import LogPage from './pages/log';
+import { DashboardPage } from './pages/AdminDashboard';
+import { MemberManagementPage } from './pages/MemberManagementPage';
+import { ContentManagementPage } from './pages/CommunityManagementPage';
 
 const App = () => {
   return (
@@ -38,7 +40,6 @@ const App = () => {
         <Route path="/mypage/edit" element={<EditProfilePage />} />
         <Route path="/analysis-result/:historyId" element={<AnalysisResultPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/log" element={<LogPage />} />
         <Route path="/photoupload" element={<PhotoUpload />} />
         <Route path="/exercises" element={<ExerciseListPage />} />
         <Route path="/routines/new" element={<RoutineCreatePage />} />
@@ -50,6 +51,10 @@ const App = () => {
         <Route path="/community/:id" element={<CommunityDetailPage />} />
         <Route path="/community/write" element={<CommunityWritePage />} />
         <Route path="/community/edit/:id" element={<CommunityWritePage />} />
+        <Route path="/" element={<Navigate to="/admin" />} />
+        <Route path="/admin" element={<DashboardPage />} />
+        <Route path="/admin/members" element={<MemberManagementPage />} />
+        <Route path="/admin/post" element={<ContentManagementPage />} />
       </Routes>
 
       {/* Toast 알림을 위한 Toaster 컴포넌트 */}
