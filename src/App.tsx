@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import { useRef, useEffect } from 'react';
+import Chatbot from './components/chat/Chatbot';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -17,7 +19,6 @@ import RoutineCreatePage from './pages/RoutineCreatePage';
 import RoutineDetailPage from './pages/RoutineDetailPage';
 import RoutineEditPage from './pages/RoutineEditPage';
 import ExerciseDetailPage from './pages/ExerciseDetailPage';
-import PhotoUploadLoading from './pages/PhotoUploadLoading';
 import CommunityPage from './pages/CommunityPage';
 import CommunityDetailPage from './pages/CommunityDetailPage';
 import CommunityWritePage from './pages/CommunityWritePage';
@@ -26,6 +27,19 @@ import { MemberManagementPage } from './pages/MemberManagementPage';
 import { ContentManagementPage } from './pages/CommunityManagementPage';
 
 const App = () => {
+  const chatbotRef = useRef<any>(null);
+
+  useEffect(() => {
+    (window as any).openChatbot = (type: string, payload?: any) => {
+      if (chatbotRef.current && typeof chatbotRef.current.open === 'function') {
+        chatbotRef.current.open(type, payload);
+      }
+    };
+    return () => {
+      (window as any).openChatbot = undefined;
+    };
+  }, []);
+
   return (
     <>
       <Routes>
@@ -46,7 +60,6 @@ const App = () => {
         <Route path="/routines/:routineId" element={<RoutineDetailPage />} />
         <Route path="/routines/edit/:routineId" element={<RoutineEditPage />} />
         <Route path="/exercises/:exerciseId" element={<ExerciseDetailPage />} />
-        <Route path="/photoanalysis-loading" element={<PhotoUploadLoading />} />
         <Route path="/community" element={<CommunityPage />} />
         <Route path="/community/:id" element={<CommunityDetailPage />} />
         <Route path="/community/write" element={<CommunityWritePage />} />
@@ -64,6 +77,7 @@ const App = () => {
         closeButton 
         expand={true}
       />
+      <Chatbot ref={chatbotRef} />
     </>
   )
 }

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Header from '@/components/common/Header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
 import { HiUpload } from 'react-icons/hi';
 import { useUserStore } from '@/store/userStore';
@@ -9,6 +11,7 @@ import { useUserStore } from '@/store/userStore';
 const PhotoUpload: React.FC = () => {
   const [frontPhoto, setFrontPhoto] = useState<File | null>(null);
   const [sidePhoto, setSidePhoto] = useState<File | null>(null);
+  const [includeSidePhoto, setIncludeSidePhoto] = useState(false);
   const navigate = useNavigate();
   const { user } = useUserStore();
 
@@ -48,6 +51,19 @@ const PhotoUpload: React.FC = () => {
     );
   }
 
+  // 분석 시작 가능 여부 확인
+  const canStartAnalysis = frontPhoto && (includeSidePhoto ? sidePhoto : true);
+
+  const dummyAnalysis = {
+    id: 10,
+    createdAt: new Date().toISOString(),
+    spineCurvScore: 75,
+    spineScolScore: 82,
+    pelvicScore: 78,
+    neckScore: 65,
+    shoulderScore: 70
+  };
+
   return (
     <div className="bg-background min-h-screen">
       <Header />
@@ -55,20 +71,37 @@ const PhotoUpload: React.FC = () => {
         <h1 className="text-3xl font-bold text-center mb-6 text-gray-900 dark:text-white">AI 자세 분석</h1>
         <Card className="p-8">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">사진 업로드</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">정확한 분석을 위해 앉은 자세에서 앞모습과 옆모습 사진을 각각 업로드해주세요.</p>
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
-            <PhotoUploader photo={frontPhoto} setPhoto={setFrontPhoto} title="앞모습 사진" exampleUrl="https://placehold.co/300x400/BFDBFE/1E40AF?text=Front+View" />
-            <PhotoUploader photo={sidePhoto} setPhoto={setSidePhoto} title="옆모습 사진" exampleUrl="https://placehold.co/300x400/BFDBFE/1E40AF?text=Side+View" />
+          <p className="text-gray-600 dark:text-gray-400 mb-6">정확한 분석을 위해 앉은 자세에서 앞모습 사진을 업로드해주세요.</p>
+          
+          <div className="flex flex-col gap-6 mb-6">
+            <PhotoUploader photo={frontPhoto} setPhoto={setFrontPhoto} title="앞모습 사진 (필수)" exampleUrl="https://placehold.co/300x400/BFDBFE/1E40AF?text=Front+View" />
+            
+            {/* 측면사진 토글 */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-md border dark:border-gray-700">
+              <div>
+                <Label className="text-sm font-medium">측면사진 포함</Label>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  측면사진을 포함하면 더 정확한 분석 결과를 얻을 수 있습니다.
+                </p>
+              </div>
+              <Switch
+                checked={includeSidePhoto}
+                onCheckedChange={setIncludeSidePhoto}
+              />
+            </div>
+
+            {includeSidePhoto && (
+              <PhotoUploader photo={sidePhoto} setPhoto={setSidePhoto} title="옆모습 사진 (선택)" exampleUrl="https://placehold.co/300x400/BFDBFE/1E40AF?text=Side+View" />
+            )}
           </div>
+
           <Button
             onClick={() => { 
-              if (frontPhoto && sidePhoto) {
-                navigate('/photoanalysis-loading', { 
-                  state: { frontPhoto, sidePhoto } 
-                }); 
+              if (canStartAnalysis) {
+                navigate('/analysis-result/10', { state: { analysis: dummyAnalysis } });
               }
             }}
-            disabled={!frontPhoto || !sidePhoto}
+            disabled={!canStartAnalysis}
             className="w-full text-lg bg-blue-600 text-white hover:bg-blue-700"
           >
             분석 시작하기

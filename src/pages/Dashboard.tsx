@@ -223,12 +223,6 @@ const Dashboard: React.FC = () => {
           <CommunityHotPosts categories={communityCategories} topPosts={communityHotPosts} />
         </Card>
       </main>
-      <button
-        className="fixed bottom-8 right-8 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-50"
-        aria-label="챗봇 열기"
-      >
-        <HiChatAlt2 className="w-6 h-6" />
-      </button>
     </div>
   );
 };
