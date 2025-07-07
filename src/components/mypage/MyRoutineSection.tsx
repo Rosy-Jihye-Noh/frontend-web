@@ -50,12 +50,12 @@ const MyRoutineSection: React.FC<MyRoutineSectionProps> = ({ routines, onDeleteR
               </CardHeader>
               <CardContent>
                 <h4 className="font-semibold mb-2 text-sm">포함된 운동:</h4>
-                <ul className="space-y-1 text-sm text-gray-600">
+                <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
                   {routine.exercises && routine.exercises.slice(0, 3).map(ex => (
                     <li key={ex.exerciseId} className="truncate">- {ex.exerciseName}</li>
                   ))}
                   {routine.exercises && routine.exercises.length > 3 && (
-                    <li className="text-gray-500">... 외 {routine.exercises.length - 3}개</li>
+                    <li className="text-gray-500 dark:text-gray-400">... 외 {routine.exercises.length - 3}개</li>
                   )}
                 </ul>
               </CardContent>

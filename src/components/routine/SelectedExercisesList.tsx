@@ -25,7 +25,7 @@ const SelectedExercisesList: React.FC<SelectedExercisesListProps> = ({
             <div
               key={ex.id}
               // 순서 변경 애니메이션
-              className="flex items-center bg-white p-3 rounded-lg border shadow-sm transition-transform duration-300 ease-in-out"
+              className="flex items-center bg-card p-3 rounded-lg border shadow-sm transition-transform duration-300 ease-in-out"
             >
               {/* 현재 순서 표시 */}
               <span className="flex-shrink-0 w-8 text-center font-bold text-lg text-gray-500">
@@ -42,7 +42,7 @@ const SelectedExercisesList: React.FC<SelectedExercisesListProps> = ({
                   variant="ghost" 
                   onClick={() => onMoveUp(index)}
                   disabled={index === 0} // 첫 번째 항목일 때 비활성화
-                  className="hover:bg-gray-100 disabled:opacity-30"
+                  className="hover:bg-muted disabled:opacity-30"
                 >
                   <ChevronUp className="h-5 w-5" />
                 </Button>
@@ -51,7 +51,7 @@ const SelectedExercisesList: React.FC<SelectedExercisesListProps> = ({
                   variant="ghost" 
                   onClick={() => onMoveDown(index)}
                   disabled={index === exercises.length - 1} // 마지막 항목일 때 비활성화
-                  className="hover:bg-gray-100 disabled:opacity-30"
+                  className="hover:bg-muted disabled:opacity-30"
                 >
                   <ChevronDown className="h-5 w-5" />
                 </Button>

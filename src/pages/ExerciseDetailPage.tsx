@@ -136,7 +136,7 @@ const ExerciseDetailPage: React.FC = () => {
   if (!exercise) return <div className="flex justify-center items-center h-screen">운동 정보를 찾을 수 없습니다.</div>;
 
   return (
-    <div className="bg-slate-50 min-h-screen relative">
+    <div className="bg-background min-h-screen relative">
       <Header />
       <main className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8" style={{ paddingTop: 'var(--header-height, 90px)' }}>
         <Button variant="outline" onClick={() => navigate(-1)} className="mb-6">
@@ -186,8 +186,8 @@ const ExerciseDetailPage: React.FC = () => {
               <DetailItem label="자세" value={exercise.posture} />
             </dl>
             <div>
-              <h2 className="text-lg font-semibold mb-2">운동 설명</h2>
-              <p className="text-gray-700 leading-relaxed">{exercise.description}</p>
+              <h2 className="text-lg font-semibold mb-2 text-foreground">운동 설명</h2>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{exercise.description}</p>
             </div>
             {user && (
               <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => setIsModalOpen(true)} size="lg">

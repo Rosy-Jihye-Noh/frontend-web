@@ -10,7 +10,7 @@ const Section1 = () => {
 
   return (
     <section ref={ref} className="flex flex-col items-center justify-center min-h-screen 
-                      bg-gray-50 dark:bg-gray-900 px-4 py-16 md:py-24 text-center"
+                      bg-gray-50 dark:bg-background px-4 py-16 md:py-24 text-center"
               style={{
                 backgroundImage: `url(${logo})`,
                 backgroundSize: "cover",
@@ -23,7 +23,7 @@ const Section1 = () => {
           ? 'translate-y-0 opacity-100' 
           : 'translate-y-10 opacity-0'
       }`}>
-        <h1 className="text-4xl md:text-6xl font-extrabold leading-tight">
+        <h1 className="text-4xl md:text-6xl font-extrabold leading-tight text-gray-900">
           <span className="text-blue-500">AI</span>와 함께 똑똑하게, <br />
           나를 위한{" "}
           <span className="underline decoration-blue-500 decoration-4">
@@ -38,7 +38,7 @@ const Section1 = () => {
           ? 'translate-y-0 opacity-100' 
           : 'translate-y-10 opacity-0'
       }`}>
-        <p className="mt-6 text-lg text-gray-600 dark:text-gray-400 max-w-2xl">
+        <p className="mt-6 text-lg text-gray-600 max-w-2xl">
           당신의 몸을 가장 잘 아는 파트너, Health AI가 24시간 함께합니다.
         </p>
       </div>

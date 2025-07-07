@@ -11,9 +11,9 @@ const CommunityHotPosts: React.FC<CommunityHotPostsProps> = ({ categories, topPo
     {categories.map(({ key, icon }) => {
       const top = topPosts.find((item) => item.category === key);
       return (
-        <div key={key} className="flex items-center bg-gray-50 rounded-lg p-4 shadow hover:bg-gray-100 transition min-h-[64px] cursor-pointer">
+        <div key={key} className="flex items-center bg-muted rounded-lg p-4 shadow hover:bg-muted/80 transition min-h-[64px] cursor-pointer">
           {icon}
-          <span className="text-base font-bold text-blue-600 mr-2">[{key}]</span>
+          <span className="text-base font-bold text-blue-600 dark:text-blue-400 mr-2">[{key}]</span>
           {top ? (
             <>
               <span className="font-semibold text-base truncate max-w-[300px]">{top.title}</span>

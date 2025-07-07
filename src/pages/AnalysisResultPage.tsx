@@ -65,7 +65,7 @@ const AnalysisResultPage: React.FC = () => {
   ];
 
   return (
-    <div className="bg-gray-50 min-h-screen py-8 px-4">
+    <div className="bg-background min-h-screen py-8 px-4">
       <div className="max-w-3xl mx-auto">
         {/* 헤더 */}
         <header className="relative flex items-center justify-center mb-6">
@@ -87,7 +87,7 @@ const AnalysisResultPage: React.FC = () => {
         {/* Keypoint 분석 카드 */}
         <Card className="p-6 mb-6">
             <h2 className="font-bold text-lg mb-4">Keypoint 분석</h2>
-            <div className="h-64 bg-gray-200 rounded-md flex items-center justify-center">
+            <div className="h-64 bg-muted rounded-md flex items-center justify-center">
               {/* 여기에 분석 이미지가 들어갑니다 */}
               <p className="text-gray-500">분석 이미지 표시 영역</p>
             </div>

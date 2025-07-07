@@ -14,7 +14,7 @@ const AddToRoutineModal: React.FC<AddToRoutineModalProps> = ({ isOpen, routines,
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+      <div className="bg-card p-6 rounded-lg shadow-xl w-full max-w-sm">
         <h2 className="text-xl font-bold mb-4">루틴에 추가</h2>
         <div className="space-y-2 max-h-60 overflow-y-auto">
           {routines.length > 0 ? (
@@ -22,7 +22,7 @@ const AddToRoutineModal: React.FC<AddToRoutineModalProps> = ({ isOpen, routines,
               <button
                 key={routine.id}
                 onClick={() => onSelectRoutine(routine.id)}
-                className="w-full text-left p-3 rounded-md hover:bg-gray-100"
+                className="w-full text-left p-3 rounded-md hover:bg-muted"
               >
                 {routine.name}
               </button>

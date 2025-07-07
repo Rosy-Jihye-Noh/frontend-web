@@ -49,7 +49,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-white/80 backdrop-blur-sm fixed top-0 left-0 right-0 z-10 border-b border-gray-200">
+    <header className="bg-background/80 backdrop-blur-sm fixed top-0 left-0 right-0 z-10 border-b border-border">
       <div className="container mx-auto px-4 py-2 [@media(min-width:1025px)]:py-3 flex items-center justify-between">
         {/* 왼쪽: 로고 */}
         <div className="flex-1 flex items-center">
@@ -66,7 +66,7 @@ const Header: React.FC = () => {
           {menus.map((menu) => (
             <button
               key={menu.name}
-              className={`text-base font-bold cursor-pointer ${location.pathname === menu.path ? "text-blue-600" : "text-gray-700 hover:text-blue-600"}`}
+              className={`text-base font-bold cursor-pointer ${location.pathname === menu.path ? "text-blue-600" : "text-foreground hover:text-blue-600"}`}
               onClick={() => navigate(menu.path)}
               style={{ cursor: 'pointer' }}
             >
@@ -106,7 +106,7 @@ const Header: React.FC = () => {
             </>
           ) : (
             <>
-              <Button variant="ghost" className="text-gray-700 cursor-pointer" onClick={() => navigate("/login")}>로그인</Button>
+              <Button variant="ghost" className="text-foreground cursor-pointer" onClick={() => navigate("/login")}>로그인</Button>
               <Button className="bg-blue-600 text-white hover:bg-blue-700 cursor-pointer" onClick={() => navigate("/signup")}>회원가입</Button>
             </>
           )}
@@ -137,7 +137,7 @@ const Header: React.FC = () => {
           {menus.map((menu) => (
             <button
               key={menu.name}
-              className={`text-lg font-semibold text-left cursor-pointer ${location.pathname === menu.path ? "text-blue-600" : "text-gray-700 hover:text-blue-600"}`}
+              className={`text-lg font-semibold text-left cursor-pointer ${location.pathname === menu.path ? "text-blue-600" : "text-foreground hover:text-blue-600"}`}
               onClick={() => handleMenuClick(menu.path)}
               style={{ cursor: 'pointer' }}
             >
@@ -168,7 +168,7 @@ const Header: React.FC = () => {
             </>
           ) : (
             <>
-              <Button variant="ghost" className="text-gray-700 w-full cursor-pointer" onClick={() => handleMenuClick("/login")}>로그인</Button>
+              <Button variant="ghost" className="text-foreground w-full cursor-pointer" onClick={() => handleMenuClick("/login")}>로그인</Button>
               <Button className="bg-blue-600 text-white hover:bg-blue-700 w-full cursor-pointer" onClick={() => handleMenuClick("/signup")}>회원가입</Button>
             </>
           )}

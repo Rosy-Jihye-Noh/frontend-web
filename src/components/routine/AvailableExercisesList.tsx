@@ -29,7 +29,7 @@ const TabButton = ({
     className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
       isActive 
         ? 'bg-blue-600 text-white shadow-md' 
-        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
     }`}
   >
     {icon}
@@ -84,22 +84,22 @@ const AvailableExercisesList: React.FC<AvailableExercisesListProps> = ({
         
         <div className="max-h-80 overflow-y-auto space-y-2 pr-2">
           {filteredExercises.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              {activeTab === 'liked' ? (
-                <div>
-                  <Heart className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                  <p>좋아요한 운동이 없습니다.</p>
-                  <p className="text-sm">운동 목록에서 좋아요를 표시해보세요!</p>
-                </div>
-              ) : (
-                <p>검색 결과가 없습니다.</p>
-              )}
-            </div>
+                          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                {activeTab === 'liked' ? (
+                  <div>
+                    <Heart className="w-8 h-8 mx-auto mb-2 text-gray-300 dark:text-gray-500" />
+                    <p>좋아요한 운동이 없습니다.</p>
+                    <p className="text-sm">운동 목록에서 좋아요를 표시해보세요!</p>
+                  </div>
+                ) : (
+                  <p>검색 결과가 없습니다.</p>
+                )}
+              </div>
           ) : (
             filteredExercises.map(ex => (
               <div 
                 key={ex.id} 
-                className="flex items-center justify-between p-3 rounded-md hover:bg-slate-100 transition-colors duration-150"
+                className="flex items-center justify-between p-3 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -108,7 +108,7 @@ const AvailableExercisesList: React.FC<AvailableExercisesListProps> = ({
                       <Heart className="w-4 h-4 text-red-500 fill-current" />
                     )}
                   </div>
-                  <p className="text-sm text-gray-500">{ex.bodyPart}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{ex.bodyPart}</p>
                   {ex.category && (
                     <span className="inline-block mt-1 text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
                       {ex.category}

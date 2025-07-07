@@ -39,7 +39,7 @@ const RoutineDetailPage: React.FC = () => {
   if (!routine) return <div className="flex justify-center items-center h-screen">루틴 정보를 찾을 수 없습니다.</div>;
 
   return (
-    <div className="bg-slate-50 min-h-screen">
+    <div className="bg-background min-h-screen">
       <Header />
       <main
         className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8"
@@ -68,12 +68,12 @@ const RoutineDetailPage: React.FC = () => {
                 <Link 
                   to={`/exercises/${ex.exerciseId}`} 
                   key={ex.exerciseId} 
-                  className="block p-4 bg-slate-100 rounded-lg transition-colors hover:bg-slate-200"
+                  className="block p-4 bg-slate-100 dark:bg-slate-800 rounded-lg transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
                 >
                   <div className="flex items-center">
-                    <span className="text-lg font-bold text-blue-600 mr-4">{index + 1}</span>
+                    <span className="text-lg font-bold text-blue-600 dark:text-blue-400 mr-4">{index + 1}</span>
                     <div className="flex-grow">
-                      <p className="font-semibold text-lg">{ex.exerciseName}</p>
+                      <p className="font-semibold text-lg text-gray-900 dark:text-gray-100">{ex.exerciseName}</p>
                     </div>
                   </div>
                 </Link>

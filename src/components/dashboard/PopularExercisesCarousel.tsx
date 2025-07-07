@@ -121,21 +121,21 @@ const PopularExercisesCarousel: React.FC<PopularExercisesCarouselProps> = ({ cla
 
   if (isLoading) {
     return (
-      <div className={`bg-white p-6 rounded-lg shadow-lg ${className}`}>
+      <div className={`bg-card p-6 rounded-lg shadow-lg ${className}`}>
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded mb-4"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
+          <div className="h-6 bg-muted rounded mb-4"></div>
+          <div className="h-32 bg-muted rounded"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`bg-white p-6 rounded-lg shadow-lg ${className}`}>
+    <div className={`bg-card p-6 rounded-lg shadow-lg ${className}`}>
       {/* 좋아요가 많은 운동 */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-bold text-gray-900 flex items-center">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-foreground flex items-center">
             <HiHeart className="w-5 h-5 text-red-500 mr-2" />
             인기 운동
           </h3>
@@ -198,7 +198,7 @@ const PopularExercisesCarousel: React.FC<PopularExercisesCarouselProps> = ({ cla
       {/* 루틴에 많이 추가된 운동 */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-bold text-gray-900 flex items-center">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-foreground flex items-center">
             <HiPlus className="w-5 h-5 text-blue-500 mr-2" />
             루틴 인기
           </h3>
@@ -251,7 +251,7 @@ const PopularExercisesCarousel: React.FC<PopularExercisesCarouselProps> = ({ cla
         <Button
           onClick={() => navigate('/routines/new')}
           size="sm"
-          className="w-full mt-3 bg-blue-600 text-white hover:bg-blue-700"
+          className="w-full mt-3 bg-blue-500 dark:bg-blue-400 text-white hover:bg-blue-600 dark:hover:bg-blue-300"
         >
           나만의 루틴 만들기
         </Button>

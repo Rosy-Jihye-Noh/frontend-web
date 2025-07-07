@@ -83,7 +83,7 @@ const FindCredentials = () => {
 
 
     return (
-        <div className="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="bg-background min-h-screen flex flex-col items-center justify-center p-4">
             <h1 className="text-3xl font-extrabold text-blue-600 mb-8 cursor-pointer" onClick={() => navigate('/')}>SynergyM</h1>
             <Card className="w-full max-w-md p-8">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
