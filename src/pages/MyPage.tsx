@@ -22,7 +22,7 @@ import {
 const TabButton = ({ id, activeTab, setActiveTab, children }: { id: string, activeTab: string, setActiveTab: (id: string) => void, children: React.ReactNode }) => (
     <button
         onClick={() => setActiveTab(id)}
-        className={`py-2.5 text-sm font-semibold transition-all duration-200 ${activeTab === id ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-800'}`}
+        className={`py-2.5 text-sm font-semibold transition-all duration-200 ${activeTab === id ? 'text-blue-600 border-b-2 border-blue-600' : 'text-muted-foreground hover:text-foreground'}`}
     >
         {children}
     </button>
@@ -93,7 +93,7 @@ const MyPage: React.FC = () => {
 
     if (isPageLoading) {
         return (
-            <div className="bg-slate-50 min-h-screen">
+            <div className="bg-background min-h-screen">
                 <Header />
                 <div 
                     className="flex justify-center items-center" 
@@ -117,7 +117,7 @@ const MyPage: React.FC = () => {
     }
 
     return (
-        <div className="bg-slate-50 min-h-screen">
+        <div className="bg-background min-h-screen">
             <Header />
             <main
              className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8"
@@ -125,7 +125,7 @@ const MyPage: React.FC = () => {
             >
                 <ProfileHeader user={profile} onEdit={() => navigate('/mypage/edit')} />
                 
-                <div className="border-b border-slate-200 mb-6">
+                <div className="border-b border-border mb-6">
                     <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                         <TabButton id="routines" activeTab={activeTab} setActiveTab={setActiveTab}>내 루틴 관리</TabButton>
                         <TabButton id="history" activeTab={activeTab} setActiveTab={setActiveTab}>사진 분석 기록</TabButton>

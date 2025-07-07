@@ -159,17 +159,17 @@ const WeeklyReportCard: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col p-6 shadow-lg rounded-lg bg-white">
+            <div className="flex flex-col p-6 shadow-lg rounded-lg bg-card">
       <div className="flex items-center mb-4">
         <HiCalendar className="text-blue-500 w-8 h-8 mr-2" />
-        <h2 className="text-xl font-bold text-gray-800">운동 리포트</h2>
+        <h2 className="text-xl font-bold text-foreground">운동 리포트</h2>
       </div>
 
       <div className="space-y-6">
         {/* 이번주 통계 */}
-        <div className="bg-blue-50 p-4 rounded-lg">
+        <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-blue-800 flex items-center">
+            <h3 className="font-semibold text-blue-800 dark:text-blue-300 flex items-center">
               <HiCalendar className="w-5 h-5 mr-2" />
               이번주
             </h3>
@@ -179,21 +179,21 @@ const WeeklyReportCard: React.FC = () => {
           </div>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-600">{stats?.thisWeek.totalWorkouts || 0}</div>
-              <div className="text-gray-600">이번주 총 일수</div>
-              <div className="text-xs text-gray-500">(월~오늘)</div>
+              <div className="text-2xl font-bold text-gray-600 dark:text-gray-300">{stats?.thisWeek.totalWorkouts || 0}</div>
+              <div className="text-gray-600 dark:text-gray-300">이번주 총 일수</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">(월~오늘)</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats?.thisWeek.completedWorkouts || 0}</div>
-              <div className="text-blue-600">완료한 날짜</div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats?.thisWeek.completedWorkouts || 0}</div>
+              <div className="text-blue-600 dark:text-blue-400">완료한 날짜</div>
             </div>
           </div>
         </div>
 
         {/* 이번달 통계 */}
-        <div className="bg-green-50 p-4 rounded-lg">
+        <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-lg">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-green-800 flex items-center">
+            <h3 className="font-semibold text-green-800 dark:text-green-300 flex items-center">
               <HiTrendingUp className="w-5 h-5 mr-2" />
               이번달
             </h3>
@@ -203,26 +203,26 @@ const WeeklyReportCard: React.FC = () => {
           </div>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-600">{stats?.thisMonth.totalWorkouts || 0}</div>
-              <div className="text-gray-600">이번달 총 일수</div>
-              <div className="text-xs text-gray-500">(1일~오늘)</div>
+              <div className="text-2xl font-bold text-gray-600 dark:text-gray-300">{stats?.thisMonth.totalWorkouts || 0}</div>
+              <div className="text-gray-600 dark:text-gray-300">이번달 총 일수</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">(1일~오늘)</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{stats?.thisMonth.completedWorkouts || 0}</div>
-              <div className="text-green-600">완료한 날짜</div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats?.thisMonth.completedWorkouts || 0}</div>
+              <div className="text-green-600 dark:text-green-400">완료한 날짜</div>
             </div>
           </div>
         </div>
 
         {/* 격려 메시지 */}
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
+        <div className="text-center p-3 bg-muted rounded-lg">
           {(stats?.thisWeek.completionRate || 0) >= 80 ? (
             <div className="flex items-center justify-center text-green-600">
               <HiCheckCircle className="w-5 h-5 mr-2" />
               <span className="text-sm font-medium">훌륭해요! 계속 이어가세요!</span>
             </div>
           ) : (
-            <div className="flex items-center justify-center text-blue-600">
+            <div className="flex items-center justify-center text-blue-600 dark:text-blue-400">
               <HiTrendingUp className="w-5 h-5 mr-2" />
               <span className="text-sm font-medium">조금만 더 노력하면 목표 달성!</span>
             </div>

@@ -21,7 +21,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user, onEdit }) => (
             />
         ) : (
             // 이미지가 없을 경우 (기본 아이콘 또는 플레이스홀더)
-            <div className="w-24 h-24 rounded-full shadow-md bg-gray-200 flex items-center justify-center">
+            <div className="w-24 h-24 rounded-full shadow-md bg-muted flex items-center justify-center">
                 <HiUser className="w-14 h-14 text-gray-400" />
             </div>
         )}

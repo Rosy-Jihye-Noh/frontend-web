@@ -131,10 +131,10 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="bg-card rounded-xl shadow-lg p-6">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold text-gray-800">알림</h2>
+          <h2 className="text-xl font-bold text-foreground">알림</h2>
           {unreadCount > 0 && (
             <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
               {unreadCount}
@@ -154,7 +154,7 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
 
       {isLoading ? (
         <div className="flex justify-center items-center py-12">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-gray-500 dark:text-gray-400">
             <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-2"></div>
             <p>로딩 중...</p>
           </div>
@@ -162,8 +162,8 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
       ) : (
         <div className="space-y-2">
           {!Array.isArray(notifications) || notifications.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <HiBell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <HiBell className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-500" />
               <p>새로운 알림이 없습니다.</p>
             </div>
           ) : (
@@ -174,7 +174,7 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
                   key={notification.id}
                   className={`p-4 rounded-lg border transition-all cursor-pointer group ${
                     notification.isRead 
-                      ? 'border-gray-200 bg-white hover:border-gray-300' 
+                      ? 'border-border bg-card hover:border-border' 
                       : 'border-blue-200 bg-blue-50 hover:border-blue-300'
                   }`}
                   onClick={() => handleNotificationClick(notification)}
@@ -186,12 +186,12 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start mb-1">
                         <p className={`font-semibold text-sm ${
-                          notification.isRead ? 'text-gray-700' : 'text-blue-800'
+                          notification.isRead ? 'text-gray-700 dark:text-gray-300' : 'text-blue-800 dark:text-blue-300'
                         }`}>
                           {notification.title}
                         </p>
                         <div className="flex items-center gap-2 ml-2">
-                          <span className="text-xs text-gray-500 flex-shrink-0">
+                          <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
                             {formatDate(notification.createdAt)}
                           </span>
                           <button
@@ -199,14 +199,14 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
                               e.stopPropagation();
                               deleteNotification(notification.id);
                             }}
-                            className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
+                            className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 dark:text-gray-500 hover:text-red-500 transition-all"
                           >
                             <HiX className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
                       <p className={`text-sm ${
-                        notification.isRead ? 'text-gray-600' : 'text-blue-700'
+                        notification.isRead ? 'text-gray-600 dark:text-gray-400' : 'text-blue-700 dark:text-blue-400'
                       }`}>
                         {notification.message}
                       </p>

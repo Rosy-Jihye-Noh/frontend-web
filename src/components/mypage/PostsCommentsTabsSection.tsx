@@ -198,7 +198,7 @@ const PostsCommentsTabsSection: React.FC<PostsCommentsTabsProps> = ({ userId }) 
       className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${
         activeTab === tab 
           ? 'bg-blue-600 text-white shadow-lg' 
-          : 'bg-white text-blue-600 border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50'
+                        : 'bg-card text-blue-600 border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50'
       }`}
     >
       {label}
@@ -213,7 +213,7 @@ const PostsCommentsTabsSection: React.FC<PostsCommentsTabsProps> = ({ userId }) 
   );
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="bg-card rounded-xl shadow-lg p-6">
       <div className="flex gap-3 mb-6">
         <TabButton tab="posts" label="내 글" count={posts.length} />
         <TabButton tab="comments" label="내 댓글" count={comments.length} />
@@ -221,7 +221,7 @@ const PostsCommentsTabsSection: React.FC<PostsCommentsTabsProps> = ({ userId }) 
 
       {isLoading ? (
         <div className="flex justify-center items-center py-12">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-gray-500 dark:text-gray-400">
             <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-2"></div>
             <p>로딩 중...</p>
           </div>
@@ -231,10 +231,10 @@ const PostsCommentsTabsSection: React.FC<PostsCommentsTabsProps> = ({ userId }) 
           {activeTab === 'posts' && (
             <>
               {posts.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <HiChatAlt className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                  <HiChatAlt className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-500" />
                   <p className="text-lg font-medium mb-2">작성한 글이 없습니다.</p>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-400 dark:text-gray-500">
                     커뮤니티에서 첫 번째 글을 작성해보세요!
                   </p>
                 </div>
@@ -243,18 +243,18 @@ const PostsCommentsTabsSection: React.FC<PostsCommentsTabsProps> = ({ userId }) 
                   <div
                     key={post.id}
                     onClick={() => navigate(`/community/${post.id}`)}
-                    className="p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-md transition-all group"
+                    className="p-4 border border-border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-md transition-all group"
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-1">
+                      <h3 className="font-semibold text-gray-800 dark:text-gray-200 group-hover:text-blue-600 transition-colors line-clamp-1">
                         {post.title}
                       </h3>
-                      <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">
                         {formatDate(post.createdAt)}
                       </span>
                     </div>
-                    <p className="text-gray-600 text-sm line-clamp-2 mb-3">{post.content}</p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2 mb-3">{post.content}</p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                       <span className="flex items-center gap-1">
                         <HiThumbUp className="w-3 h-3" />
                         {post.likesCount}
@@ -276,10 +276,10 @@ const PostsCommentsTabsSection: React.FC<PostsCommentsTabsProps> = ({ userId }) 
           {activeTab === 'comments' && (
             <>
               {comments.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <HiChatAlt className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                  <HiChatAlt className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-500" />
                   <p className="text-lg font-medium mb-2">작성한 댓글이 없습니다.</p>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-400 dark:text-gray-500">
                     다른 사용자의 글에 댓글을 남겨보세요!
                   </p>
                 </div>
@@ -288,18 +288,18 @@ const PostsCommentsTabsSection: React.FC<PostsCommentsTabsProps> = ({ userId }) 
                   <div
                     key={comment.id}
                     onClick={() => navigate(`/community/${comment.postId}`)}
-                    className="p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-md transition-all"
+                    className="p-4 border border-border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-md transition-all"
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <p className="text-sm text-blue-600 font-medium line-clamp-1">
+                      <p className="text-sm text-blue-600 dark:text-blue-400 font-medium line-clamp-1">
                         "{comment.postTitle}"에 댓글
                       </p>
-                      <span className="text-xs text-gray-500 ml-2 flex-shrink-0 flex items-center gap-1">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0 flex items-center gap-1">
                         <HiClock className="w-3 h-3" />
                         {formatDate(comment.createdAt)}
                       </span>
                     </div>
-                    <p className="text-gray-700 text-sm line-clamp-2">{comment.content}</p>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm line-clamp-2">{comment.content}</p>
                   </div>
                 ))
               )}

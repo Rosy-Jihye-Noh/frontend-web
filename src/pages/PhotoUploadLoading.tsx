@@ -76,7 +76,7 @@ const PhotoUploadLoading: React.FC = () => {
   };
 
   return (
-    <div className="bg-slate-50 min-h-screen">
+    <div className="bg-background min-h-screen">
       <Header />
       <main className="max-w-4xl mx-auto pt-32 px-4 sm:px-8 lg:px-16 pb-8">
         {renderContent()}

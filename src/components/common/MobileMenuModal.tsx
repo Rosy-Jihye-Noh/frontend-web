@@ -17,7 +17,7 @@ const MobileMenuModal: React.FC<MobileMenuModalProps> = ({ open, onClose, childr
       onClick={onClose}
     >
       <div
-        className="ml-auto w-64 bg-white shadow-lg flex flex-col p-6 gap-4 relative rounded-lg"
+        className="ml-auto w-64 bg-card shadow-lg flex flex-col p-6 gap-4 relative rounded-lg"
         style={{ maxHeight: '90vh', marginTop: '5vh', overflowY: 'auto' }}
         onClick={e => e.stopPropagation()}
       >

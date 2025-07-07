@@ -58,7 +58,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
+    <div className="bg-background min-h-screen flex flex-col items-center justify-center p-4">
       <h1 className="text-3xl font-extrabold text-blue-600 mb-8">SynergyM</h1>
       <Card className="w-full max-w-md p-8">
         <h2 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-white">

@@ -29,7 +29,7 @@ const CommunityFilters: React.FC<CommunityFiltersProps> = ({
   return (
     <>
       {/* 카테고리 탭 */}
-      <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
+              <div className="border-b border-border mb-6">
         <nav className="-mb-px flex space-x-6 overflow-x-auto">
           <button
             key="all"
@@ -37,7 +37,7 @@ const CommunityFilters: React.FC<CommunityFiltersProps> = ({
             className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               currentCategory === '전체'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
             }`}
           >
             전체
@@ -49,7 +49,7 @@ const CommunityFilters: React.FC<CommunityFiltersProps> = ({
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 currentCategory === cat.name
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
               {cat.name}
@@ -66,7 +66,7 @@ const CommunityFilters: React.FC<CommunityFiltersProps> = ({
             className={`px-3 py-1 rounded shrink-0 transition-colors ${
               currentSort === 'latest' 
                 ? 'bg-blue-100 text-blue-600' 
-                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
             }`}
             onClick={() => onSortChange('latest')}
           >
@@ -76,7 +76,7 @@ const CommunityFilters: React.FC<CommunityFiltersProps> = ({
             className={`px-3 py-1 rounded shrink-0 transition-colors ${
               currentSort === 'popular' 
                 ? 'bg-blue-100 text-blue-600' 
-                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
             }`}
             onClick={() => onSortChange('popular')}
           >
@@ -105,7 +105,7 @@ const CommunityFilters: React.FC<CommunityFiltersProps> = ({
                 className={`px-3 py-1.5 text-sm rounded-md font-medium transition-colors ${
                   currentSort === 'latest' 
                     ? 'bg-blue-50 text-blue-600 border border-blue-200' 
-                    : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
+                    : 'bg-muted text-muted-foreground border border-border hover:bg-muted/80'
                 }`}
                 onClick={() => onSortChange('latest')}
               >
@@ -115,7 +115,7 @@ const CommunityFilters: React.FC<CommunityFiltersProps> = ({
                 className={`px-3 py-1.5 text-sm rounded-md font-medium transition-colors ${
                   currentSort === 'popular' 
                     ? 'bg-blue-50 text-blue-600 border border-blue-200' 
-                    : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
+                    : 'bg-muted text-muted-foreground border border-border hover:bg-muted/80'
                 }`}
                 onClick={() => onSortChange('popular')}
               >

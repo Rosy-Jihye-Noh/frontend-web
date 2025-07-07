@@ -385,7 +385,7 @@ const CommunityDetailPage: React.FC = () => {
   if (!post) return <div className="max-w-2xl mx-auto py-8 text-center">게시글이 없습니다.</div>;
 
   return (
-    <div className="bg-slate-50 min-h-screen">
+    <div className="bg-background min-h-screen">
       <Header />
       <main className="max-w-2xl mx-auto py-8 px-2 mt-16">
         <Card>

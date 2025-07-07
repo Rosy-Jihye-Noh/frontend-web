@@ -39,7 +39,7 @@ const PhotoUpload: React.FC = () => {
   // 로그인하지 않은 경우 로딩 화면 표시
   if (!user) {
     return (
-      <div className="bg-slate-50 min-h-screen flex justify-center items-center">
+      <div className="bg-background min-h-screen flex justify-center items-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-dashed rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">로그인 확인 중...</p>
@@ -49,7 +49,7 @@ const PhotoUpload: React.FC = () => {
   }
 
   return (
-    <div className="bg-slate-50 min-h-screen">
+    <div className="bg-background min-h-screen">
       <Header />
       <main className="max-w-4xl mx-auto pt-32 px-4 sm:px-8 lg:px-16 pb-8">
         <h1 className="text-3xl font-bold text-center mb-6 text-gray-900 dark:text-white">AI 자세 분석</h1>

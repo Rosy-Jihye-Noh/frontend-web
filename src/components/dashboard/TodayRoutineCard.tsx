@@ -26,36 +26,82 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
   const [todayCompletedRoutines, setTodayCompletedRoutines] = useState<string[]>([]);
   const [routineCompletionData, setRoutineCompletionData] = useState<{ [routineName: string]: number }>({});
 
-  // localStorage에서 선택된 루틴 불러오기
-  const getStoredSelectedRoutines = () => {
+  // exercise-log-storage에서 오늘 날짜의 선택된 루틴 불러오기
+  const getTodaySelectedRoutinesFromStorage = () => {
     try {
       if (!user?.id) return [];
       
-      const stored = localStorage.getItem(`selected-routines-${user.id}`);
-      if (!stored) return [];
+      const logData = localStorage.getItem('exercise-log-storage');
+      if (!logData) return [];
+
+      const parsedData = JSON.parse(logData);
+      const todayDate = getTodayDateString();
       
-      const storedIds: number[] = JSON.parse(stored);
-      // 저장된 ID들과 현재 사용자 루틴들을 매칭
-      return allUserRoutines.filter(routine => storedIds.includes(routine.id));
+      // state.sessions[오늘날짜] 경로로 접근
+      const todaySessions = parsedData?.state?.sessions?.[todayDate];
+      if (!todaySessions || !Array.isArray(todaySessions)) return [];
+
+      // 오늘 세션에 있는 루틴 ID들 추출
+      const routineIds = todaySessions.map((session: any) => session.routineId).filter(Boolean);
+      
+      // 해당 루틴 ID들과 현재 사용자 루틴들을 매칭
+      return allUserRoutines.filter(routine => 
+        routineIds.includes(routine.id) && routine.userId === user.id
+      );
     } catch (error) {
+      console.error('오늘 선택된 루틴 가져오기 실패:', error);
       return [];
     }
   };
 
-  // localStorage에 선택된 루틴 저장하기
-  const saveSelectedRoutines = (routines: Routine[]) => {
+  // exercise-log-storage에 선택된 루틴 저장하기 (오늘 날짜 세션으로)
+  const saveSelectedRoutinesToStorage = (routines: Routine[]) => {
     try {
       if (!user?.id) return;
       
-      if (routines.length === 0) {
-        // 선택된 루틴이 없으면 localStorage에서 제거
-        localStorage.removeItem(`selected-routines-${user.id}`);
+      const logData = localStorage.getItem('exercise-log-storage');
+      const todayDate = getTodayDateString();
+      
+      let parsedData;
+      if (logData) {
+        parsedData = JSON.parse(logData);
       } else {
-        const routineIds = routines.map(r => r.id);
-        localStorage.setItem(`selected-routines-${user.id}`, JSON.stringify(routineIds));
+        parsedData = { state: { selectedDate: todayDate, sessions: {}, currentDayMemo: '' }, version: 0 };
       }
+
+      if (!parsedData.state) {
+        parsedData.state = { selectedDate: todayDate, sessions: {}, currentDayMemo: '' };
+      }
+      
+      if (!parsedData.state.sessions) {
+        parsedData.state.sessions = {};
+      }
+
+      // 오늘 날짜의 세션 생성/업데이트
+      if (routines.length === 0) {
+        // 선택된 루틴이 없으면 오늘 날짜 세션을 빈 배열로 설정
+        parsedData.state.sessions[todayDate] = [];
+      } else {
+        // 선택된 루틴들을 세션 형태로 변환
+        const sessionRoutines = routines.map(routine => ({
+          logId: null,
+          routineId: routine.id,
+          routineName: routine.name,
+          exercises: routine.exercises.map((ex: any) => ({
+            exerciseId: ex.exerciseId,
+            exerciseName: ex.exerciseName,
+            isCompleted: false,
+          })),
+          completionRate: 0,
+        }));
+        
+        parsedData.state.sessions[todayDate] = sessionRoutines;
+      }
+      
+      localStorage.setItem('exercise-log-storage', JSON.stringify(parsedData));
+      console.log('오늘 루틴 선택 저장 완료:', routines.map(r => r.name));
     } catch (error) {
-      // 저장 실패 시 무시
+      console.error('루틴 저장 실패:', error);
     }
   };
 
@@ -114,32 +160,52 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
     setTempSelectedRoutines(selectedRoutines);
   }, [selectedRoutines]);
 
-  // 컴포넌트 마운트 시 저장된 선택 상태 복원 (새로고침 후에도 유지)
+  // 컴포넌트 마운트 시 exercise-log-storage에서 오늘 선택된 루틴 복원
   useEffect(() => {
     if (user?.id && allUserRoutines.length > 0) {
-      const storedRoutines = getStoredSelectedRoutines();
-      if (storedRoutines.length > 0 && selectedRoutines.length === 0) {
-        // 저장된 루틴들이 있고 현재 선택된 루틴이 없을 때만 복원
-        onRoutineSelect(storedRoutines);
+      const todayStorageRoutines = getTodaySelectedRoutinesFromStorage();
+      if (todayStorageRoutines.length > 0 && selectedRoutines.length === 0) {
+        // exercise-log-storage에 오늘 날짜 세션이 있고 현재 선택된 루틴이 없을 때만 복원
+        onRoutineSelect(todayStorageRoutines);
       }
     }
   }, [user?.id, allUserRoutines.length]); // onRoutineSelect 의존성 제거하고 길이만 체크
 
-  // 컴포넌트 마운트 시 및 주기적으로 완료된 루틴 확인
+  // 컴포넌트 마운트 시 및 주기적으로 완료된 루틴 확인 + 선택된 루틴 상태 업데이트
   useEffect(() => {
     const updateCompletedRoutines = () => {
       const { completedRoutines, routineCompletionData } = getRoutineCompletionFromStorage();
       setTodayCompletedRoutines(completedRoutines);
       setRoutineCompletionData(routineCompletionData);
+      
+      // exercise-log-storage에서 오늘 선택된 루틴 확인하여 상태 동기화
+      if (user?.id && allUserRoutines.length > 0) {
+        const todayStorageRoutines = getTodaySelectedRoutinesFromStorage();
+        if (todayStorageRoutines.length > 0 && selectedRoutines.length === 0) {
+          onRoutineSelect(todayStorageRoutines);
+        }
+      }
     };
 
     updateCompletedRoutines();
     
-    // 10초마다 확인 (실시간 업데이트를 위해)
-    const interval = setInterval(updateCompletedRoutines, 10000);
+    // storage 이벤트 리스너 추가 (다른 탭에서의 변경사항 감지)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'exercise-log-storage') {
+        updateCompletedRoutines();
+      }
+    };
     
-    return () => clearInterval(interval);
-  }, []);
+    window.addEventListener('storage', handleStorageChange);
+    
+    // 5초마다 확인 (실시간 업데이트를 위해)
+    const interval = setInterval(updateCompletedRoutines, 5000);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [user?.id, allUserRoutines.length, selectedRoutines.length]);
 
   const handleRoutineToggle = (routine: Routine) => {
     setTempSelectedRoutines(prev => 
@@ -168,8 +234,8 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
       return;
     }
 
-    // localStorage에 선택 상태 저장
-    saveSelectedRoutines(validRoutines);
+    // exercise-log-storage에 선택 상태 저장
+    saveSelectedRoutinesToStorage(validRoutines);
     
     onRoutineSelect(validRoutines);
     setIsDialogOpen(false);
@@ -203,7 +269,9 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
           {allUserRoutines.map(routine => {
             const completionRate = routineCompletionData[routine.name] || 0;
             const isCompleted = todayCompletedRoutines.includes(routine.name);
-            const isSelected = selectedRoutines.some(r => r.id === routine.id);
+            // exercise-log-storage에서 오늘 선택된 루틴인지 확인
+            const todayStorageRoutines = getTodaySelectedRoutinesFromStorage();
+            const isSelected = todayStorageRoutines.some(r => r.id === routine.id);
             
             return (
               <div key={routine.id} className={`bg-white/10 rounded-lg p-3 ${

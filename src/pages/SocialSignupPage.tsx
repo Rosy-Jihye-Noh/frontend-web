@@ -68,7 +68,7 @@ const SocialSignupPage = () => {
 
 
     return (
-        <div className="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="bg-background min-h-screen flex flex-col items-center justify-center p-4">
             <h1 className="text-3xl font-extrabold text-blue-600 mb-8">SynergyM</h1>
             <Card className="w-full max-w-lg p-8">
                 <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-white">소셜 회원가입</h2>

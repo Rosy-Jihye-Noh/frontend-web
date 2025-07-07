@@ -228,7 +228,7 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
   // 사용자 정보가 없는 경우 처리 (user 상태가 undefined가 아니라 null일 때만)
   if (user === null) {
     return (
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="bg-card rounded-xl shadow-lg p-6">
         <div className="flex justify-center items-center py-12">
           <div className="text-center text-gray-500">
             <p>로그인이 필요합니다.</p>
@@ -241,7 +241,7 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
   // 사용자 정보 로딩 중
   if (user === undefined || !userId) {
     return (
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="bg-card rounded-xl shadow-lg p-6">
         <div className="flex justify-center items-center py-12">
           <div className="text-center text-gray-500">
             <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-2"></div>
@@ -254,7 +254,7 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="bg-card rounded-xl shadow-lg p-6">
         <div className="flex justify-center items-center py-12">
           <div className="text-center text-gray-500">
             <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-2"></div>
@@ -266,8 +266,8 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
-      <h2 className="text-xl font-bold text-gray-800 mb-6">운동 기록</h2>
+    <div className="bg-card rounded-xl shadow-lg p-6">
+      <h2 className="text-xl font-bold text-foreground mb-6">운동 기록</h2>
 
       {/* 운동 기록 메인 컨텐츠 */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -277,7 +277,7 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
                     {/* 격려/칭찬 메시지 */}
           {stats && (
             <div className="mt-6">
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-lg p-4 border border-purple-100 dark:border-border">
                 <div className="flex items-center space-x-3">
                   {stats.weeklyCompletedRoutines > stats.weeklyExerciseCount ? (
                     <>
@@ -287,8 +287,8 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
                         </div>
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-semibold text-purple-800 mb-1">정말 대단해요!</p>
-                        <p className="text-xs text-purple-600">
+                        <p className="text-sm font-semibold text-purple-800 dark:text-purple-300 mb-1">정말 대단해요!</p>
+                        <p className="text-xs text-purple-600 dark:text-purple-400">
                           하루에 여러 개의 루틴을 수행하며 정말 열심히 운동하고 계시네요! 
                           이런 노력이 건강한 습관을 만들어갑니다. 💪
                         </p>
@@ -302,8 +302,8 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
                         </div>
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-semibold text-orange-800 mb-1">조금 더 화이팅!</p>
-                        <p className="text-xs text-orange-600">
+                        <p className="text-sm font-semibold text-orange-800 dark:text-orange-300 mb-1">조금 더 화이팅!</p>
+                        <p className="text-xs text-orange-600 dark:text-orange-400">
                           운동은 잘 하고 계시는데, 루틴 완성도를 높여보는 건 어떨까요? 
                           체계적인 루틴으로 더 효과적인 운동을 경험해보세요! 🔥
                         </p>
@@ -317,8 +317,8 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
                         </div>
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-semibold text-green-800 mb-1">완벽한 밸런스!</p>
-                        <p className="text-xs text-green-600">
+                        <p className="text-sm font-semibold text-green-800 dark:text-green-300 mb-1">완벽한 밸런스!</p>
+                        <p className="text-xs text-green-600 dark:text-green-400">
                           운동 기록과 루틴 완료가 균형 잡혀 있어요! 
                           꾸준한 페이스로 건강한 운동 습관을 유지하고 계시네요. 👍
                         </p>
@@ -334,36 +334,36 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
           <div className="mt-6">
             {stats ? (
               <div className="space-y-4">
-                <div className="bg-blue-50 rounded-lg p-4">
+                <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <p className="text-sm text-gray-600 font-medium">이번 주 (월~일)</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">이번 주 (월~일)</p>
                       <div className="grid grid-cols-2 gap-4 mt-2">
                         <div>
-                          <p className="text-xl font-bold text-700">{stats.weeklyExerciseCount}회</p>
-                          <p className="text-xs text-500">운동 기록</p>
+                          <p className="text-xl font-bold text-gray-700 dark:text-gray-200">{stats.weeklyExerciseCount}회</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">운동 기록</p>
                         </div>
                         <div>
-                          <p className="text-xl font-bold text-700">{stats.weeklyCompletedRoutines}개</p>
-                          <p className="text-xs text-500">완료된 루틴</p>
+                          <p className="text-xl font-bold text-gray-700 dark:text-gray-200">{stats.weeklyCompletedRoutines}개</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">완료된 루틴</p>
                         </div>
                       </div>
                     </div>
                     <HiTrendingUp className="w-8 h-8 text-blue-500" />
                   </div>
                 </div>
-                <div className="bg-green-50 rounded-lg p-4">
+                <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <p className="text-sm text-gray-600 font-medium">이번 달 (1일~말일)</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">이번 달 (1일~말일)</p>
                       <div className="grid grid-cols-2 gap-4 mt-2">
                         <div>
-                          <p className="text-xl font-bold text-700">{stats.monthlyExerciseCount}회</p>
-                          <p className="text-xs text-500">운동 기록</p>
+                          <p className="text-xl font-bold text-gray-700 dark:text-gray-200">{stats.monthlyExerciseCount}회</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">운동 기록</p>
                         </div>
                         <div>
-                          <p className="text-xl font-bold text-700">{stats.monthlyCompletedRoutines}개</p>
-                          <p className="text-xs text-500">완료된 루틴</p>
+                          <p className="text-xl font-bold text-gray-700 dark:text-gray-200">{stats.monthlyCompletedRoutines}개</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">완료된 루틴</p>
                         </div>
                       </div>
                     </div>
@@ -373,22 +373,22 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-muted rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-500 font-medium">이번 주</p>
-                      <p className="text-2xl font-bold text-gray-400">데이터 없음</p>
-                      <p className="text-xs text-gray-400">운동 기록을 시작해보세요</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">이번 주</p>
+                      <p className="text-2xl font-bold text-gray-400 dark:text-gray-500">데이터 없음</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">운동 기록을 시작해보세요</p>
                     </div>
                     <HiTrendingUp className="w-8 h-8 text-gray-300" />
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-muted rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-500 font-medium">이번 달</p>
-                      <p className="text-2xl font-bold text-gray-400">데이터 없음</p>
-                      <p className="text-xs text-gray-400">운동 기록을 시작해보세요</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">이번 달</p>
+                      <p className="text-2xl font-bold text-gray-400 dark:text-gray-500">데이터 없음</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">운동 기록을 시작해보세요</p>
                     </div>
                     <HiCheckCircle className="w-8 h-8 text-gray-300" />
                   </div>

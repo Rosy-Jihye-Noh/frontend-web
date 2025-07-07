@@ -154,12 +154,12 @@ const EditProfilePage: React.FC = () => {
     }
 
     return (
-        <div className="max-w-md mx-auto p-4 bg-white min-h-screen">
+        <div className="max-w-md mx-auto p-4 bg-background min-h-screen">
             <header className="relative flex items-center justify-center py-4 mb-6">
-                <button onClick={() => navigate(-1)} className="absolute left-0 p-2 hover:bg-gray-100 rounded-full transition-colors">
-                    <HiArrowLeft className="w-6 h-6 text-gray-600" />
+                <button onClick={() => navigate(-1)} className="absolute left-0 p-2 hover:bg-muted rounded-full transition-colors">
+                    <HiArrowLeft className="w-6 h-6 text-muted-foreground" />
                 </button>
-                <h1 className="text-xl font-bold text-gray-800">프로필 수정</h1>
+                <h1 className="text-xl font-bold text-foreground">프로필 수정</h1>
             </header>
 
             <div className="flex flex-col items-center mb-8">
@@ -178,40 +178,40 @@ const EditProfilePage: React.FC = () => {
 
             <div className="space-y-6">
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">닉네임</label>
+                    <label className="block text-sm font-semibold text-foreground mb-2">닉네임</label>
                     <input 
                         type="text" 
                         value={name} 
                         onChange={(e) => setName(e.target.value)} 
-                        className="w-full border-2 border-gray-200 rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                        className="w-full border-2 border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
                         placeholder="닉네임을 입력하세요"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">목표</label>
+                    <label className="block text-sm font-semibold text-foreground mb-2">목표</label>
                     <input 
                         type="text" 
                         value={goal} 
                         onChange={(e) => setGoal(e.target.value)} 
-                        className="w-full border-2 border-gray-200 rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                        className="w-full border-2 border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
                         placeholder="운동 목표를 입력하세요"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">생년월일</label>
+                    <label className="block text-sm font-semibold text-foreground mb-2">생년월일</label>
                     <input 
                         type="date" 
                         value={birthday || ''} 
                         onChange={(e) => setBirthday(e.target.value)} 
-                        className="w-full border-2 border-gray-200 rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                        className="w-full border-2 border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">성별</label>
+                    <label className="block text-sm font-semibold text-foreground mb-2">성별</label>
                     <select 
                         value={gender || ''} 
                         onChange={(e) => setGender(e.target.value)} 
-                        className="w-full border-2 border-gray-200 rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                        className="w-full border-2 border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-background"
                     >
                         <option value="">선택 안 함</option>
                         <option value="MALE">남성</option>
@@ -220,22 +220,22 @@ const EditProfilePage: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">몸무게 (kg)</label>
+                        <label className="block text-sm font-semibold text-foreground mb-2">몸무게 (kg)</label>
                         <input 
                             type="number" 
                             value={weight || ''} 
                             onChange={(e) => setWeight(e.target.value ? Number(e.target.value) : null)} 
-                            className="w-full border-2 border-gray-200 rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                            className="w-full border-2 border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
                             placeholder="kg"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">키 (cm)</label>
+                        <label className="block text-sm font-semibold text-foreground mb-2">키 (cm)</label>
                         <input 
                             type="number" 
                             value={height || ''} 
                             onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : null)} 
-                            className="w-full border-2 border-gray-200 rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                            className="w-full border-2 border-border rounded-lg p-3 text-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
                             placeholder="cm"
                         />
                     </div>

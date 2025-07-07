@@ -410,7 +410,7 @@ const DailyLogComponent = () => {
             <div className="p-2 bg-blue-100 rounded-full">
               <Dumbbell className="h-5 w-5 text-blue-600" />
             </div>
-            <span className="text-gray-800">{dateTitle} 운동</span>
+                            <span className="text-gray-800 dark:text-gray-200">{dateTitle} 운동</span>
             {/* 완료 뱃지 표시 */}
             {isDateFullyCompleted() && (
               <div className="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full flex items-center gap-1">
@@ -469,7 +469,7 @@ const DailyLogComponent = () => {
                           checked={selectedRoutines.some(r => r.id === routine.id)} 
                           className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                         />
-                        <span className="font-medium text-gray-700">{routine.name}</span>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">{routine.name}</span>
                       </div>
                     ))}
                   </div>
@@ -488,7 +488,7 @@ const DailyLogComponent = () => {
           ) : (
             <div className="space-y-6">
               {sessionRoutines.map(routine => (
-                <div key={routine.routineId} className="bg-white rounded-lg p-4 border border-blue-100 shadow-sm">
+                <div key={routine.routineId} className="bg-card rounded-lg p-4 border border-blue-100 shadow-sm">
                   <h3 className="font-semibold text-md mb-3 flex items-center gap-2">
                     {routine.completionRate === 100 ? (
                       <div className="p-1 bg-emerald-100 rounded-full">
@@ -548,7 +548,7 @@ const DailyLogComponent = () => {
               ))}
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full mt-4 border-dashed border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200">
+                  <Button variant="outline" className="w-full mt-4 border-dashed border-blue-300 dark:border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:border-blue-400 dark:hover:border-blue-300 transition-all duration-200">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     수행할 루틴 추가하기
                   </Button>
@@ -578,7 +578,7 @@ const DailyLogComponent = () => {
                             checked={selectedRoutines.some(r => r.id === routine.id)}
                             className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                           />
-                          <span className="font-medium text-gray-700">{routine.name}</span>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">{routine.name}</span>
                         </div>
                     ))}
                   </div>
@@ -606,7 +606,7 @@ const DailyLogComponent = () => {
               <div className="p-2 bg-blue-100 rounded-full">
                 <Save className="h-4 w-4 text-blue-600" />
               </div>
-              <span className="text-gray-800">운동 메모</span>
+              <span className="text-gray-800 dark:text-gray-200">운동 메모</span>
             </div>
             <Button
               onClick={handleMemoSave}
@@ -665,7 +665,7 @@ const DailyLogComponent = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="p-4 bg-muted rounded-lg border border-border">
               <p className="text-sm text-gray-800 font-medium">
                 {dateTitle}의 모든 운동 기록과 메모가 삭제됩니다.
               </p>

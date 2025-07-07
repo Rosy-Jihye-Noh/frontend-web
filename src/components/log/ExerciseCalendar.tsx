@@ -137,8 +137,8 @@ export const ExerciseCalendar: React.FC<ExerciseCalendarProps> = () => {
             today: 'bg-accent text-accent-foreground rounded-md',
             level4: 'bg-blue-500 text-white rounded-md',
             level3: 'bg-blue-400 text-white rounded-md',
-            level2: 'bg-blue-300 text-blue-800 rounded-md',
-            level1: 'bg-blue-200 text-blue-700 rounded-md',
+            level2: 'bg-blue-300 dark:bg-blue-400 text-blue-800 dark:text-white rounded-md',
+            level1: 'bg-blue-200 dark:bg-blue-300 text-blue-700 dark:text-blue-900 rounded-md',
           }}
         />
       </CardContent>

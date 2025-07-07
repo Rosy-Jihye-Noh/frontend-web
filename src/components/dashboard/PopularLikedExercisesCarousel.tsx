@@ -69,7 +69,7 @@ const PopularLikedExercisesCarousel: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col justify-center items-center flex-1 space-y-4">
-          <p className="text-gray-500 text-center">아직 좋아요가 많은 운동이 없습니다.</p>
+          <p className="text-gray-500 dark:text-gray-400 text-center">아직 좋아요가 많은 운동이 없습니다.</p>
           <Button
             onClick={() => navigate('/exercises')}
             variant="outline"
@@ -97,7 +97,7 @@ const PopularLikedExercisesCarousel: React.FC = () => {
         {currentExercise && (
           <div className="relative flex-1 flex items-center px-8">
             <div 
-              className="bg-blue-50 rounded-lg p-4 cursor-pointer transition-all duration-300 hover:bg-blue-100 hover:scale-[1.02] w-full"
+              className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 cursor-pointer transition-all duration-300 hover:bg-blue-100 dark:hover:bg-blue-950/30 hover:scale-[1.02] w-full"
               onClick={() => navigate(`/exercises/${currentExercise.id}`)}
             >
               <div className="text-center">
@@ -121,12 +121,12 @@ const PopularLikedExercisesCarousel: React.FC = () => {
                     <span className="text-3xl">💪</span>
                   )}
                 </div>
-                <h4 className="font-semibold text-gray-900 mb-1 text-sm truncate">{currentExercise.name}</h4>
-                <p className="text-xs text-gray-500 mb-2 truncate">{currentExercise.bodyPart}</p>
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-1 text-sm truncate">{currentExercise.name}</h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 truncate">{currentExercise.bodyPart}</p>
                 <div className="flex items-center justify-center gap-2">
                   <HiHeart className="w-4 h-4 text-red-500" />
-                  <span className="text-sm text-gray-600">{currentExercise.likeCount || 0}</span>
-                  <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full ml-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">{currentExercise.likeCount || 0}</span>
+                  <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-1 rounded-full ml-2">
                     {currentExercise.category}
                   </span>
                 </div>
@@ -166,7 +166,7 @@ const PopularLikedExercisesCarousel: React.FC = () => {
           onClick={() => navigate('/exercises')}
           variant="outline"
           size="sm"
-          className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 flex-shrink-0"
+          className="w-full border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 flex-shrink-0"
         >
           더 많은 운동 보기
         </Button>

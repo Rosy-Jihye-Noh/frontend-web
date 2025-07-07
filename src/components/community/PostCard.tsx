@@ -46,7 +46,7 @@ const PostCard: React.FC<PostCardProps> = ({
         </div>
         {post.imageUrl && (
           <div 
-            className="w-16 h-16 ml-2 flex-shrink-0 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden"
+            className="w-16 h-16 ml-2 flex-shrink-0 rounded-md bg-muted flex items-center justify-center overflow-hidden"
             style={{
               width: '64px',
               height: '64px',

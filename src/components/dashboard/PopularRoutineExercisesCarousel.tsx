@@ -69,11 +69,11 @@ const PopularRoutineExercisesCarousel: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col justify-center items-center flex-1 space-y-4">
-          <p className="text-gray-500 text-center">아직 루틴에 많이 추가된 운동이 없습니다.</p>
+          <p className="text-gray-500 dark:text-gray-400 text-center">아직 루틴에 많이 추가된 운동이 없습니다.</p>
           <Button
             onClick={() => navigate('/routines/new')}
             size="sm"
-            className="bg-blue-600 text-white hover:bg-blue-700"
+            className="bg-blue-500 dark:bg-blue-400 text-white hover:bg-blue-600 dark:hover:bg-blue-300"
           >
             첫 루틴 만들기
           </Button>
@@ -96,7 +96,7 @@ const PopularRoutineExercisesCarousel: React.FC = () => {
         {currentExercise && (
           <div className="relative flex-1 flex items-center px-8">
             <div 
-              className="bg-green-50 rounded-lg p-4 cursor-pointer transition-all duration-300 hover:bg-green-100 hover:scale-[1.02] w-full"
+              className="bg-green-50 dark:bg-green-950/20 rounded-lg p-4 cursor-pointer transition-all duration-300 hover:bg-green-100 dark:hover:bg-green-950/30 hover:scale-[1.02] w-full"
               onClick={() => navigate(`/exercises/${currentExercise.id}`)}
             >
               <div className="text-center">
@@ -120,12 +120,12 @@ const PopularRoutineExercisesCarousel: React.FC = () => {
                     <span className="text-3xl">🏋️</span>
                   )}
                 </div>
-                <h4 className="font-semibold text-gray-900 mb-1 text-sm truncate">{currentExercise.name}</h4>
-                <p className="text-xs text-gray-500 mb-2 truncate">{currentExercise.bodyPart}</p>
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-1 text-sm truncate">{currentExercise.name}</h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 truncate">{currentExercise.bodyPart}</p>
                 <div className="flex items-center justify-center gap-2">
                   <HiPlus className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm text-gray-600">{currentExercise.routineCount || 0}</span>
-                  <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full ml-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">{currentExercise.routineCount || 0}</span>
+                  <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full ml-2">
                     {currentExercise.category}
                   </span>
                 </div>
@@ -164,7 +164,7 @@ const PopularRoutineExercisesCarousel: React.FC = () => {
         <Button
           onClick={() => navigate('/routines/new')}
           size="sm"
-          className="w-full bg-green-600 text-white hover:bg-green-700 flex-shrink-0"
+          className="w-full bg-green-500 dark:bg-green-400 text-white hover:bg-green-600 dark:hover:bg-green-300 flex-shrink-0"
         >
           나만의 루틴 만들기
         </Button>

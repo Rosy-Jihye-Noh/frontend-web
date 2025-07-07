@@ -22,14 +22,14 @@ const LikedExercisesSection: React.FC<LikedExercisesSectionProps> = ({ likedExer
                     ex.thumbnailUrl && (
                         <div 
                             key={ex.id} 
-                            className="text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg p-2 transition-colors"
+                            className="text-center cursor-pointer hover:bg-muted rounded-lg p-2 transition-colors"
                             onClick={() => handleExerciseClick(ex.id)}
                         >
                             <div className="w-full h-24 mb-2 overflow-hidden rounded-md">
                                 <img 
                                     src={ex.thumbnailUrl} 
                                     alt={ex.name} 
-                                    className="w-full h-full object-contain bg-gray-100 dark:bg-gray-700" 
+                                    className="w-full h-full object-contain bg-muted" 
                                 />
                             </div>
                             <p className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{ex.name}</p>
