@@ -32,7 +32,12 @@ const LoginPage = () => {
       if (responseData.success) {
         // loginUser 함수를 사용해서 통합 로그인 처리
         const loginResponse = {
-          user: responseData.user,
+          user: {
+            id: responseData.user.id,
+            name: responseData.user.name,
+            goal: '', // Default empty goal for regular login
+            profileImageUrl: null // Default null profile image for regular login
+          },
           token: responseData.token,
           success: responseData.success,
           message: responseData.message,
@@ -58,7 +63,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="bg-background min-h-screen flex flex-col items-center justify-center p-4">
+    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
       <h1 className="text-3xl font-extrabold text-blue-600 mb-8">SynergyM</h1>
       <Card className="w-full max-w-md p-8">
         <h2 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-white">

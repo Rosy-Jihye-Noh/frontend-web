@@ -1,6 +1,13 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface PaginationProps {
   currentPage: number; // 0-based index
@@ -8,20 +15,12 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
-  const MAX_VISIBLE_PAGES = 8;
+const CustomPagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
+  const MAX_VISIBLE_PAGES = 5;
   
   if (totalPages <= 1) {
     return null; // 페이지가 하나 이하면 렌더링하지 않음
   }
-
-  const handlePrevious = () => {
-    onPageChange(Math.max(0, currentPage - 1));
-  };
-
-  const handleNext = () => {
-    onPageChange(Math.min(totalPages - 1, currentPage + 1));
-  };
 
   const getPageNumbers = () => {
     // 전체 페이지 수가 최대 표시 개수보다 적으면 모든 페이지 번호를 보여줌
@@ -47,62 +46,72 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
   };
 
   const pageNumbers = getPageNumbers();
+  const showStartEllipsis = pageNumbers[0] > 0;
+  const showEndEllipsis = pageNumbers[pageNumbers.length - 1] < totalPages - 1;
 
   return (
-    <nav className="flex items-center justify-center space-x-2">
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => onPageChange(0)}
-        disabled={currentPage === 0}
-        className="h-9 w-9"
-        aria-label="맨 처음 페이지"
-      >
-        <ChevronsLeft className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={handlePrevious}
-        disabled={currentPage === 0}
-        className="h-9 w-9"
-        aria-label="이전 페이지"
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
-      {pageNumbers.map((page) => (
-        <Button
-          key={page}
-          variant={currentPage === page ? 'default' : 'outline'}
-          size="icon"
-          onClick={() => onPageChange(page)}
-          className="h-9 w-9"
-        >
-          {page + 1}
-        </Button>
-      ))}
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={handleNext}
-        disabled={currentPage === totalPages - 1}
-        className="h-9 w-9"
-        aria-label="다음 페이지"
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => onPageChange(totalPages - 1)}
-        disabled={currentPage === totalPages - 1}
-        className="h-9 w-9"
-        aria-label="맨 끝 페이지"
-      >
-        <ChevronsRight className="h-4 w-4" />
-      </Button>
-    </nav>
+    <Pagination className="w-full">
+      <PaginationContent className="gap-0.5">
+        <PaginationItem>
+          <PaginationPrevious 
+            onClick={() => onPageChange(Math.max(0, currentPage - 1))}
+            className={`h-7 px-2 text-xs ${currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
+          />
+        </PaginationItem>
+        
+        {showStartEllipsis && (
+          <>
+            <PaginationItem>
+              <PaginationLink 
+                onClick={() => onPageChange(0)}
+                className="h-7 w-7 text-xs cursor-pointer"
+              >
+                1
+              </PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationEllipsis className="h-7 w-7" />
+            </PaginationItem>
+          </>
+        )}
+        
+        {pageNumbers.map((page) => (
+          <PaginationItem key={page}>
+            <PaginationLink
+              onClick={() => onPageChange(page)}
+              isActive={currentPage === page}
+              className="h-7 w-7 text-xs cursor-pointer"
+            >
+              {page + 1}
+            </PaginationLink>
+          </PaginationItem>
+        ))}
+        
+        {showEndEllipsis && (
+          <>
+            <PaginationItem>
+              <PaginationEllipsis className="h-7 w-7" />
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink 
+                onClick={() => onPageChange(totalPages - 1)}
+                className="h-7 w-7 text-xs cursor-pointer"
+              >
+                {totalPages}
+              </PaginationLink>
+            </PaginationItem>
+          </>
+        )}
+        
+        <PaginationItem>
+          <PaginationNext 
+            onClick={() => onPageChange(Math.min(totalPages - 1, currentPage + 1))}
+            className={`h-7 px-2 text-xs ${currentPage === totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
   );
 };
 
-export default Pagination;
+export default CustomPagination;
