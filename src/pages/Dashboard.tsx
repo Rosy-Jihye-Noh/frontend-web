@@ -81,10 +81,10 @@ const Dashboard: React.FC = () => {
               const postRes = await axiosInstance.get(`/posts/category/${cat.id}/popular`, { params: { size: 1 } });
               const post = postRes.data.content?.[0];
               return post
-                ? { category: cat.name, title: post.title, likes: post.likeCount }
-                : { category: cat.name, title: '', likes: 0 };
+                ? { category: cat.name, title: post.title, likes: post.likeCount, id: post.id }
+                : { category: cat.name, title: '', likes: 0, id: null };
             } catch {
-              return { category: cat.name, title: '', likes: 0 };
+              return { category: cat.name, title: '', likes: 0, id: null };
             }
           })
         );
