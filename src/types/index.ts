@@ -101,11 +101,21 @@ export interface UserComment {
 // 알림
 export interface Notification {
   id: number;
-  type: 'COMMENT' | 'LIKE' | 'REPLY';
-  title: string;
+  type: 'POST_COMMENT' | 'POST_LIKE' | 'COMMENT_REPLY' | 'COMMENT' | 'LIKE' | 'REPLY';
   message: string;
-  postId?: number;
+  referenceId?: number; // postId에 해당
   postTitle?: string;
-  isRead: boolean;
+  read: boolean; // isRead에 해당
   createdAt: string;
+  updatedAt: string;
+  senderId: number;
+  senderName: string;
+  userId: number;
+  userName: string;
+  useYn: 'Y' | 'N';
+  
+  // 호환성을 위한 계산된 속성들 (게터로 처리)
+  title?: string;
+  postId?: number;
+  isRead?: boolean;
 }
