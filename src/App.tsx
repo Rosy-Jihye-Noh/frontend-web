@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { useRef, useEffect } from 'react';
 import Chatbot from './components/chat/Chatbot';
@@ -12,6 +12,7 @@ import SocialSignupPage from './pages/SocialSignupPage';
 import MyPage from './pages/MyPage';
 import EditProfilePage from './pages/EditProfilePage';
 import AnalysisResultPage from './pages/AnalysisResultPage';
+import AnalysisSharePage from './pages/AnalysisSharePage';
 import Dashboard from './pages/Dashboard';
 import PhotoUpload from './pages/PhotoUpload';
 import ExerciseListPage from './pages/ExerciseListPage';
@@ -28,6 +29,7 @@ import { ContentManagementPage } from './pages/CommunityManagementPage';
 
 const App = () => {
   const chatbotRef = useRef<any>(null);
+  const location = useLocation();
 
   useEffect(() => {
     (window as any).openChatbot = (type: string, payload?: any) => {
@@ -39,6 +41,9 @@ const App = () => {
       (window as any).openChatbot = undefined;
     };
   }, []);
+
+  // 공유 페이지에서는 챗봇 숨기기
+  const isSharePage = location.pathname.includes('/analysis-share/');
 
   return (
     <>
@@ -53,6 +58,7 @@ const App = () => {
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/mypage/edit" element={<EditProfilePage />} />
         <Route path="/analysis-result/:historyId" element={<AnalysisResultPage />} />
+        <Route path="/analysis-share/:historyId" element={<AnalysisSharePage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/photoupload" element={<PhotoUpload />} />
         <Route path="/exercises" element={<ExerciseListPage />} />
@@ -77,7 +83,7 @@ const App = () => {
         closeButton 
         expand={true}
       />
-      <Chatbot ref={chatbotRef} />
+      {!isSharePage && <Chatbot ref={chatbotRef} />}
     </>
   )
 }

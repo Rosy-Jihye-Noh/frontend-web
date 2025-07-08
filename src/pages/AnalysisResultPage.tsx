@@ -2,15 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { HiArrowLeft, HiCheckCircle } from 'react-icons/hi';
+import { HiArrowLeft, HiCheckCircle, HiShare } from 'react-icons/hi';
 import Header from '@/components/common/Header';
 import { useUserStore } from '@/store/userStore';
 import type { AnalysisHistoryItem } from '@/types/index';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 interface LocationState {
   frontPhoto: File;
   sidePhoto: File | null;
+}
+
+interface AnalysisResultPageProps {
+  isReadOnly?: boolean;
 }
 
 // 점수별 진단 결과와 등급을 반환하는 헬퍼 함수
@@ -26,7 +31,7 @@ const getOverallGrade = (score: number) => {
   return '개선 필요';
 };
 
-const AnalysisResultPage: React.FC = () => {
+const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { historyId } = useParams<{ historyId: string }>();
@@ -136,6 +141,34 @@ const AnalysisResultPage: React.FC = () => {
     setIsModalOpen(false);
   };
 
+  // 공유 기능
+  const handleShare = async () => {
+    if (!analysis) return;
+
+    const shareUrl = `${window.location.origin}/analysis-share/${analysis.id}`;
+    
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'AI 자세 분석 결과',
+          text: 'AI가 분석한 자세 결과를 확인해보세요!',
+          url: shareUrl,
+        });
+        toast.success('공유가 완료되었습니다!');
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success('링크가 클립보드에 복사되었습니다!');
+      }
+    } catch (error) {
+      console.error('공유 중 오류:', error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        // 사용자가 공유를 취소한 경우
+        return;
+      }
+      toast.error('공유 중 오류가 발생했습니다.');
+    }
+  };
+
   const renderLoadingContent = () => (
     <div className="flex flex-col items-center justify-center h-full text-center p-4 min-h-[60vh]">
       <div className="w-16 h-16 border-4 border-blue-500 border-dashed rounded-full animate-spin mb-6"></div>
@@ -183,10 +216,25 @@ const AnalysisResultPage: React.FC = () => {
       <div className="max-w-3xl mx-auto">
         {/* 헤더 */}
         <header className="relative flex items-center justify-center mb-6">
-          <button onClick={() => navigate(-1)} className="absolute left-0 p-2">
-            <HiArrowLeft className="w-6 h-6" />
-          </button>
-          <h1 className="text-2xl font-bold">AI 분석 결과</h1>
+          {!isReadOnly && (
+            <button 
+              onClick={() => navigate(-1)} 
+              className="absolute left-0 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              title="뒤로 가기"
+            >
+              <HiArrowLeft className="w-6 h-6" />
+            </button>
+          )}
+          <h1 className="text-xl sm:text-2xl font-bold">AI 분석 결과</h1>
+          {!isReadOnly && (
+            <button 
+              onClick={handleShare}
+              className="absolute right-0 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              title="결과 공유하기"
+            >
+              <HiShare className="w-6 h-6" />
+            </button>
+          )}
         </header>
 
         {/* 전체 점수 카드 */}
@@ -234,13 +282,18 @@ const AnalysisResultPage: React.FC = () => {
           </p>
         </Card>
 
-        {/* 맞춤 운동 추천 버튼 */}
-        <Button
-          className="w-full !py-4 !text-base !font-bold bg-blue-600 hover:bg-blue-700 text-white"
-          onClick={() => setIsModalOpen(true)}
-        >
-          맞춤 운동 추천 보기
-        </Button>
+        {/* 맞춤 운동 추천 버튼 - 읽기 전용이 아닐 때만 표시 */}
+        {!isReadOnly && (
+          <Button
+            className="w-full !py-4 !text-base !font-bold bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={() => setIsModalOpen(true)}
+          >
+            맞춤 운동 추천 보기
+          </Button>
+        )}
+
+
+
         {/* 모달 */}
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="max-w-md w-full">
@@ -270,8 +323,8 @@ const AnalysisResultPage: React.FC = () => {
 
   return (
     <div className="bg-background min-h-screen">
-      <Header />
-      <main className="max-w-4xl mx-auto pt-32 px-4 sm:px-8 lg:px-16 pb-8">
+      {!isReadOnly && <Header />}
+      <main className={`max-w-4xl mx-auto ${!isReadOnly ? 'pt-32' : 'pt-8'} px-4 sm:px-8 lg:px-16 pb-8`}>
         {status === 'loading' && renderLoadingContent()}
         {status === 'completed' && renderCompletedContent()}
         {status === 'error' && renderErrorContent()}
