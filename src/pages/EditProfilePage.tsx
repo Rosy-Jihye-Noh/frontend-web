@@ -5,6 +5,8 @@ import type { ProfileUser } from '@/types/index';
 import { Button } from '@/components/ui/button';
 import { HiArrowLeft, HiUser } from 'react-icons/hi';
 import { toast } from 'sonner';
+import axiosInstance from '@/api/axiosInstance';
+import { fetchAuthenticatedImage, revokeObjectUrl } from '@/utils/imageUtils';
 
 const EditProfilePage: React.FC = () => {
     const navigate = useNavigate();
@@ -36,10 +38,10 @@ const EditProfilePage: React.FC = () => {
 
         const fetchUserData = async (userId: number) => {
             try {
-                const res = await fetch(`http://localhost:8081/api/users/${userId}`);
-                if (!res.ok) throw new Error('사용자 정보 로딩 실패');
+                const res = await axiosInstance.get(`/users/${userId}`);
+                if (res.status !== 200) throw new Error('사용자 정보 로딩 실패');
                 
-                const userData: ProfileUser = await res.json();
+                const userData: ProfileUser = res.data;
                 
                 // 가져온 데이터로 모든 폼 상태 초기화
                 setName(userData.name);
@@ -48,7 +50,14 @@ const EditProfilePage: React.FC = () => {
                 setGender(userData.gender || null);
                 setWeight(userData.weight || null);
                 setHeight(userData.height || null);
-                setPreviewImage(userData.profileImageUrl);
+                
+                // 프로필 이미지가 있으면 인증된 요청으로 로드
+                if (userData.profileImageUrl) {
+                    const imageObjectUrl = await fetchAuthenticatedImage(`/users/${userId}/profile-image`);
+                    if (imageObjectUrl) {
+                        setPreviewImage(imageObjectUrl);
+                    }
+                }
             } catch (error) {
                 console.error(error);
                 alert('사용자 정보를 불러오는 중 오류가 발생했습니다.');
@@ -56,6 +65,13 @@ const EditProfilePage: React.FC = () => {
         };
 
         fetchUserData(user.id);
+        
+        // 컴포넌트 언마운트 시 Object URL 정리
+        return () => {
+            if (previewImage && previewImage.startsWith('blob:')) {
+                revokeObjectUrl(previewImage);
+            }
+        };
     }, [hasHydrated, user, navigate]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,13 +120,14 @@ const EditProfilePage: React.FC = () => {
         }
 
         try {
-            const response = await fetch(`http://localhost:8081/api/users/${user.id}`, { 
-                method: 'PUT', 
-                body: formData 
+            const response = await axiosInstance.put(`/users/${user.id}`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                }
             });
             
-            if (!response.ok) {
-                const errorText = await response.text();
+            if (response.status !== 200) {
+                const errorText = response.statusText;
                 
                 // 파일 크기 초과 에러 체크
                 if (errorText.includes('MaxUploadSizeExceededException') || 

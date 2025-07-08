@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HiBell, HiChat, HiHeart, HiReply, HiCheck, HiX } from 'react-icons/hi';
 import type { Notification } from '@/types/index';
+import axiosInstance from '@/api/axiosInstance';
 
 interface NotificationsSectionProps {
   userId: number;
@@ -17,9 +18,9 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
   const fetchNotifications = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8081/api/users/${userId}/notifications`);
-      if (response.ok) {
-        const data = await response.json();
+      const response = await axiosInstance.get(`/users/${userId}/notifications`);
+      if (response.status === 200) {
+        const data = response.data;
         console.log('Notifications API Response:', data); // 디버깅용
         
         if (data && Array.isArray(data.content)) {
@@ -42,7 +43,7 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
           setNotifications([]);
         }
       } else {
-        console.error('Failed to fetch notifications:', response.status, response.statusText);
+        console.error('Failed to fetch notifications:', response.status);
         setNotifications([]);
       }
     } catch (error) {
@@ -72,18 +73,13 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
     );
 
     try {
-      const response = await fetch(`http://localhost:8081/api/users/${userId}/notifications/${notificationId}/read`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await axiosInstance.put(`/users/${userId}/notifications/${notificationId}/read`);
 
-      if (!response.ok) {
+      if (response.status === 200) {
+        console.log(`알림 ${notificationId} 읽음 처리 완료`);
+      } else {
         throw new Error(`Failed to mark as read: ${response.status}`);
       }
-
-      console.log(`알림 ${notificationId} 읽음 처리 완료`);
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
       // 에러 발생 시 원래 상태로 롤백
@@ -104,18 +100,13 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
     setNotifications(prev => prev.map(notif => ({ ...notif, isRead: true })));
     
     try {
-      const response = await fetch(`http://localhost:8081/api/users/${userId}/notifications/read-all`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await axiosInstance.put(`/users/${userId}/notifications/read-all`);
 
-      if (!response.ok) {
+      if (response.status === 200) {
+        console.log('모든 알림 읽음 처리 완료');
+      } else {
         throw new Error(`Failed to mark all as read: ${response.status}`);
       }
-
-      console.log('모든 알림 읽음 처리 완료');
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
       fetchNotifications(); // 실패 시 서버 데이터로 다시 동기화
@@ -128,18 +119,13 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
     setNotifications(prev => prev.filter(notif => notif.id !== notificationId));
 
     try {
-      const response = await fetch(`http://localhost:8081/api/users/${userId}/notifications/${notificationId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await axiosInstance.delete(`/users/${userId}/notifications/${notificationId}`);
 
-      if (!response.ok) {
+      if (response.status === 200) {
+        console.log(`알림 ${notificationId} 삭제 완료`);
+      } else {
         throw new Error(`Failed to delete notification: ${response.status}`);
       }
-
-      console.log(`알림 ${notificationId} 삭제 완료`);
     } catch (error) {
       console.error('Failed to delete notification:', error);
       setNotifications(originalNotifications); // 실패 시 롤백
