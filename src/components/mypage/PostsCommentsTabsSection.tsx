@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HiChatAlt, HiThumbUp, HiClock } from 'react-icons/hi';
 import type { UserPost, UserComment } from '@/types/index';
+import { fetchUserPosts as fetchUserPostsApi, fetchUserComments as fetchUserCommentsApi } from '@/services/api/communityApi';
+import axiosInstance from '@/api/axiosInstance';
 
 interface PostsCommentsTabsProps {
   userId: number;
@@ -25,76 +27,48 @@ const PostsCommentsTabsSection: React.FC<PostsCommentsTabsProps> = ({ userId }) 
     try {
       // 로그인한 사용자의 글만 가져오기
       console.log('사용자', userId, '의 글을 가져오는 중...');
-      const response = await fetch(`http://localhost:8081/api/posts/user/${userId}`);
+      const postsArray = await fetchUserPostsApi(userId);
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log('API 응답 전체:', data);
+      console.log('추출된 글 배열:', postsArray);
+      console.log('사용자 작성 글 로드 성공:', postsArray.length, '개');
+      
+      // PostDTO를 UserPost 형태로 변환
+      const formattedPosts = postsArray.map((post: any) => ({
+        id: post.id,
+        title: post.title,
+        content: post.content,
+        authorId: post.userId,
+        authorName: post.userName,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt,
+        likesCount: post.likeCount || 0,
+        commentsCount: 0, // 댓글 수는 별도로 가져와야 함
+        category: post.categoryName
+      }));
         
-        // 페이지네이션 형태인지 직접 배열인지 확인
-        let postsArray = [];
-        if (Array.isArray(data)) {
-          // 직접 배열로 온 경우
-          postsArray = data;
-        } else if (data && Array.isArray(data.content)) {
-          // 페이지네이션 형태로 온 경우
-          postsArray = data.content;
-        }
+      console.log('변환된 posts:', formattedPosts);
         
-        console.log('추출된 글 배열:', postsArray);
-        console.log('사용자 작성 글 로드 성공:', postsArray.length, '개');
-        
-        // PostDTO를 UserPost 형태로 변환
-        const formattedPosts = postsArray.map((post: any) => ({
-          id: post.id,
-          title: post.title,
-          content: post.content,
-          authorId: post.userId,
-          authorName: post.userName,
-          createdAt: post.createdAt,
-          updatedAt: post.updatedAt,
-          likesCount: post.likeCount || 0,
-          commentsCount: 0, // 댓글 수는 별도로 가져와야 함
-          category: post.categoryName
-        }));
-        
-        console.log('변환된 posts:', formattedPosts);
-        
-        // 각 글의 댓글 수를 병렬로 가져오기
-        const postsWithCommentCount = await Promise.all(
-          formattedPosts.map(async (post: UserPost) => {
-            try {
-              const commentResponse = await fetch(`http://localhost:8081/api/comments/post/${post.id}?page=0&size=1`);
-              if (commentResponse.ok) {
-                const commentData = await commentResponse.json();
-                const commentCount = commentData.totalElements || commentData.length || 0;
-                return { ...post, commentsCount: commentCount };
-              }
-            } catch (error) {
-              console.warn(`댓글 수 조회 실패 (글 ID: ${post.id}):`, error);
+      // 각 글의 댓글 수를 병렬로 가져오기
+      const postsWithCommentCount = await Promise.all(
+        formattedPosts.map(async (post: UserPost) => {
+          try {
+            const commentResponse = await axiosInstance.get(`/comments/post/${post.id}?page=0&size=1`);
+            if (commentResponse.status === 200) {
+              const commentData = commentResponse.data;
+              const commentCount = commentData.totalElements || commentData.length || 0;
+              return { ...post, commentsCount: commentCount };
             }
-            return post;
-          })
-        );
+          } catch (error) {
+            console.warn(`댓글 수 조회 실패 (글 ID: ${post.id}):`, error);
+          }
+          return post;
+        })
+      );
         
-        console.log('댓글 수가 포함된 최종 posts:', postsWithCommentCount);
-        setPosts(postsWithCommentCount);
-      } else if (response.status === 404) {
-        console.log('사용자 글 API 엔드포인트를 찾을 수 없음 (404)');
-        setPosts([]);
-      } else if (response.status === 500) {
-        console.error('서버 내부 오류 (500) - 백엔드 API 구현 확인 필요');
-        setPosts([]);
-      } else {
-        console.error('사용자 글 로드 실패:', response.status, response.statusText);
-        setPosts([]);
-      }
+      console.log('댓글 수가 포함된 최종 posts:', postsWithCommentCount);
+      setPosts(postsWithCommentCount);
     } catch (error) {
       console.error('사용자 글 API 호출 실패:', error);
-      // 네트워크 오류나 API가 구현되지 않은 경우
-      if ((error as any)?.message?.includes('fetch')) {
-        console.log('API 엔드포인트가 구현되지 않았을 가능성이 높습니다.');
-      }
       setPosts([]);
     } finally {
       setIsLoading(false);
@@ -112,55 +86,27 @@ const PostsCommentsTabsSection: React.FC<PostsCommentsTabsProps> = ({ userId }) 
     try {
       // 로그인한 사용자의 댓글만 가져오기
       console.log('사용자', userId, '의 댓글을 가져오는 중...');
-      const response = await fetch(`http://localhost:8081/api/comments/user/${userId}`);
+      const commentsArray = await fetchUserCommentsApi(userId);
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log('댓글 API 응답 전체:', data);
-        
-        // 페이지네이션 형태인지 직접 배열인지 확인
-        let commentsArray = [];
-        if (Array.isArray(data)) {
-          // 직접 배열로 온 경우
-          commentsArray = data;
-        } else if (data && Array.isArray(data.content)) {
-          // 페이지네이션 형태로 온 경우
-          commentsArray = data.content;
-        }
-        
-        console.log('추출된 댓글 배열:', commentsArray);
-        console.log('사용자 작성 댓글 로드 성공:', commentsArray.length, '개');
-        
-        // CommentDTO를 UserComment 형태로 변환
-        const formattedComments = commentsArray.map((comment: any) => ({
-          id: comment.id,
-          content: comment.content,
-          postId: comment.postId,
-          postTitle: comment.postTitle,
-          authorId: comment.userId,
-          authorName: comment.userName,
-          createdAt: comment.createdAt,
-          updatedAt: comment.updatedAt
-        }));
-        
-        console.log('변환된 comments:', formattedComments);
-        setComments(formattedComments);
-      } else if (response.status === 404) {
-        console.log('사용자 댓글 API 엔드포인트를 찾을 수 없음 (404)');
-        setComments([]);
-      } else if (response.status === 500) {
-        console.error('서버 내부 오류 (500) - 백엔드 댓글 API 구현 확인 필요');
-        setComments([]);
-      } else {
-        console.error('사용자 댓글 로드 실패:', response.status, response.statusText);
-        setComments([]);
-      }
+      console.log('추출된 댓글 배열:', commentsArray);
+      console.log('사용자 작성 댓글 로드 성공:', commentsArray.length, '개');
+      
+      // CommentDTO를 UserComment 형태로 변환
+      const formattedComments = commentsArray.map((comment: any) => ({
+        id: comment.id,
+        content: comment.content,
+        postId: comment.postId,
+        postTitle: comment.postTitle,
+        authorId: comment.userId,
+        authorName: comment.userName,
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt
+      }));
+      
+      console.log('변환된 comments:', formattedComments);
+      setComments(formattedComments);
     } catch (error) {
       console.error('사용자 댓글 API 호출 실패:', error);
-      // 네트워크 오류나 API가 구현되지 않은 경우
-      if ((error as any)?.message?.includes('fetch')) {
-        console.log('댓글 API 엔드포인트가 구현되지 않았을 가능성이 높습니다.');
-      }
       setComments([]);
     } finally {
       setIsLoading(false);
@@ -198,7 +144,7 @@ const PostsCommentsTabsSection: React.FC<PostsCommentsTabsProps> = ({ userId }) 
       className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${
         activeTab === tab 
           ? 'bg-blue-600 text-white shadow-lg' 
-                        : 'bg-card text-blue-600 border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50'
+          : 'bg-card text-blue-600 border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50'
       }`}
     >
       {label}
@@ -213,7 +159,7 @@ const PostsCommentsTabsSection: React.FC<PostsCommentsTabsProps> = ({ userId }) 
   );
 
   return (
-            <div className="bg-card rounded-xl shadow-lg p-6">
+    <div className="bg-card rounded-xl shadow-lg p-6">
       <div className="flex gap-3 mb-6">
         <TabButton tab="posts" label="내 글" count={posts.length} />
         <TabButton tab="comments" label="내 댓글" count={comments.length} />
