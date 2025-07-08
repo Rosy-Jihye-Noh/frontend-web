@@ -71,7 +71,7 @@ const Header: React.FC = () => {
             onClick={() => navigate("/dashboard")}
             style={{ cursor: 'pointer' }}
           >
-            Health AI
+            SynergyM AI
           </h1>
         </div>
         {/* 데스크탑: 메뉴/버튼 */}
