@@ -70,7 +70,6 @@ const App = () => {
         <Route path="/community/:id" element={<CommunityDetailPage />} />
         <Route path="/community/write" element={<CommunityWritePage />} />
         <Route path="/community/edit/:id" element={<CommunityWritePage />} />
-        <Route path="/" element={<Navigate to="/admin" />} />
         <Route path="/admin" element={<DashboardPage />} />
         <Route path="/admin/members" element={<MemberManagementPage />} />
         <Route path="/admin/post" element={<ContentManagementPage />} />

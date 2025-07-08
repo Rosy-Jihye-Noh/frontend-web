@@ -33,7 +33,10 @@ const OAuth2RedirectHandler = () => {
                     };
                     
                     loginUser(loginResponse);
-                    navigate('/dashboard');
+                    
+                    // role이 ADMIN이면 admin 페이지로, 아니면 dashboard로 이동
+                    const targetPath = user.role === 'ADMIN' ? '/admin' : '/dashboard';
+                    navigate(targetPath);
                 })
                 .catch((error) => {
                     console.error("유저 정보 가져오기 실패:", error);
