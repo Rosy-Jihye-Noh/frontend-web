@@ -1,70 +1,70 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import apiClient from '@/api/axiosInstance';
 import { MainLayout } from '@/components/common/AdminLayout';
 import { PageHeader } from '@/components/common/AdminHeader';
-import { StatCard } from '@/components/common/StatCard'; // StatCard 경로는 유지한다고 가정
-import Pagination from '@/components/common/Pagination';
+import { StatCard } from '@/components/common/StatCard';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { RadialProgress } from '@/components/ui/radial-progress';
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, FileText, BarChart3, TrendingUp, Heart, PlusSquare, Eye, MessageSquare, ThumbsUp } from 'lucide-react';
+import { Users, FileText, BarChart3, TrendingUp } from 'lucide-react';
+import { GroupedBarChart } from '@/components/ui/grouped-bar-chart';
+import type { GroupedBarChartDataItem } from '@/components/ui/grouped-bar-chart';
 
+
+// 👇 Updated data types to include analysis counts
 type DashboardData = {
-  stats: { totalMembers: number; totalPosts: number; totalAnalysis: number; weeklyActiveUsers: { value: number, change: number } };
-  genderAnalysis: { male: number; female: number; maxScore: number };
+  stats: {
+    totalMembers: number;
+    totalPosts: number;
+    totalAnalysis: number;
+    weeklyActiveUsers: { value: number; change: number };
+  };
+  genderAnalysis: {
+    male: number;
+    female: number;
+    maxScore: number;
+    maleCount: number;   // New field
+    femaleCount: number; // New field
+  };
   ageGroupAnalysis: AgeGroupAnalysis[];
-  popularByLikes: { name: string; count: number }[];
-  popularByRoutine: { name: string; count: number }[];
-  popularByViews: { title: string; count: number; categoryName: string; postId: number }[];
-  popularByComments: { title: string; count: number; categoryName: string; postId: number }[];
-  popularByPostLikes: { title: string; count: number; categoryName: string; postId: number }[];
 };
 
 type AgeGroupAnalysis = {
   ageGroup: string;
   averageScore: number;
+  count: number; // New field
+};
+
+type GenderDistribution = {
+  gender: string;
+  analysisCount: number;
+  userCount: number;
+};
+
+type AgeGroupDistributionItem = {
+  ageGroup: string;         // Matches 'ageGroup' from your new data
+  analysisCount: string;    // Matches 'analysisCount' from your new data
+  userCount: number;
+};
+
+type AnalysisDistributionResponse = {
+  genderDistribution: GenderDistribution[];
+  ageGroupDistribution: AgeGroupDistributionItem[];
 };
 
 export const DashboardPage: React.FC = () => {
-  const navigate = useNavigate();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [likesCurrentPage, setLikesCurrentPage] = useState(0);
-  const [routineCurrentPage, setRoutineCurrentPage] = useState(0);
-  const [viewsCurrentPage, setViewsCurrentPage] = useState(0);
-  const [commentsCurrentPage, setCommentsCurrentPage] = useState(0);
-  const [postLikesCurrentPage, setPostLikesCurrentPage] = useState(0);
-  const itemsPerPage = 5;
-
-  // 게시글 클릭 핸들러
-  const handlePostClick = (postId: number) => {
-    console.log('클릭된 게시글 ID:', postId, typeof postId);
-    if (isNaN(postId) || postId <= 0) {
-      console.error('유효하지 않은 게시글 ID:', postId);
-      return;
-    }
-    navigate(`/community/${postId}`);
-  };
-
+  const [genderDistData, setGenderDistData] = useState<GroupedBarChartDataItem[]>([]);
+  const [ageDistData, setAgeDistData] = useState<GroupedBarChartDataItem[]>([]);
+  
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
         const response = await apiClient.get<DashboardData>('/admin/dashboard');
-        console.log('받은 대시보드 데이터:', response.data);
-        
-        // 게시글 데이터 로그
-        if (response.data.popularByPostLikes) {
-          console.log('좋아요 순 게시글:', response.data.popularByPostLikes);
-        }
-        if (response.data.popularByComments) {
-          console.log('댓글수 순 게시글:', response.data.popularByComments);
-        }
-        if (response.data.popularByViews) {
-          console.log('조회수 순 게시글:', response.data.popularByViews);
-        }
-        
+        console.log('Received main dashboard data:', response.data); // Keep this line
+        console.log('Age Group Analysis Data:', response.data.ageGroupAnalysis); // Add this line
         setData(response.data);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
@@ -72,244 +72,228 @@ export const DashboardPage: React.FC = () => {
         setLoading(false);
       }
     };
+    
+    const fetchDistributionData = async () => {
+      try {
+        const response = await apiClient.get<AnalysisDistributionResponse>('/admin/analysis-distribution');
+        const { genderDistribution, ageGroupDistribution } = response.data; // Destructure ageGroupDistribution
+
+        // --- Process Gender Distribution Data ---
+        const processedGenderData: { [key: string]: GroupedBarChartDataItem } = {};
+        
+        genderDistribution.forEach(item => {
+          const key = `${item.analysisCount} 분석`; // Label for x-axis
+          if (!processedGenderData[key]) {
+            processedGenderData[key] = { name: key };
+          }
+          const genderKey = item.gender === 'MALE' ? '남성' : '여성';
+          processedGenderData[key][genderKey] = item.userCount;
+        });
+        
+        const chartGenderData = Object.values(processedGenderData).sort((a, b) => parseInt(a.name) - parseInt(b.name));
+        setGenderDistData(chartGenderData);
+
+        // --- Process Age Group Distribution Data ---
+        const processedAgeData: { [key: string]: GroupedBarChartDataItem } = {};
+
+        ageGroupDistribution.forEach(item => {
+          // Use 'item.analysisCount' from the new data structure
+          const key = `${item.analysisCount}`; // e.g., "0회", "2회", "3회 이상"
+          if (!processedAgeData[key]) {
+            processedAgeData[key] = { name: key };
+          }
+          // Use 'item.ageGroup' from the new data structure
+          processedAgeData[key][item.ageGroup] = item.userCount;
+        });
+
+        // Ensure all age groups are represented in each bar, even if their count is 0
+        const allAgeGroups = ['10대', '20대', '30대', '40대', '50대 이상'];
+        const chartAgeData = Object.values(processedAgeData).map(item => {
+          const newItem = { ...item };
+          allAgeGroups.forEach(group => {
+            if (newItem[group] === undefined) {
+              newItem[group] = 0; // Initialize missing age groups to 0
+            }
+          });
+          return newItem;
+        }).sort((a, b) => {
+            // Custom sort for analysisCount to handle "0회", "1회", "2회", "3회 이상"
+            const parseCount = (countStr: string) => {
+                if (countStr === "3회 이상") return Infinity; // Put "3회 이상" at the end
+                return parseInt(countStr.replace('회', ''));
+            };
+            return parseCount(a.name) - parseCount(b.name);
+        });
+
+        setAgeDistData(chartAgeData);
+
+      } catch (error) {
+        console.error("Failed to fetch distribution data:", error);
+      }
+    };
+    
     fetchDashboardData();
+    fetchDistributionData();
   }, []);
 
   if (loading || !data) {
-    // 로딩 중일 때 스켈레톤 UI 표시
+    // Skeleton UI for loading state
     return (
-        <MainLayout>
-            <PageHeader title="관리자 대시보드" />
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Skeleton className="h-28" /><Skeleton className="h-28" />
-                <Skeleton className="h-28" /><Skeleton className="h-28" />
-            </div>
-            <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <Skeleton className="h-48" /><Skeleton className="h-48" /><Skeleton className="h-48" />
-            </div>
-        </MainLayout>
+      <MainLayout>
+        <PageHeader title="Admin Dashboard" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Skeleton className="h-28" /><Skeleton className="h-28" />
+          <Skeleton className="h-28" /><Skeleton className="h-28" />
+        </div>
+        <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Skeleton className="h-56" /><Skeleton className="h-56" />
+        </div>
+      </MainLayout>
     );
   }
 
   return (
     <MainLayout>
-      <PageHeader title="관리자 대시보드" />
+      <PageHeader title="Admin Dashboard" />
+      
+      {/* Main Statistics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="총 회원 수" value={`${data.stats.totalMembers}명`} icon={Users} />
-        <StatCard title="총 게시글 수" value={`${data.stats.totalPosts}개`} icon={FileText} />
-        <StatCard title="총 분석 횟수" value={`${data.stats.totalAnalysis}회`} icon={BarChart3} />
+        <StatCard title="총 회원 수" value={`${data.stats.totalMembers} 명`} icon={Users} />
+        <StatCard title="총 게시글 수" value={`${data.stats.totalPosts} 개`} icon={FileText} />
+        <StatCard title="총 분석 횟수" value={`${data.stats.totalAnalysis} 회`} icon={BarChart3} />
         <StatCard 
           title="주간 활성 사용자" 
-          value={`${data.stats.weeklyActiveUsers.value.toLocaleString()}명`}
+          value={`${data.stats.weeklyActiveUsers.value.toLocaleString()} 명`}
           icon={TrendingUp} 
           details={`${data.stats.weeklyActiveUsers.change >= 0 ? '+' : ''}${data.stats.weeklyActiveUsers.change}% vs last week`}
         />
       </div>
 
-      {/* 성별 분석 점수 평균 */}
-      <div className="mt-6 grid gap-6 md:grid-cols-2">
+      {/* 분석 섹션 */}
+      <div className="mt-6 grid gap-6 md:grid-cols-1 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>성별 분석 점수 평균</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-                <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium">남성</span>
-                    <span className="text-sm font-bold text-blue-600">{data.genderAnalysis.male.toFixed(1)}점</span>
-                </div>
-                <Progress value={(data.genderAnalysis.male / data.genderAnalysis.maxScore) * 100} className="h-2 [&>div]:bg-blue-500" />
+          <CardHeader>
+            <CardTitle>성별 분석</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-4 items-center justify-items-center pt-4">
+            <div className="flex flex-col items-center gap-2">
+              <RadialProgress 
+                value={data.genderAnalysis.male} 
+                max={data.genderAnalysis.maxScore} 
+                className="text-blue-500"
+              />
+              <span className="text-sm font-medium text-foreground">남성 평균 점수</span>
+              {/* 👇 Display male analysis count */}
+              <span className="text-xs text-muted-foreground">
+                {data.genderAnalysis.maleCount.toLocaleString()}회 분석
+              </span>
             </div>
-            <div>
-                <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium">여성</span>
-                    <span className="text-sm font-bold text-blue-600">{data.genderAnalysis.female.toFixed(1)}점</span>
-                </div>
-                <Progress value={(data.genderAnalysis.female / data.genderAnalysis.maxScore) * 100} className="h-2 [&>div]:bg-blue-500" />
+            <div className="flex flex-col items-center gap-2">
+              <RadialProgress 
+                value={data.genderAnalysis.female} 
+                max={data.genderAnalysis.maxScore} 
+                className="text-pink-500"
+              />
+              <span className="text-sm font-medium text-foreground">여성 평균 점수</span>
+              {/* 👇 Display female analysis count */}
+              <span className="text-xs text-muted-foreground">
+                {data.genderAnalysis.femaleCount.toLocaleString()}회 분석
+              </span>
             </div>
           </CardContent>
         </Card>
 
-        {/* ▼▼▼ 나이대별 분석 점수 평균 카드 (신규 추가) ▼▼▼ */}
         <Card>
-            <CardHeader>
-            <CardTitle>나이대별 분석 점수 평균</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-            {data.ageGroupAnalysis.map((item) => (
-                <div key={item.ageGroup}>
-                <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium">{item.ageGroup}</span>
-                    <span className="text-sm font-bold text-teal-600">{item.averageScore.toFixed(1)}점</span>
+          <CardHeader>
+            <CardTitle>나이대별 분석</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-2 items-center justify-items-center pt-4">
+            {data.ageGroupAnalysis.map((item) => {
+              let colorClass = "text-blue-300";
+              switch (item.ageGroup) {
+                case "10대": colorClass = "text-blue-300"; break;
+                case "20대": colorClass = "text-blue-400"; break;
+                case "30대": colorClass = "text-blue-500"; break;
+                case "40대": colorClass = "text-blue-600"; break;
+                default: colorClass = "text-blue-800"; break;
+              }
+
+              // count 값을 렌더링하기 전에 유효성 검사 추가
+              const displayCount = (typeof item.count === 'number' && !isNaN(item.count))
+                ? `${item.count.toLocaleString()}회 분석`
+                : '분석 없음'; // 또는 빈 문자열 ''
+
+              return (
+                <div key={item.ageGroup} className="flex flex-col items-center gap-2">
+                  <RadialProgress
+                    value={item.averageScore}
+                    max={110}
+                    size={110}
+                    strokeWidth={8}
+                    className={colorClass}
+                  />
+                  <span className="text-sm font-medium text-foreground">{item.ageGroup} 평균 점수</span>
+                  {/* 👇 Display age group analysis count with explicit check */}
+                  <span className="text-xs text-muted-foreground">
+                    {displayCount}
+                  </span>
                 </div>
-                {/* 점수는 100점 만점으로 가정하여 프로그레스 바 표시 */}
-                <Progress value={item.averageScore} className="h-2 [&>div]:bg-teal-500" />
-                </div>
-            ))}
+              );
+            })}
             {data.ageGroupAnalysis.length === 0 && (
-                <p className="text-sm text-muted-foreground">분석 기록이 없습니다.</p>
+              <p className="col-span-full text-center text-sm text-muted-foreground">
+                분석 기록이 없습니다.
+              </p>
             )}
-            </CardContent>
+          </CardContent>
         </Card>
       </div>
 
-      {/* 인기 운동 섹션 */}
-      <div className="mt-6 grid gap-6 md:grid-cols-2">
+      {/* --- ✨ 분석 횟수 분포 차트 섹션 --- */}
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader><CardTitle>인기 운동 (좋아요 순)</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {data.popularByLikes
-              .slice(likesCurrentPage * itemsPerPage, (likesCurrentPage + 1) * itemsPerPage)
-              .map((item, index) => (
-                <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{item.name}</span>
-                    <div className="flex items-center gap-2">
-                        <Heart className="h-4 w-4 text-red-400" />
-                        <span className="font-semibold">{item.count.toLocaleString()}</span>
-                    </div>
-                </div>
-            ))}
-          </CardContent>
-          {/* 좋아요 순 페이지네이션 */}
-          <div className="px-4 pb-4 pt-2">
-            <div className="flex justify-center">
-              <Pagination
-                currentPage={likesCurrentPage}
-                totalPages={Math.ceil(data.popularByLikes.length / itemsPerPage)}
-                onPageChange={setLikesCurrentPage}
+          <CardHeader>
+            <CardTitle>성별 분석 횟수 분포</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              분석 횟수별 사용자(명) 분포를 보여줍니다.
+            </p>
+          </CardHeader>
+          <CardContent>
+            {genderDistData.length > 0 ? (
+              <GroupedBarChart 
+                data={genderDistData}
+                keys={['남성', '여성']}
+                colors={['#93c5fd', '#f9a8d4']}
               />
-            </div>
-          </div>
+            ) : (
+                <div className="flex h-[300px] items-center justify-center">
+                  <p className="text-center text-sm text-muted-foreground">분석 기록이 없습니다.</p>
+              </div>
+            )}
+          </CardContent>
         </Card>
-
         <Card>
-          <CardHeader><CardTitle>인기 운동 (루틴 추가 순)</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {data.popularByRoutine
-              .slice(routineCurrentPage * itemsPerPage, (routineCurrentPage + 1) * itemsPerPage)
-              .map((item, index) => (
-                <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{item.name}</span>
-                    <div className="flex items-center gap-2">
-                        <PlusSquare className="h-4 w-4 text-green-500" />
-                        <span className="font-semibold text-green-600">+{item.count.toLocaleString()}</span>
-                    </div>
-                </div>
-            ))}
-          </CardContent>
-          {/* 루틴 추가 순 페이지네이션 */}
-          <div className="px-4 pb-4 pt-2">
-            <div className="flex justify-center">
-              <Pagination
-                currentPage={routineCurrentPage}
-                totalPages={Math.ceil(data.popularByRoutine.length / itemsPerPage)}
-                onPageChange={setRoutineCurrentPage}
+          <CardHeader>
+            <CardTitle>나이대별 분석 횟수 분포</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              분석 횟수별 사용자(명) 분포를 보여줍니다.
+            </p>
+          </CardHeader>
+          <CardContent>
+            {ageDistData.length > 0 ? (
+              <GroupedBarChart 
+                data={ageDistData}
+                keys={['10대', '20대', '30대', '40대', '50대 이상']}
+                colors={['#a7f3d0', '#67e8f9', '#93c5fd', '#c4b5fd', '#f9a8d4']} // Teal, Cyan, Blue, Violet, Pink
               />
-            </div>
-          </div>
+            ) : (
+                <div className="flex h-[300px] items-center justify-center">
+                  <p className="text-center text-sm text-muted-foreground">분석 기록이 없습니다.</p>
+              </div>
+            )}
+          </CardContent>
         </Card>
       </div>
-
-      {/* 인기 게시글 섹션 */}
-      <div className="mt-6 grid gap-6 md:grid-cols-3">
-        <Card>
-          <CardHeader><CardTitle>인기 게시글 (좋아요 순)</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {data.popularByPostLikes
-              .slice(postLikesCurrentPage * itemsPerPage, (postLikesCurrentPage + 1) * itemsPerPage)
-              .map((item, index) => (
-                <div 
-                  key={index} 
-                  className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
-                  onClick={() => handlePostClick(item.postId)}
-                >
-                    <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{item.title}</div>
-                        <div className="text-xs text-muted-foreground">{item.categoryName}</div>
-                    </div>
-                    <div className="flex items-center gap-2 ml-2">
-                        <ThumbsUp className="h-4 w-4 text-red-400" />
-                        <span className="font-semibold">{item.count.toLocaleString()}</span>
-                    </div>
-                </div>
-            ))}
-          </CardContent>
-          <div className="px-4 pb-4 pt-2">
-            <div className="flex justify-center">
-              <Pagination
-                currentPage={postLikesCurrentPage}
-                totalPages={Math.ceil(data.popularByPostLikes.length / itemsPerPage)}
-                onPageChange={setPostLikesCurrentPage}
-              />
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle>인기 게시글 (댓글수 순)</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {data.popularByComments
-              .slice(commentsCurrentPage * itemsPerPage, (commentsCurrentPage + 1) * itemsPerPage)
-              .map((item, index) => (
-                <div 
-                  key={index} 
-                  className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
-                  onClick={() => handlePostClick(item.postId)}
-                >
-                    <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{item.title}</div>
-                        <div className="text-xs text-muted-foreground">{item.categoryName}</div>
-                    </div>
-                    <div className="flex items-center gap-2 ml-2">
-                        <MessageSquare className="h-4 w-4 text-green-400" />
-                        <span className="font-semibold">{item.count.toLocaleString()}</span>
-                    </div>
-                </div>
-            ))}
-          </CardContent>
-          <div className="px-4 pb-4 pt-2">
-            <div className="flex justify-center">
-              <Pagination
-                currentPage={commentsCurrentPage}
-                totalPages={Math.ceil(data.popularByComments.length / itemsPerPage)}
-                onPageChange={setCommentsCurrentPage}
-              />
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle>인기 게시글 (조회수 순)</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {data.popularByViews
-              .slice(viewsCurrentPage * itemsPerPage, (viewsCurrentPage + 1) * itemsPerPage)
-              .map((item, index) => (
-                <div 
-                  key={index} 
-                  className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
-                  onClick={() => handlePostClick(item.postId)}
-                >
-                    <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{item.title}</div>
-                        <div className="text-xs text-muted-foreground">{item.categoryName}</div>
-                    </div>
-                    <div className="flex items-center gap-2 ml-2">
-                        <Eye className="h-4 w-4 text-blue-400" />
-                        <span className="font-semibold">{item.count.toLocaleString()}</span>
-                    </div>
-                </div>
-            ))}
-          </CardContent>
-          <div className="px-4 pb-4 pt-2">
-            <div className="flex justify-center">
-              <Pagination
-                currentPage={viewsCurrentPage}
-                totalPages={Math.ceil(data.popularByViews.length / itemsPerPage)}
-                onPageChange={setViewsCurrentPage}
-              />
-            </div>
-          </div>
-        </Card>
-      </div>
-
     </MainLayout>
   );
 }
