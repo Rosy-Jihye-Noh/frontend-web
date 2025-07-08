@@ -52,7 +52,7 @@ const ChatModal = ({ isOpen, onClose, initType, initPayload }: Props) => {
     } else if (initType === 'consult' && initPayload) {
       initial.push({ type: 'bot', content: <div>{initPayload.message}</div> });
     } else {
-      initial.push({ type: 'bot', content: <div>💬 어디가 불편하신가요?</div> });
+      initial.push({ type: 'bot', content: <div>어디가 불편하신가요?</div> });
     }
     setMessages(initial);
   }, [isOpen, initType, initPayload]);
@@ -76,7 +76,7 @@ const ChatModal = ({ isOpen, onClose, initType, initPayload }: Props) => {
         ${isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
     >
       <div className="flex justify-between items-center p-4 border-b">
-        <span className="font-semibold text-lg">Gymmie</span>
+        <span className="font-semibold text-lg">SynergyM AI</span>
         <button onClick={onClose}>
           <X className="w-5 h-5 text-gray-600 hover:text-black" />
         </button>
