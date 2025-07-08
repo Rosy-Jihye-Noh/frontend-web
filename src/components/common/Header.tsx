@@ -36,6 +36,19 @@ const Header: React.FC = () => {
     setMobileOpen(false);
   };
 
+  // 인증이 필요한 페이지 클릭 처리
+  const handleAuthenticatedMenuClick = (path: string) => {
+    // 커뮤니티와 운동 목록은 로그인이 필요
+    if ((path === "/community" || path === "/exercises") && !user) {
+      navigate("/login");
+      setMobileOpen(false);
+      return;
+    }
+    
+    // 기타 페이지는 그대로 이동
+    handleMenuClick(path);
+  };
+
   const handleDarkModeToggle = () => {
     setDarkMode((prev) => {
       const next = !prev;
@@ -67,7 +80,7 @@ const Header: React.FC = () => {
             <button
               key={menu.name}
               className={`text-base font-bold cursor-pointer ${location.pathname === menu.path ? "text-blue-600" : "text-foreground hover:text-blue-600"}`}
-              onClick={() => navigate(menu.path)}
+              onClick={() => handleAuthenticatedMenuClick(menu.path)}
               style={{ cursor: 'pointer' }}
             >
               {menu.name}
@@ -138,7 +151,7 @@ const Header: React.FC = () => {
             <button
               key={menu.name}
               className={`text-lg font-semibold text-left cursor-pointer ${location.pathname === menu.path ? "text-blue-600" : "text-foreground hover:text-blue-600"}`}
-              onClick={() => handleMenuClick(menu.path)}
+              onClick={() => handleAuthenticatedMenuClick(menu.path)}
               style={{ cursor: 'pointer' }}
             >
               {menu.name}
