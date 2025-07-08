@@ -225,6 +225,13 @@ const CommunityDetailPage: React.FC = () => {
   const location = useLocation();
   const { user } = useUserStore();
   const userId = user?.id;
+  
+  // postId 유효성 검사
+  const postId = Number(id);
+  if (isNaN(postId) || postId <= 0) {
+    console.error('유효하지 않은 게시글 ID:', id);
+    return <div className="max-w-2xl mx-auto py-8 text-red-500 text-center">유효하지 않은 게시글입니다.</div>;
+  }
   const commentInputRef = useRef<HTMLInputElement>(null);
   const commentListRef = useRef<HTMLDivElement>(null);
 
@@ -249,15 +256,15 @@ const CommunityDetailPage: React.FC = () => {
     setViewCount,
     incrementViewCount,
     refreshViewCount
-  } = usePostDetail(Number(id), userId);
+  } = usePostDetail(postId, userId);
 
   // 개발자 도구에서 조회수 새로고침 함수 등록 (디버깅용)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any).refreshViewCount = () => refreshViewCount(Number(id));
+      (window as any).refreshViewCount = () => refreshViewCount(postId);
       console.log('조회수 새로고침 함수가 window.refreshViewCount에 등록되었습니다.');
     }
-  }, [refreshViewCount, id]);
+  }, [refreshViewCount, postId]);
 
   const {
     comments,
@@ -276,7 +283,7 @@ const CommunityDetailPage: React.FC = () => {
     handleCommentSubmit,
     handleDeleteComment,
     handleEditSubmit
-  } = useComments(Number(id), userId, setCommentCount);
+  } = useComments(postId, userId, setCommentCount);
 
   // 스크롤 맨 위로
   useEffect(() => {
@@ -286,25 +293,25 @@ const CommunityDetailPage: React.FC = () => {
   // 게시글 로드
   useEffect(() => {
     loadPostDetail();
-  }, [id]);
+  }, [postId]);
 
   // 좋아요 상태 로드
   useEffect(() => {
-    if (!id || !userId) return;
+    if (!postId || !userId) return;
     
-    checkPostLiked(userId, Number(id))
+    checkPostLiked(userId, postId)
       .then(likedResult => {
         setLiked(likedResult);
       })
       .catch(err => {
         console.error('좋아요 상태 로드 실패:', err);
       });
-  }, [id, userId]);
+  }, [postId, userId]);
 
   // 댓글 목록 불러오기
   useEffect(() => {
     loadComments();
-  }, [id, commentPage]);
+  }, [postId, commentPage]);
 
   // 댓글 입력란 자동 포커스
   useEffect(() => {

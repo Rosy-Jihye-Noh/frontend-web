@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import apiClient from '@/api/axiosInstance';
 import { MainLayout } from '@/components/common/AdminLayout';
 import { PageHeader } from '@/components/common/AdminHeader';
@@ -7,7 +8,7 @@ import Pagination from '@/components/common/Pagination';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, FileText, BarChart3, TrendingUp, Heart, PlusSquare } from 'lucide-react';
+import { Users, FileText, BarChart3, TrendingUp, Heart, PlusSquare, Eye, MessageSquare, ThumbsUp } from 'lucide-react';
 
 type DashboardData = {
   stats: { totalMembers: number; totalPosts: number; totalAnalysis: number; weeklyActiveUsers: { value: number, change: number } };
@@ -15,6 +16,9 @@ type DashboardData = {
   ageGroupAnalysis: AgeGroupAnalysis[];
   popularByLikes: { name: string; count: number }[];
   popularByRoutine: { name: string; count: number }[];
+  popularByViews: { title: string; count: number; categoryName: string; postId: number }[];
+  popularByComments: { title: string; count: number; categoryName: string; postId: number }[];
+  popularByPostLikes: { title: string; count: number; categoryName: string; postId: number }[];
 };
 
 type AgeGroupAnalysis = {
@@ -23,17 +27,44 @@ type AgeGroupAnalysis = {
 };
 
 export const DashboardPage: React.FC = () => {
+  const navigate = useNavigate();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [likesCurrentPage, setLikesCurrentPage] = useState(0);
   const [routineCurrentPage, setRoutineCurrentPage] = useState(0);
+  const [viewsCurrentPage, setViewsCurrentPage] = useState(0);
+  const [commentsCurrentPage, setCommentsCurrentPage] = useState(0);
+  const [postLikesCurrentPage, setPostLikesCurrentPage] = useState(0);
   const itemsPerPage = 5;
+
+  // 게시글 클릭 핸들러
+  const handlePostClick = (postId: number) => {
+    console.log('클릭된 게시글 ID:', postId, typeof postId);
+    if (isNaN(postId) || postId <= 0) {
+      console.error('유효하지 않은 게시글 ID:', postId);
+      return;
+    }
+    navigate(`/community/${postId}`);
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
         const response = await apiClient.get<DashboardData>('/admin/dashboard');
+        console.log('받은 대시보드 데이터:', response.data);
+        
+        // 게시글 데이터 로그
+        if (response.data.popularByPostLikes) {
+          console.log('좋아요 순 게시글:', response.data.popularByPostLikes);
+        }
+        if (response.data.popularByComments) {
+          console.log('댓글수 순 게시글:', response.data.popularByComments);
+        }
+        if (response.data.popularByViews) {
+          console.log('조회수 순 게시글:', response.data.popularByViews);
+        }
+        
         setData(response.data);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
@@ -171,6 +202,108 @@ export const DashboardPage: React.FC = () => {
                 currentPage={routineCurrentPage}
                 totalPages={Math.ceil(data.popularByRoutine.length / itemsPerPage)}
                 onPageChange={setRoutineCurrentPage}
+              />
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* 인기 게시글 섹션 */}
+      <div className="mt-6 grid gap-6 md:grid-cols-3">
+        <Card>
+          <CardHeader><CardTitle>인기 게시글 (좋아요 순)</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {data.popularByPostLikes
+              .slice(postLikesCurrentPage * itemsPerPage, (postLikesCurrentPage + 1) * itemsPerPage)
+              .map((item, index) => (
+                <div 
+                  key={index} 
+                  className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
+                  onClick={() => handlePostClick(item.postId)}
+                >
+                    <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{item.title}</div>
+                        <div className="text-xs text-muted-foreground">{item.categoryName}</div>
+                    </div>
+                    <div className="flex items-center gap-2 ml-2">
+                        <ThumbsUp className="h-4 w-4 text-red-400" />
+                        <span className="font-semibold">{item.count.toLocaleString()}</span>
+                    </div>
+                </div>
+            ))}
+          </CardContent>
+          <div className="px-4 pb-4 pt-2">
+            <div className="flex justify-center">
+              <Pagination
+                currentPage={postLikesCurrentPage}
+                totalPages={Math.ceil(data.popularByPostLikes.length / itemsPerPage)}
+                onPageChange={setPostLikesCurrentPage}
+              />
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>인기 게시글 (댓글수 순)</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {data.popularByComments
+              .slice(commentsCurrentPage * itemsPerPage, (commentsCurrentPage + 1) * itemsPerPage)
+              .map((item, index) => (
+                <div 
+                  key={index} 
+                  className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
+                  onClick={() => handlePostClick(item.postId)}
+                >
+                    <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{item.title}</div>
+                        <div className="text-xs text-muted-foreground">{item.categoryName}</div>
+                    </div>
+                    <div className="flex items-center gap-2 ml-2">
+                        <MessageSquare className="h-4 w-4 text-green-400" />
+                        <span className="font-semibold">{item.count.toLocaleString()}</span>
+                    </div>
+                </div>
+            ))}
+          </CardContent>
+          <div className="px-4 pb-4 pt-2">
+            <div className="flex justify-center">
+              <Pagination
+                currentPage={commentsCurrentPage}
+                totalPages={Math.ceil(data.popularByComments.length / itemsPerPage)}
+                onPageChange={setCommentsCurrentPage}
+              />
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>인기 게시글 (조회수 순)</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {data.popularByViews
+              .slice(viewsCurrentPage * itemsPerPage, (viewsCurrentPage + 1) * itemsPerPage)
+              .map((item, index) => (
+                <div 
+                  key={index} 
+                  className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
+                  onClick={() => handlePostClick(item.postId)}
+                >
+                    <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{item.title}</div>
+                        <div className="text-xs text-muted-foreground">{item.categoryName}</div>
+                    </div>
+                    <div className="flex items-center gap-2 ml-2">
+                        <Eye className="h-4 w-4 text-blue-400" />
+                        <span className="font-semibold">{item.count.toLocaleString()}</span>
+                    </div>
+                </div>
+            ))}
+          </CardContent>
+          <div className="px-4 pb-4 pt-2">
+            <div className="flex justify-center">
+              <Pagination
+                currentPage={viewsCurrentPage}
+                totalPages={Math.ceil(data.popularByViews.length / itemsPerPage)}
+                onPageChange={setViewsCurrentPage}
               />
             </div>
           </div>
