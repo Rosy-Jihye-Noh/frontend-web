@@ -27,7 +27,7 @@ const Section1 = () => {
           <span className="text-blue-500">AI</span>와 함께 똑똑하게, <br />
           나를 위한{" "}
           <span className="underline decoration-blue-500 decoration-4">
-            진짜 운동
+            진짜 자세교정
           </span>
           을 시작하세요
         </h1>
@@ -39,7 +39,7 @@ const Section1 = () => {
           : 'translate-y-10 opacity-0'
       }`}>
         <p className="mt-6 text-lg text-gray-600 max-w-2xl">
-          당신의 몸을 가장 잘 아는 파트너, Health AI가 24시간 함께합니다.
+          당신의 몸을 가장 잘 아는 파트너, SynergyM AI가 24시간 함께합니다.
         </p>
       </div>
 
@@ -55,7 +55,7 @@ const Section1 = () => {
                       px-6 py-4 text-lg md:px-8 md:py-5
                       transition-transform duration-200 hover:scale-105 hover:bg-blue-700"
         >
-          내 몸 상태 분석하기 <HiArrowRight className="w-5 h-5" />
+          내 자세 분석하기 <HiArrowRight className="w-5 h-5" />
         </Button>
       </div>
 
