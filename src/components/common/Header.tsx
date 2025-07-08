@@ -99,6 +99,15 @@ const Header: React.FC = () => {
           </button>
           {user ? (
             <>
+              {user.role === 'ADMIN' && (
+                <Button
+                  className="bg-gray-100 text-black hover:bg-gray-200 cursor-pointer"
+                  onClick={() => navigate('/admin')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  관리자 페이지
+                </Button>
+              )}
               <Button
                 className="bg-gray-100 text-blue-600 hover:bg-gray-200 cursor-pointer"
                 onClick={() => navigate("/mypage")}
@@ -161,6 +170,15 @@ const Header: React.FC = () => {
         <div className="flex flex-col gap-2 mt-6 border-t pt-4">
           {user ? (
             <>
+              {user.role === 'ADMIN' && (
+                <Button
+                  className="bg-yellow-500 text-white hover:bg-yellow-600 w-full cursor-pointer mb-2"
+                  onClick={() => handleMenuClick('/admin')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  관리자 페이지
+                </Button>
+              )}
               <Button
                 className="bg-gray-100 text-blue-600 hover:bg-gray-200 w-full cursor-pointer"
                 onClick={() => handleMenuClick("/mypage")}

@@ -2,6 +2,7 @@ export interface User {
     id: number; 
     name: string;
     goal: string;
+    role?: 'MEMBER' | 'ADMIN';
     profileImageUrl: string | null;
 }
 

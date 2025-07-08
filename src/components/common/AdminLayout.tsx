@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, BarChart, Users, FileText } from 'lucide-react';
+import { Menu, BarChart, Users, FileText, Home } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 // Props 타입 정의
@@ -21,6 +21,7 @@ const navLinks: NavLinkInfo[] = [
   { href: "/admin", label: "대시보드", icon: BarChart },
   { href: "/admin/members", label: "회원 관리", icon: Users },
   { href: "/admin/post", label: "콘텐츠 관리", icon: FileText },
+  { href: "/", label: "사용자 화면", icon: Home }, // 사용자 화면 이동 메뉴 추가
 ];
 
 // 사이드바 컴포넌트

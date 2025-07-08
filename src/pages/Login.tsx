@@ -35,8 +35,9 @@ const LoginPage = () => {
           user: {
             id: responseData.user.id,
             name: responseData.user.name,
-            goal: '', // Default empty goal for regular login
-            profileImageUrl: null // Default null profile image for regular login
+            role: responseData.user.role,
+            goal: '',
+            profileImageUrl: null
           },
           token: responseData.token,
           success: responseData.success,
@@ -46,7 +47,9 @@ const LoginPage = () => {
         
         loginUser(loginResponse);
         
-        navigate(from);
+        // role이 ADMIN이면 admin 페이지로, 아니면 원래 목적지로 이동
+        const targetPath = responseData.user.role === 'ADMIN' ? '/admin' : from;
+        navigate(targetPath);
         alert(`🎉 로그인 성공!\n환영합니다, ${responseData.user.name}님!`);
       } else {
         alert(`❌ 로그인 실패: ${responseData.message}`);
