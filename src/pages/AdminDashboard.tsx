@@ -52,11 +52,24 @@ type AnalysisDistributionResponse = {
   ageGroupDistribution: AgeGroupDistributionItem[];
 };
 
+// 다크모드 감지 훅
+function useIsDarkMode() {
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains('dark'));
+    const handler = () => setIsDark(document.documentElement.classList.contains('dark'));
+    window.addEventListener('classChange', handler);
+    return () => window.removeEventListener('classChange', handler);
+  }, []);
+  return isDark;
+}
+
 export const DashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [genderDistData, setGenderDistData] = useState<GroupedBarChartDataItem[]>([]);
   const [ageDistData, setAgeDistData] = useState<GroupedBarChartDataItem[]>([]);
+  const isDark = useIsDarkMode();
   
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -142,11 +155,11 @@ export const DashboardPage: React.FC = () => {
       <MainLayout>
         <PageHeader title="Admin Dashboard" />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Skeleton className="h-28" /><Skeleton className="h-28" />
-          <Skeleton className="h-28" /><Skeleton className="h-28" />
+          <Skeleton className="h-28 bg-gray-100 dark:bg-gray-800" /><Skeleton className="h-28 bg-gray-100 dark:bg-gray-800" />
+          <Skeleton className="h-28 bg-gray-100 dark:bg-gray-800" /><Skeleton className="h-28 bg-gray-100 dark:bg-gray-800" />
         </div>
         <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Skeleton className="h-56" /><Skeleton className="h-56" />
+          <Skeleton className="h-56 bg-gray-100 dark:bg-gray-800" /><Skeleton className="h-56 bg-gray-100 dark:bg-gray-800" />
         </div>
       </MainLayout>
     );
@@ -158,20 +171,21 @@ export const DashboardPage: React.FC = () => {
       
       {/* Main Statistics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="총 회원 수" value={`${data.stats.totalMembers} 명`} icon={Users} />
-        <StatCard title="총 게시글 수" value={`${data.stats.totalPosts} 개`} icon={FileText} />
-        <StatCard title="총 분석 횟수" value={`${data.stats.totalAnalysis} 회`} icon={BarChart3} />
+        <StatCard title="총 회원 수" value={`${data.stats.totalMembers} 명`} icon={Users} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
         <StatCard 
           title="주간 활성 사용자" 
           value={`${data.stats.weeklyActiveUsers.value.toLocaleString()} 명`}
           icon={TrendingUp} 
           details={`${data.stats.weeklyActiveUsers.change >= 0 ? '+' : ''}${data.stats.weeklyActiveUsers.change}% vs last week`}
+          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         />
+        <StatCard title="총 분석 횟수" value={`${data.stats.totalAnalysis} 회`} icon={BarChart3} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
+        <StatCard title="총 게시글 수" value={`${data.stats.totalPosts} 개`} icon={FileText} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
       </div>
 
       {/* 분석 섹션 */}
       <div className="mt-6 grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
           <CardHeader>
             <CardTitle>성별 분석</CardTitle>
           </CardHeader>
@@ -182,9 +196,9 @@ export const DashboardPage: React.FC = () => {
                 max={data.genderAnalysis.maxScore} 
                 className="text-blue-500"
               />
-              <span className="text-sm font-medium text-foreground">남성 평균 점수</span>
+              <span className="text-sm font-medium text-foreground dark:text-gray-100">남성 평균 점수</span>
               {/* 👇 Display male analysis count */}
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground dark:text-gray-300">
                 {data.genderAnalysis.maleCount.toLocaleString()}회 분석
               </span>
             </div>
@@ -194,16 +208,16 @@ export const DashboardPage: React.FC = () => {
                 max={data.genderAnalysis.maxScore} 
                 className="text-pink-500"
               />
-              <span className="text-sm font-medium text-foreground">여성 평균 점수</span>
+              <span className="text-sm font-medium text-foreground dark:text-gray-100">여성 평균 점수</span>
               {/* 👇 Display female analysis count */}
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground dark:text-gray-300">
                 {data.genderAnalysis.femaleCount.toLocaleString()}회 분석
               </span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
           <CardHeader>
             <CardTitle>나이대별 분석</CardTitle>
           </CardHeader>
@@ -232,16 +246,16 @@ export const DashboardPage: React.FC = () => {
                     strokeWidth={8}
                     className={colorClass}
                   />
-                  <span className="text-sm font-medium text-foreground">{item.ageGroup} 평균 점수</span>
+                  <span className="text-sm font-medium text-foreground dark:text-gray-100">{item.ageGroup} 평균 점수</span>
                   {/* 👇 Display age group analysis count with explicit check */}
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground dark:text-gray-300">
                     {displayCount}
                   </span>
                 </div>
               );
             })}
             {data.ageGroupAnalysis.length === 0 && (
-              <p className="col-span-full text-center text-sm text-muted-foreground">
+              <p className="col-span-full text-center text-sm text-muted-foreground dark:text-gray-300">
                 분석 기록이 없습니다.
               </p>
             )}
@@ -251,10 +265,10 @@ export const DashboardPage: React.FC = () => {
 
       {/* --- ✨ 분석 횟수 분포 차트 섹션 --- */}
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
           <CardHeader>
             <CardTitle>성별 분석 횟수 분포</CardTitle>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground dark:text-gray-300">
               분석 횟수별 사용자(명) 분포를 보여줍니다.
             </p>
           </CardHeader>
@@ -264,18 +278,19 @@ export const DashboardPage: React.FC = () => {
                 data={genderDistData}
                 keys={['남성', '여성']}
                 colors={['#93c5fd', '#f9a8d4']}
+                isDark={isDark}
               />
             ) : (
                 <div className="flex h-[300px] items-center justify-center">
-                  <p className="text-center text-sm text-muted-foreground">분석 기록이 없습니다.</p>
+                  <p className="text-center text-sm text-muted-foreground dark:text-gray-300">분석 기록이 없습니다.</p>
               </div>
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
           <CardHeader>
             <CardTitle>나이대별 분석 횟수 분포</CardTitle>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground dark:text-gray-300">
               분석 횟수별 사용자(명) 분포를 보여줍니다.
             </p>
           </CardHeader>
@@ -285,10 +300,11 @@ export const DashboardPage: React.FC = () => {
                 data={ageDistData}
                 keys={['10대', '20대', '30대', '40대', '50대 이상']}
                 colors={['#a7f3d0', '#67e8f9', '#93c5fd', '#c4b5fd', '#f9a8d4']} // Teal, Cyan, Blue, Violet, Pink
+                isDark={isDark}
               />
             ) : (
                 <div className="flex h-[300px] items-center justify-center">
-                  <p className="text-center text-sm text-muted-foreground">분석 기록이 없습니다.</p>
+                  <p className="text-center text-sm text-muted-foreground dark:text-gray-300">분석 기록이 없습니다.</p>
               </div>
             )}
           </CardContent>

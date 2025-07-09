@@ -304,3 +304,13 @@ export const deleteNotification = async (notificationId: number): Promise<void> 
     throw new Error('알림 삭제에 실패했습니다.');
   }
 };
+
+export async function fetchUserSignupStats(year: number) {
+  const res = await axiosInstance.get(`/admin/user-signup-stats?year=${year}`);
+  return res.data;
+}
+
+export async function fetchAdminDashboard() {
+  const res = await axiosInstance.get('/admin/dashboard');
+  return res.data;
+}

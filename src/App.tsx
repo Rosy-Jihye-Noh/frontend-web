@@ -26,6 +26,8 @@ import CommunityWritePage from './pages/CommunityWritePage';
 import { DashboardPage } from './pages/AdminDashboard';
 import { MemberManagementPage } from './pages/MemberManagementPage';
 import { ContentManagementPage } from './pages/CommunityManagementPage';
+import MemberStatsPage from './pages/MemberStatsPage';
+import { PopularContentsPage } from './pages/PopularContentsPage';
 
 const App = () => {
   const chatbotRef = useRef<any>(null);
@@ -73,6 +75,8 @@ const App = () => {
         <Route path="/admin" element={<DashboardPage />} />
         <Route path="/admin/members" element={<MemberManagementPage />} />
         <Route path="/admin/post" element={<ContentManagementPage />} />
+        <Route path="/admin/member-stats" element={<MemberStatsPage />} />
+        <Route path="/admin/popular" element={<PopularContentsPage />} />
       </Routes>
 
       {/* Toast 알림을 위한 Toaster 컴포넌트 */}
