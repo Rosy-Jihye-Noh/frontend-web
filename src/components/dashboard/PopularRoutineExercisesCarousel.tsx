@@ -1,4 +1,3 @@
-// 필요한 라이브러리 및 컴포넌트 import
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,14 +6,12 @@ import { HiPlus, HiChevronLeft, HiChevronRight } from 'react-icons/hi2';
 import type { Exercise } from '@/types/index';
 import { fetchPopularExercisesByRoutineAdditions } from '@/services/api/exerciseApi';
 
-// 루틴에 자주 추가된 운동 캐러셀 컴포넌트
 const PopularRoutineExercisesCarousel: React.FC = () => {
   const navigate = useNavigate();
   const [exercises, setExercises] = useState<(Exercise & { routineCount: number })[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 운동 데이터 로드
   useEffect(() => {
     const loadExercises = async () => {
       try {
@@ -31,18 +28,16 @@ const PopularRoutineExercisesCarousel: React.FC = () => {
     loadExercises();
   }, []);
 
-  // 3초마다 자동으로 다음 운동으로 전환
   useEffect(() => {
     if (exercises.length === 0) return;
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % exercises.length);
-    }, 3000);
+    }, 3000); // 3초마다 전환
 
     return () => clearInterval(interval);
   }, [exercises.length]);
 
-  // 이전/다음 버튼 핸들러
   const handlePrevious = () => {
     setCurrentIndex((prev) => (prev - 1 + exercises.length) % exercises.length);
   };
@@ -51,7 +46,6 @@ const PopularRoutineExercisesCarousel: React.FC = () => {
     setCurrentIndex((prev) => (prev + 1) % exercises.length);
   };
 
-  // 로딩 중 표시
   if (isLoading) {
     return (
       <Card className="h-[400px] flex flex-col">
@@ -65,7 +59,6 @@ const PopularRoutineExercisesCarousel: React.FC = () => {
     );
   }
 
-  // 데이터 없을 때 표시
   if (exercises.length === 0) {
     return (
       <Card className="h-[400px] flex flex-col">
@@ -76,9 +69,7 @@ const PopularRoutineExercisesCarousel: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col justify-center items-center flex-1 space-y-4">
-          <p className="text-gray-500 dark:text-gray-400 text-center">
-            아직 루틴에 많이 추가된 운동이 없습니다.
-          </p>
+          <p className="text-gray-500 dark:text-gray-400 text-center">아직 루틴에 많이 추가된 운동이 없습니다.</p>
           <Button
             onClick={() => navigate('/routines/new')}
             size="sm"
@@ -102,7 +93,6 @@ const PopularRoutineExercisesCarousel: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 flex-1 flex flex-col overflow-hidden">
-        {/* 현재 운동 정보 표시 */}
         {currentExercise && (
           <div className="relative flex-1 flex items-center px-8">
             <div 
@@ -110,7 +100,6 @@ const PopularRoutineExercisesCarousel: React.FC = () => {
               onClick={() => navigate(`/exercises/${currentExercise.id}`)}
             >
               <div className="text-center">
-                {/* 썸네일 이미지 또는 기본 아이콘 */}
                 <div className="w-24 h-24 mx-auto mb-3 relative overflow-hidden rounded-lg bg-green-200 flex items-center justify-center shadow-sm">
                   {currentExercise.thumbnailUrl ? (
                     <img 
@@ -131,26 +120,19 @@ const PopularRoutineExercisesCarousel: React.FC = () => {
                     <span className="text-3xl">🏋️</span>
                   )}
                 </div>
-                {/* 운동 이름, 부위, 추가 수, 카테고리 */}
-                <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-1 text-sm truncate">
-                  {currentExercise.name}
-                </h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 truncate">
-                  {currentExercise.bodyPart}
-                </p>
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-1 text-sm truncate">{currentExercise.name}</h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 truncate">{currentExercise.bodyPart}</p>
                 <div className="flex items-center justify-center gap-2">
                   <HiPlus className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm text-gray-600 dark:text-gray-300">
-                    {currentExercise.routineCount || 0}
-                  </span>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">{currentExercise.routineCount || 0}</span>
                   <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full ml-2">
                     {currentExercise.category}
                   </span>
                 </div>
               </div>
             </div>
-
-            {/* 좌우 화살표 버튼 */}
+            
+            {/* Navigation arrows */}
             <button
               onClick={handlePrevious}
               className="absolute left-1 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-1.5 shadow-md hover:bg-gray-50 z-10"
@@ -166,7 +148,7 @@ const PopularRoutineExercisesCarousel: React.FC = () => {
           </div>
         )}
 
-        {/* 아래 점(dot) 인디케이터 */}
+        {/* Dots indicator */}
         <div className="flex justify-center gap-1 flex-shrink-0">
           {exercises.map((_, index) => (
             <button
@@ -179,7 +161,6 @@ const PopularRoutineExercisesCarousel: React.FC = () => {
           ))}
         </div>
 
-        {/* 루틴 만들기 버튼 */}
         <Button
           onClick={() => navigate('/routines/new')}
           size="sm"

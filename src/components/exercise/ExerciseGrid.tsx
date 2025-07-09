@@ -3,24 +3,22 @@ import { Link } from 'react-router-dom'; // react-router-dom의 Link를 사용�
 import type { Exercise } from '@/types/index';
 import ExerciseCard from './ExerciseCard';
 
-// ExerciseGrid 컴포넌트의 props 인터페이스
 interface ExerciseGridProps {
-  exercises: Exercise[]; // 표시할 운동 객체들의 배열
-  likedExerciseIds: Set<number>; // 사용자가 '좋아요'한 운동 ID들을 저장하는 Set 객체
-  onLikeToggle: (exerciseId: number) => void; // 운동 '좋아요' 상태를 토글할 때 호출되는 함수
-  onAddToRoutine: (exercise: Exercise) => void; // 운동을 루틴에 추가할 때 호출되는 함수입니다.
+  exercises: Exercise[];
+  likedExerciseIds: Set<number>;
+  onLikeToggle: (exerciseId: number) => void;
+  onAddToRoutine: (exercise: Exercise) => void;
 }
 
 const ExerciseGrid: React.FC<ExerciseGridProps> = ({
   exercises, likedExerciseIds, onLikeToggle, onAddToRoutine,
 }) => {
-  // '루틴에 추가' 버튼 클릭 시 기본 이벤트를 막고 onAddToRoutine 함수를 호출
+  // 버튼 클릭 시 링크 이동을 막는 핸들러
   const handleAddToRoutineClick = (e: React.MouseEvent, exercise: Exercise) => {
     e.preventDefault();
     onAddToRoutine(exercise);
   };
   
-  // '좋아요' 토글 버튼 클릭 시 기본 이벤트를 막고 onLikeToggle 함수를 호출
   const handleLikeToggleClick = (e: React.MouseEvent, exerciseId: number) => {
     e.preventDefault();
     onLikeToggle(exerciseId);
@@ -28,7 +26,6 @@ const ExerciseGrid: React.FC<ExerciseGridProps> = ({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch">
-      {/* 'exercises' 배열을 순회하며 각 운동에 대해 ExerciseCard 컴포넌트를 렌더링합니다. */}
       {exercises.map((exercise) => (
         <ExerciseCard
           key={exercise.id}
