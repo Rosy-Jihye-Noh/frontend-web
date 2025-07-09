@@ -1,15 +1,16 @@
+// PostCounter: 게시글의 좋아요/댓글/조회수 카운트와 좋아요 버튼을 표시하는 컴포넌트
 import React from 'react';
 import { Heart, Eye, MessageCircle } from 'lucide-react';
 
 interface PostCounterProps {
-  likeCount: number;
-  commentCount: number;
-  viewCount: number;
-  isLiked?: boolean;
-  onLikeClick?: (e: React.MouseEvent) => void;
-  likeLoading?: boolean;
-  showLikeButton?: boolean;
-  size?: 'sm' | 'md';
+  likeCount: number;      // 좋아요 수
+  commentCount: number;   // 댓글 수
+  viewCount: number;      // 조회수
+  isLiked?: boolean;      // 좋아요 여부(선택)
+  onLikeClick?: (e: React.MouseEvent) => void; // 좋아요 클릭 핸들러(선택)
+  likeLoading?: boolean;  // 좋아요 처리 중(선택)
+  showLikeButton?: boolean; // 좋아요 버튼 노출 여부(선택)
+  size?: 'sm' | 'md';     // 아이콘/텍스트 크기(sm|md, 기본 md)
 }
 
 const PostCounter: React.FC<PostCounterProps> = ({
@@ -27,6 +28,7 @@ const PostCounter: React.FC<PostCounterProps> = ({
 
   return (
     <div className="flex items-center gap-3">
+      {/* 좋아요 버튼/카운트 */}
       {showLikeButton && onLikeClick ? (
         <button
           type="button"
@@ -52,11 +54,13 @@ const PostCounter: React.FC<PostCounterProps> = ({
         </span>
       )}
       
+      {/* 댓글 카운트 */}
       <span className={`flex items-center ${textSize} text-muted-foreground`}>
         <MessageCircle size={iconSize} className="mr-1" />
         {commentCount}
       </span>
       
+      {/* 조회수 카운트 */}
       <span className={`flex items-center ${textSize} text-muted-foreground`}>
         <Eye size={iconSize} className="mr-1" />
         {viewCount}

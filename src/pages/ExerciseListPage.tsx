@@ -21,12 +21,15 @@ import {
   removeLikeApi, 
   addExerciseToRoutineApi 
 } from '@/services/api/exerciseApi';
+import { useRequireAuth } from "../hooks/useRequireAuth";
 
 const CATEGORIES = ["전체", "전신", "다리", "옆구리", "허리", "허벅지", "엉덩이", "종아리", "팔", "가슴", "등", "어깨", "복부"] as const;
 const EXERCISES_PER_PAGE = 12; 
 const MAX_VISIBLE_PAGES = 8;
 
 const ExerciseListPage: React.FC = () => {
+  useRequireAuth("/exercises"); // 페이지 최상단에서 인증 체크
+
   const { user } = useUserStore();
   const [allExercises, setAllExercises] = useState<Exercise[]>([]);
   const [likedExerciseIds, setLikedExerciseIds] = useState<Set<number>>(new Set());

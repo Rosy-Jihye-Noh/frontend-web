@@ -1,18 +1,19 @@
+// CommunityFilters: 커뮤니티 목록에서 카테고리, 정렬, 검색, 글쓰기 기능을 제공하는 필터 컴포넌트
 import React from 'react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import type { CategoryDTO } from '../../types/community';
 
 interface CommunityFiltersProps {
-  categories: CategoryDTO[];
-  currentCategory: string;
-  currentSort: 'latest' | 'popular';
-  searchValue: string;
-  onCategoryChange: (category: string) => void;
-  onSortChange: (sort: 'latest' | 'popular') => void;
-  onSearchChange: (value: string) => void;
-  onSearchSubmit: (e: React.FormEvent) => void;
-  onWriteClick: () => void;
+  categories: CategoryDTO[]; // 카테고리 목록
+  currentCategory: string; // 현재 선택된 카테고리
+  currentSort: 'latest' | 'popular'; // 정렬 기준
+  searchValue: string; // 검색어
+  onCategoryChange: (category: string) => void; // 카테고리 변경 핸들러
+  onSortChange: (sort: 'latest' | 'popular') => void; // 정렬 변경 핸들러
+  onSearchChange: (value: string) => void; // 검색어 입력 핸들러
+  onSearchSubmit: (e: React.FormEvent) => void; // 검색 폼 제출 핸들러
+  onWriteClick: () => void; // 글쓰기 버튼 클릭 핸들러
 }
 
 const CommunityFilters: React.FC<CommunityFiltersProps> = ({
@@ -28,8 +29,8 @@ const CommunityFilters: React.FC<CommunityFiltersProps> = ({
 }) => {
   return (
     <>
-      {/* 카테고리 탭 */}
-              <div className="border-b border-border mb-6">
+      {/* 카테고리 탭: 전체/카테고리별 필터 */}
+      <div className="border-b border-border mb-6">
         <nav className="-mb-px flex space-x-6 overflow-x-auto">
           <button
             key="all"
@@ -58,9 +59,9 @@ const CommunityFilters: React.FC<CommunityFiltersProps> = ({
         </nav>
       </div>
 
-      {/* 정렬/검색/글쓰기 */}
+      {/* 정렬/검색/글쓰기 영역: 데스크톱/모바일 반응형 */}
       <div className="mb-4">
-        {/* 데스크톱 레이아웃 */}
+        {/* 데스크톱 레이아웃: 정렬, 검색, 글쓰기 버튼 */}
         <div className="hidden md:flex flex-row items-center gap-2 overflow-x-auto whitespace-nowrap">
           <button
             className={`px-3 py-1 rounded shrink-0 transition-colors ${
@@ -97,7 +98,7 @@ const CommunityFilters: React.FC<CommunityFiltersProps> = ({
           </Button>
         </div>
 
-        {/* 모바일 레이아웃 */}
+        {/* 모바일 레이아웃: 정렬, 글쓰기, 검색 */}
         <div className="md:hidden space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
