@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { XCircle, ChevronUp, ChevronDown } from 'lucide-react';
 
+// SelectedExercisesList 컴포넌트의 props 인터페이스
 interface SelectedExercisesListProps {
-  exercises: Exercise[];
-  onRemoveExercise: (exerciseId: number) => void;
-  onMoveUp: (index: number) => void;
-  onMoveDown: (index: number) => void;
+  exercises: Exercise[]; // 루틴에 포함된 운동 객체들의 배열
+  onRemoveExercise: (exerciseId: number) => void; // 운동 제거 시 호출될 함수
+  onMoveUp: (index: number) => void; // 운동 순서를 위로 옮길 때 호출될 함수
+  onMoveDown: (index: number) => void; // 운동 순서를 아래로 옮길 때 호출될 함수
 }
 
 const SelectedExercisesList: React.FC<SelectedExercisesListProps> = ({

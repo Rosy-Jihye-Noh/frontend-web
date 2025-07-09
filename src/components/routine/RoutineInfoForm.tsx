@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
+// RoutineInfoForm 컴포넌트의 props 인터페이스
 interface RoutineInfoFormProps {
-  routineName: string;
-  description: string;
-  onNameChange: (name: string) => void;
-  onDescriptionChange: (description: string) => void;
+  routineName: string; // 루틴 이름 (입력 필드의 값)
+  description: string; // 루틴 설명 (텍스트 영역의 값)
+  onNameChange: (name: string) => void; // 루틴 이름 변경 시 호출될 콜백 함수
+  onDescriptionChange: (description: string) => void; // 루틴 설명 변경 시 호출될 콜백 함수
 }
 
 const RoutineInfoForm: React.FC<RoutineInfoFormProps> = ({
