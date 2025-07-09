@@ -8,12 +8,13 @@ const axiosInstance = axios.create({
   },
 });
 
+// 요청 인터셉터: JWT 토큰이 있으면 Authorization 헤더에 자동 추가
 axiosInstance.interceptors.request.use(
   (config) => {
-        // localStorage에서 토큰을 가져옵니다.
+        // localStorage에서 토큰을 가져옴
         const token = localStorage.getItem('jwt_token');
 
-        // 토큰이 존재하면 Authorization 헤더를 추가합니다.
+        // 토큰이 존재하면 Authorization 헤더를 추가
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }

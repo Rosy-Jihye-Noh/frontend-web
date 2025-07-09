@@ -1,24 +1,26 @@
+// PostHeader: 게시글 상세 상단에 제목, 작성자, 카테고리, 작성일을 보여주는 컴포넌트
 import React from 'react';
 import { CardHeader, CardTitle } from '../ui/card';
 import type { PostDTO } from '../../types/community';
 
 interface PostHeaderProps {
-  post: PostDTO;
+  post: PostDTO; // 게시글 정보
 }
 
 const PostHeader: React.FC<PostHeaderProps> = ({ post }) => {
   return (
     <CardHeader>
+      {/* 게시글 제목 */}
       <CardTitle className="text-xl mb-2">{post.title}</CardTitle>
       <div className="flex flex-col gap-1 sm:flex-row sm:gap-2 text-sm text-muted-foreground">
-        {/* 첫 번째 줄: 작성자와 카테고리 */}
+        {/* 작성자/카테고리 정보 */}
         <div className="flex items-center justify-between sm:justify-start sm:gap-2">
           <span className="font-medium">{post.userName}</span>
           <span className="hidden sm:inline">|</span>
           <span className="text-blue-600 font-medium">{post.categoryName}</span>
           <span className="hidden sm:inline">|</span>
         </div>
-        {/* 두 번째 줄: 날짜 */}
+        {/* 작성일 */}
         <div className="text-xs sm:text-sm">
           {new Date(post.createdAt).toLocaleString('ko-KR', {
             year: 'numeric',

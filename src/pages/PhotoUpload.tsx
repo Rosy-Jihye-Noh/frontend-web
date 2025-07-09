@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/common/Header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,20 +7,16 @@ import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
 import { HiUpload } from 'react-icons/hi';
 import { useUserStore } from '@/store/userStore';
+import { useRequireAuth } from "../hooks/useRequireAuth";
 
 const PhotoUpload: React.FC = () => {
+  useRequireAuth("/photoupload"); // 페이지 최상단에서 인증 체크
+
   const [frontPhoto, setFrontPhoto] = useState<File | null>(null);
   const [sidePhoto, setSidePhoto] = useState<File | null>(null);
   const [includeSidePhoto, setIncludeSidePhoto] = useState(false);
   const navigate = useNavigate();
   const { user } = useUserStore();
-
-  useEffect(() => {
-    // 로그인 상태 확인
-    if (!user) {
-      navigate('/login', { state: { from: '/photoupload' } });
-    }
-  }, [user, navigate]);
 
   const PhotoUploader = ({ photo, setPhoto, title, exampleUrl }: { photo: File | null, setPhoto: (f: File) => void, title: string, exampleUrl: string }) => (
     <div className="text-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 h-full flex flex-col justify-center">
@@ -38,18 +34,6 @@ const PhotoUpload: React.FC = () => {
       </Button>
     </div>
   );
-
-  // 로그인하지 않은 경우 로딩 화면 표시
-  if (!user) {
-    return (
-      <div className="bg-background min-h-screen flex justify-center items-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-dashed rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">로그인 확인 중...</p>
-        </div>
-      </div>
-    );
-  }
 
   // 분석 시작 가능 여부 확인
   const canStartAnalysis = frontPhoto && (includeSidePhoto ? sidePhoto : true);

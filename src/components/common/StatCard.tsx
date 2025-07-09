@@ -2,13 +2,19 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface StatCardProps {
-  title: string;
-  value: string;
-  icon: React.ElementType; // 아이콘은 컴포넌트이므로 ElementType으로 지정
-  details?: string; // optional prop
-  className?: string;
+  title: string;      // 카드 제목
+  value: string;      // 주요 수치
+  icon: React.ElementType; // 아이콘 컴포넌트
+  details?: string;   // 부가 설명(선택)
+  className?: string; // 커스텀 클래스(선택)
 }
 
+// StatCard: 대시보드 등에서 통계 수치와 아이콘을 한눈에 보여주는 카드 컴포넌트
+// - title: 항목명
+// - value: 주요 수치(문자열)
+// - icon: React 아이콘 컴포넌트
+// - details: 부가 설명(선택)
+// - className: 스타일 커스텀(선택)
 export function StatCard({ title, value, icon: Icon, details, className }: StatCardProps) {
   return (
     <Card className={className}>

@@ -2,18 +2,25 @@ import { X } from "lucide-react";
 import { HiUser } from "react-icons/hi";
 import { useState, useEffect } from "react";
 
+/**
+ * SynergyM AI 챗봇 모달 컴포넌트
+ * - 챗봇/사용자 메시지 UI
+ * - 유튜브 영상 추천, 상담 등 다양한 초기 메시지 지원
+ * - 입력창/전송, 닫기 버튼 제공
+ */
 interface Props {
-  isOpen: boolean;
-  onClose: () => void;
-  initType?: 'video' | 'consult' | null;
-  initPayload?: any;
+  isOpen: boolean;  // 모달 열림/닫힘 상태
+  onClose: () => void;  // 모달 닫기 함수
+  initType?: 'video' | 'consult' | null;  // 초기 메시지 타입
+  initPayload?: any;  // 초기 메시지 데이터터
 }
 
 interface ChatMessage {
-  type: 'bot' | 'user';
-  content: React.ReactNode;
+  type: 'bot' | 'user';  // 메시지 주체(챗봇/사용자)
+  content: React.ReactNode;  // 메시지 내용
 }
 
+// 유튜브 URL에서 영상 ID 추출
 function getYoutubeId(url: string) {
   const match = url.match(/(?:v=|be\/|embed\/)([\w-]{11})/);
   return match ? match[1] : '';
@@ -23,6 +30,7 @@ const ChatModal = ({ isOpen, onClose, initType, initPayload }: Props) => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
+    // 모달 열릴 때 초기 메시지 설정 (유튜브/상담/기본)
   useEffect(() => {
     if (!isOpen) return;
     let initial: ChatMessage[] = [];
@@ -38,7 +46,7 @@ const ChatModal = ({ isOpen, onClose, initType, initPayload }: Props) => {
                 height="180"
                 src={`https://www.youtube.com/embed/${videoId}`}
                 title="YouTube video player"
-                frameBorder="0"
+                style={{ border: "none" }} 
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 className="rounded mb-2"
@@ -57,6 +65,7 @@ const ChatModal = ({ isOpen, onClose, initType, initPayload }: Props) => {
     setMessages(initial);
   }, [isOpen, initType, initPayload]);
 
+  // 메시지 전송 핸들러 (입력값을 사용자 메시지로 추가 후 초기화화)
   const handleSend = () => {
     if (input.trim()) {
       setMessages(prev => [
@@ -75,12 +84,14 @@ const ChatModal = ({ isOpen, onClose, initType, initPayload }: Props) => {
         md:w-[66vw] md:h-[80vh] md:max-w-[1100px] md:max-h-[900px]
         ${isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
     >
+      {/* 헤더: 타이틀, 닫기 버튼 */}
       <div className="flex justify-between items-center p-4 border-b">
         <span className="font-semibold text-lg">SynergyM AI</span>
         <button onClick={onClose}>
           <X className="w-5 h-5 text-gray-600 hover:text-black" />
         </button>
       </div>
+      {/* 메시지 영역 */}
       <div className="p-4 flex-1 overflow-y-auto text-sm text-gray-700 flex flex-col">
         {/* 메시지 렌더링 */}
         {messages.map((msg, idx) =>
@@ -107,6 +118,7 @@ const ChatModal = ({ isOpen, onClose, initType, initPayload }: Props) => {
           )
         )}
       </div>
+      {/* 입력창/전송 폼 */}
       <form
         className="flex items-center border-t p-3 gap-2"
         onSubmit={e => {

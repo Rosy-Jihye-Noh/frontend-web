@@ -2,8 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useUserStore } from '@/store/userStore';
-import { HiMenu, HiX, HiSun, HiMoon } from "react-icons/hi";
+import { HiMenu, HiSun, HiMoon } from "react-icons/hi";
 import MobileMenuModal from './MobileMenuModal';
+
+/**
+ * SynergyM 메인 헤더 컴포넌트
+ * - 반응형 네비게이션(데스크탑/모바일)
+ * - 다크모드 토글, 로그인/회원가입/마이페이지/관리자 메뉴 지원
+ * - 메뉴 클릭 시 페이지 이동만 담당(인증 체크는 각 페이지에서)
+ */
 
 const menus = [
   { name: "홈", path: "/dashboard" },
@@ -21,7 +28,7 @@ const Header: React.FC = () => {
     typeof window !== 'undefined' && document.documentElement.classList.contains('dark')
   );
 
-  // 다크모드 상태 동기화 (초기)
+  // 다크모드 상태 동기화
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -30,25 +37,19 @@ const Header: React.FC = () => {
     }
   }, [darkMode]);
 
-  // 메뉴 클릭 시 닫기
+  // 메뉴 클릭 시 닫기 및 이동
   const handleMenuClick = (path: string) => {
     navigate(path);
     setMobileOpen(false);
   };
 
-  // 인증이 필요한 페이지 클릭 처리
+  // 메뉴 클릭 시 페이지 이동만 담당(인증 체크 없음)
   const handleAuthenticatedMenuClick = (path: string) => {
-    // 커뮤니티와 운동 목록은 로그인이 필요
-    if ((path === "/community" || path === "/exercises") && !user) {
-      navigate("/login");
-      setMobileOpen(false);
-      return;
-    }
-    
-    // 기타 페이지는 그대로 이동
-    handleMenuClick(path);
+    navigate(path);
+    setMobileOpen(false);
   };
-
+  
+  // 다크모드 토글
   const handleDarkModeToggle = () => {
     setDarkMode((prev) => {
       const next = !prev;

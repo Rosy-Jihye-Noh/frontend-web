@@ -6,6 +6,12 @@ import { Menu, BarChart, Users, FileText, Home } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { HiSun, HiMoon } from 'react-icons/hi';
 
+/**
+ * SynergyM 관리자 페이지 레이아웃 컴포넌트
+ * - 사이드바/모바일 네비게이션, 다크모드 토글, 메인 콘텐츠 영역 제공
+ * - 관리자 메뉴(대시보드, 회원 관리, 콘텐츠 관리 등)와 사용자 화면 이동 지원
+ */
+
 // Props 타입 정의
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -53,7 +59,7 @@ const DarkModeToggle: React.FC = () => {
   );
 };
 
-// 사이드바 컴포넌트
+// 사이드바 컴포넌트: 관리자 메뉴 및 다크모드 토글
 const SidebarNav: React.FC = () => (
   <nav className="flex flex-col gap-2 p-4 h-full">
     <h1 className="text-xl sm:text-2xl font-bold p-2 mb-4 text-gray-100 dark:text-gray-100">SynergyM AI Admin</h1>
@@ -77,6 +83,12 @@ const SidebarNav: React.FC = () => (
   </nav>
 );
 
+/**
+ * 관리자 메인 레이아웃 컴포넌트
+ * - 데스크탑: 사이드바 + 메인
+ * - 모바일: 상단 메뉴 + 슬라이드 네비게이션
+ * - children: 각 관리자 페이지의 실제 콘텐츠
+ */
 export function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[240px_1fr] bg-gray-50 dark:bg-gray-900">
