@@ -7,11 +7,9 @@ import { Link } from 'react-router-dom';
 
 interface ExerciseCardProps {
   exercise: Exercise;
-  isLiked: boolean;   // '좋아요' 표시되었는지 여부를 나타내는 불리언 값
+  isLiked: boolean;
   onLikeToggle: (e: React.MouseEvent<HTMLButtonElement>) => void;
-                      // 'onLikeToggle'은 사용자가 좋아요 버튼을 클릭했을 때 호출될 함수입니다.
   onAddToRoutine: (e: React.MouseEvent<HTMLButtonElement>) => void;
-                      // 'onAddToRoutine'은 사용자가 '루틴에 추가' 버튼을 클릭했을 때 호출될 함수입니다.
 }
 
 const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, isLiked, onLikeToggle, onAddToRoutine }) => {
