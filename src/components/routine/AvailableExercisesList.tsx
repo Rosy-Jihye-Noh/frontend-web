@@ -25,7 +25,8 @@ const TabButton = ({
   icon?: React.ReactNode;
 }) => (
   <button
-    onClick={onClick}
+    onClick={onClick} // 클릭 이벤트 핸들러
+    // Tailwind CSS를 이용한 동적 스타일링: isActive 여부에 따라 배경색, 텍스트 색상, 그림자 등이 변경됩니다.
     className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
       isActive 
         ? 'bg-blue-600 text-white shadow-md' 

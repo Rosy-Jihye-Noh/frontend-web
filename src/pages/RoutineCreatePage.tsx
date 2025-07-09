@@ -46,21 +46,37 @@ const RoutineCreatePage: React.FC = () => {
     loadData();
   }, [user]);
 
+  // 검색어와 현재 선택된 운동을 기반으로 필터링된 '선택 가능한 운동' 목록을 계산하는 useMemo 훅
+  // 이 목록은 'availableExercises'에서 'selectedExercises'에 이미 포함된 운동을 제외합니다.
   const filteredAvailableExercises = useMemo(() => {
     const selectedIds = new Set(selectedExercises.map(ex => ex.id));
     return availableExercises.filter(ex => 
+      // 운동 이름이 검색어를 포함하고 (대소문자 구분 없이),
+      // 아직 선택된 운동 목록에 없는 경우에만 필터링합니다.
       ex.name.toLowerCase().includes(searchTerm.toLowerCase()) && !selectedIds.has(ex.id)
     );
   }, [searchTerm, availableExercises, selectedExercises]);
 
+  /**
+   * 운동을 '선택된 운동' 목록에 추가하는 핸들러입니다.
+   * @param exercise - 추가할 운동 객체
+   */
   const handleAddExercise = (exercise: Exercise) => {
     setSelectedExercises(prev => [...prev, exercise]);
   };
 
+  /**
+   * 운동을 '선택된 운동' 목록에서 제거하는 핸들러입니다.
+   * @param exerciseId - 제거할 운동의 ID
+   */
   const handleRemoveExercise = (exerciseId: number) => {
     setSelectedExercises(prev => prev.filter(ex => ex.id !== exerciseId));
   };
 
+  /**
+   * 새로운 루틴을 저장하는 비동기 핸들러입니다.
+   * 유효성 검사를 수행하고, API를 호출하여 루틴을 생성합니다.
+   */
   const handleSaveRoutine = async () => {
     if (!routineName.trim()) {
       alert('루틴 이름을 입력해주세요.');
@@ -89,6 +105,8 @@ const RoutineCreatePage: React.FC = () => {
     };
 
     try {
+      // `createRoutine` API를 호출하여 루틴 생성
+      // API 함수에 userId를 별도로 전달하는 경우, 해당 API가 userId를 경로 또는 헤더에 필요로 할 때 사용합니다.
       await createRoutine(routineData, user.id); 
       alert('새로운 루틴이 성공적으로 생성되었습니다!');
       navigate('/mypage');

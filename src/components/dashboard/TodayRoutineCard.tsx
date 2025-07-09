@@ -7,13 +7,15 @@ import { useUserStore } from '@/store/userStore';
 import { useNavigate } from 'react-router-dom';
 import type { Routine } from '@/types/index';
 
+// TodayWorkoutCard 컴포넌트의 props 인터페이스
 interface TodayWorkoutCardProps {
-  selectedRoutines: Routine[];
-  allUserRoutines: Routine[];
-  onRoutineSelect: (routines: Routine[]) => void;
+  selectedRoutines: Routine[]; // 오늘 선택된 루틴 배열
+  allUserRoutines: Routine[]; // 모든 사용자 루틴 배열
+  onRoutineSelect: (routines: Routine[]) => void; // 루틴 선택 시 호출되는 콜백 함수
   onStart: () => void;
 }
 
+// TodayWorkoutCard 함수형 컴포넌트
 const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
   selectedRoutines,
   allUserRoutines,
@@ -26,7 +28,12 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
   const [todayCompletedRoutines, setTodayCompletedRoutines] = useState<string[]>([]);
   const [routineCompletionData, setRoutineCompletionData] = useState<{ [routineName: string]: number }>({});
 
-  // exercise-log-storage에서 오늘 날짜의 선택된 루틴 불러오기
+  /**
+   * 로컬 스토리지의 'exercise-log-storage'에서 오늘 날짜에 선택된 루틴을 불러옵니다.
+   * 이 함수는 로그 데이터를 읽고 파싱하여 오늘 날짜의 루틴 ID를 추출한 다음,
+   * 사용자의 전체 루틴과 매칭하여 반환합니다.
+   * @returns {Routine[]} 오늘을 위해 선택된 루틴 배열
+   */
   const getTodaySelectedRoutinesFromStorage = () => {
     try {
       if (!user?.id) return [];
@@ -54,7 +61,11 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
     }
   };
 
-  // exercise-log-storage에 선택된 루틴 저장하기 (오늘 날짜 세션으로)
+  /**
+   * 선택된 루틴들을 로컬 스토리지의 'exercise-log-storage'에 오늘 날짜의 세션으로 저장합니다.
+   * 기존 로그 데이터가 있으면 업데이트하고, 없으면 새로 생성합니다.
+   * @param {Routine[]} routines - 오늘 선택된 루틴 배열
+   */
   const saveSelectedRoutinesToStorage = (routines: Routine[]) => {
     try {
       if (!user?.id) return;
@@ -105,13 +116,21 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
     }
   };
 
-  // 오늘 날짜 문자열 생성 (YYYY-MM-DD 형식)
+  /**
+   * 현재 날짜를 'YYYY-MM-DD' 형식의 문자열로 반환합니다.
+   * @returns {string} 오늘 날짜 문자열
+   */
   const getTodayDateString = () => {
     const today = new Date();
     return today.toISOString().split('T')[0];
   };
 
-  // exercise-log-storage에서 오늘 완료된 루틴 정보 가져오기
+  /**
+   * 로컬 스토리지의 'exercise-log-storage'에서 오늘 완료된 루틴 정보와
+   * 각 루틴의 완료율 정보를 가져옵니다.
+   * @returns {{ completedRoutines: string[]; routineCompletionData: { [routineName: string]: number } }}
+   * 완료된 루틴 이름 배열과 루틴별 완료율 객체를 반환합니다.
+   */
   const getRoutineCompletionFromStorage = () => {
     try {
       const logData = localStorage.getItem('exercise-log-storage');
@@ -155,7 +174,7 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
     }
   };
 
-  // selectedRoutines가 변경될 때 tempSelectedRoutines 동기화
+  // `selectedRoutines` prop이 변경될 때마다 `tempSelectedRoutines` 상태를 동기화
   useEffect(() => {
     setTempSelectedRoutines(selectedRoutines);
   }, [selectedRoutines]);

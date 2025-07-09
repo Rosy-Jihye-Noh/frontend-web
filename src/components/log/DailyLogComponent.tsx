@@ -35,7 +35,11 @@ const DailyLogComponent = () => {
   const [isSavingMemo, setIsSavingMemo] = useState(false);
   const [lastSavedMemo, setLastSavedMemo] = useState(currentDayMemo);
 
-  // 해당 날짜의 모든 로그가 100% 완료인지 확인
+  /**
+   * 현재 선택된 날짜의 모든 운동 로그가 100% 완료되었는지 확인합니다.
+   * 사용자의 `pastLogs` 데이터를 기반으로 합니다.
+   * @returns {boolean} 모든 로그가 완료되었으면 true, 아니면 false.
+   */
   const isDateFullyCompleted = () => {
     if (!user?.id) return false;
     
@@ -257,6 +261,8 @@ const DailyLogComponent = () => {
     setIsSavingMemo(true);
     try {
       console.log('메모 저장 시도:', memoText);
+      console.log('현재 날짜:', selectedDate);
+      
       // 스토어에 메모 업데이트 후 저장
       updateMemo(memoText);
       await saveMemo(user.id);
@@ -264,7 +270,12 @@ const DailyLogComponent = () => {
       console.log('메모 저장 성공');
     } catch (error) {
       console.error('메모 저장 실패:', error);
-      alert('메모 저장에 실패했습니다. 다시 시도해주세요.');
+      // 더 구체적인 에러 메시지 표시
+      if (error instanceof Error) {
+        alert(`메모 저장에 실패했습니다: ${error.message}`);
+      } else {
+        alert('메모 저장에 실패했습니다. 다시 시도해주세요.');
+      }
     } finally {
       setIsSavingMemo(false);
     }
@@ -335,7 +346,12 @@ const DailyLogComponent = () => {
 
   const dateTitle = new Date(selectedDate).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
 
-  // 해당 날짜에 실제 저장된 로그가 있는지 확인 (unique 로직 적용)
+  /**
+   * 현재 선택된 날짜에 실제 저장된(pastLogs에 존재하는) 운동 기록이 있는지 또는
+   * 현재 세션에 logId가 할당된 루틴(즉, 이미 저장된 로그와 연결된)이 있는지 확인합니다.
+   * 이는 '기록 삭제' 버튼의 활성화 여부를 결정하는 데 사용됩니다.
+   * @returns {boolean} 실제 로그가 존재하면 true, 아니면 false.
+   */
   const hasActualLogs = () => {
     if (!user?.id) return false;
     

@@ -19,8 +19,15 @@ export const getLogsByUserAndDate = async (userId: number, date: string): Promis
  * @param logData 생성할 운동 기록 데이터
  */
 export const createLog = async (logData: ExerciseLog): Promise<number> => {
-  const response = await axiosInstance.post('/logs', logData); // POST /api/logs
-  return response.data; // 생성된 log_id 반환
+  try {
+    console.log('로그 생성 API 호출:', logData);
+    const response = await axiosInstance.post('/logs', logData); // POST /api/logs
+    console.log('로그 생성 API 성공, 생성된 ID:', response.data);
+    return response.data; // 생성된 log_id 반환
+  } catch (error) {
+    console.error('로그 생성 API 실패:', error);
+    throw error;
+  }
 };
 
 /**
@@ -66,5 +73,12 @@ export const updateLog = async (logId: number, logData: Partial<ExerciseLog>): P
  * @param memo 저장할 메모
  */
 export const updateMemo = async (logId: number, memo: string): Promise<void> => {
-  await axiosInstance.patch(`/logs/${logId}`, { memo });
+  try {
+    console.log('메모 업데이트 API 호출:', { logId, memo });
+    await axiosInstance.patch(`/logs/${logId}`, { memo });
+    console.log('메모 업데이트 API 성공');
+  } catch (error) {
+    console.error('메모 업데이트 API 실패:', error);
+    throw error;
+  }
 };

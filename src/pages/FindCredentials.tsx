@@ -22,6 +22,11 @@ const FindCredentials = () => {
     const [newPassword, setNewPassword] = useState('');
     const [uiState, setUiState] = useState<'idle' | 'code-sent' | 'verifying' | 'verified'>('idle');
 
+    /**
+     * 아이디 찾기 폼 제출 핸들러입니다.
+     * 입력된 이름과 생년월일로 이메일을 찾습니다.
+     * @param e - 폼 제출 이벤트 객체
+     */
     const handleFindEmail = async (e: React.FormEvent) => {
         e.preventDefault();
         setFoundEmail(null);
@@ -36,6 +41,10 @@ const FindCredentials = () => {
         }
     };
 
+    /**
+     * 비밀번호 재설정을 위한 인증번호 발송 핸들러입니다.
+     * 입력된 이메일로 인증 코드를 요청합니다.
+     */
     const handleSendCodeForReset = async () => {
         if (!resetEmail) return alert('이메일을 입력해주세요.');
         try {
@@ -51,6 +60,9 @@ const FindCredentials = () => {
         }
     };
 
+    /**
+     * 발송된 인증번호를 확인하는 핸들러입니다.
+     */
     const handleVerifyCodeForReset = async () => {
         setUiState('verifying');
         try {
@@ -68,6 +80,10 @@ const FindCredentials = () => {
         }
     };
     
+    /**
+     * 새 비밀번호로 변경하는 폼 제출 핸들러입니다.
+     * @param e - 폼 제출 이벤트 객체
+     */
     const handleChangePassword = async (e: React.FormEvent) => {
         e.preventDefault();
         if(newPassword.length < 8) return alert('비밀번호는 8자 이상으로 설정해주세요.');

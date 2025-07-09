@@ -37,15 +37,30 @@ const SocialSignupPage = () => {
         }
     }, [location, navigate]);
 
+    /**
+     * 일반 입력 필드(`Input`)의 값이 변경될 때 호출되는 핸들러입니다.
+     * `formData` 상태를 업데이트합니다.
+     * @param e - 변경 이벤트 객체
+     */
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
         setFormData(prev => ({ ...prev, [id]: value }));
     };
 
+    /**
+     * 성별(`Select`) 값이 변경될 때 호출되는 핸들러입니다.
+     * `formData`의 `gender` 필드를 업데이트합니다.
+     * @param value - 선택된 성별 값 ('MALE' 또는 'FEMALE')
+     */
     const handleGenderChange = (value: string) => {
         setFormData(prev => ({ ...prev, gender: value }));
     };
 
+    /**
+     * 폼 제출 시 호출되는 비동기 핸들러입니다.
+     * 추가 정보를 포함하여 소셜 회원가입을 완료합니다.
+     * @param e - 폼 제출 이벤트 객체
+     */
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.birthday || !formData.gender) {
@@ -55,6 +70,7 @@ const SocialSignupPage = () => {
         try {
             const response = await socialSignup(formData);
             if (response.data.success) {
+                 // 서버에서 받은 JWT 토큰을 로컬 스토리지에 저장 (자동 로그인 처리)
                 localStorage.setItem('jwt_token', response.data.token);
                 alert('회원가입 및 로그인이 완료되었습니다.');
                 navigate('/');

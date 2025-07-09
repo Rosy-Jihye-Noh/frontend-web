@@ -17,6 +17,9 @@ const LoginPage = () => {
   // 로그인 후 돌아갈 페이지 (기본값: dashboard)
   const from = location.state?.from || '/dashboard';
 
+  /**
+   * 로그인 버튼 클릭 시 또는 Enter 키 입력 시 호출되는 로그인 처리 핸들러입니다.
+   */
   const handleLogin = async () => {
     if (!email || !password) {
       alert("🤔 이메일과 비밀번호를 입력해주세요!");
@@ -61,6 +64,11 @@ const LoginPage = () => {
     }
   };
 
+  /**
+   * 아이디/비밀번호 찾기 페이지로 이동하는 함수입니다.
+   * 어떤 탭을 초기 활성화할지 `state`를 통해 전달합니다.
+   * @param tab - 이동할 탭 ('find-email' 또는 'find-password')
+   */
   const goToFindCredentials = (tab: 'find-email' | 'find-password') => {
     navigate('/find-credentials', { state: { initialTab: tab } });
   };

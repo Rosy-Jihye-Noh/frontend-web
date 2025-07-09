@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 
 interface AddToRoutineModalProps {
   isOpen: boolean;
-  routines: Routine[]; // ✨ 이 줄을 추가하여 routines 데이터를 받을 수 있도록 합니다.
+  routines: Routine[]; // 모달에 표시될 루틴 데이터 배열
   onClose: () => void;
   onSelectRoutine: (routineId: number) => void;
 }
@@ -12,6 +12,7 @@ interface AddToRoutineModalProps {
 const AddToRoutineModal: React.FC<AddToRoutineModalProps> = ({ isOpen, routines, onClose, onSelectRoutine }) => {
   if (!isOpen) return null;
 
+  // `isOpen`이 true일 경우 모달 UI 렌더링
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-card p-6 rounded-lg shadow-xl w-full max-w-sm">

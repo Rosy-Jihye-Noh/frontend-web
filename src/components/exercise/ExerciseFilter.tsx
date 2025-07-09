@@ -31,6 +31,7 @@ const ExerciseFilter: React.FC<ExerciseFilterProps> = ({
         className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide"
         aria-label="운동 카테고리"
       >
+        {/* 'categories' 배열을 순회하며 각 카테고리에 대한 버튼을 렌더링합니다. */}
         {categories.map((category) => (
           <Button
             key={category}

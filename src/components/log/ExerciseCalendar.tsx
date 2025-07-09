@@ -11,8 +11,10 @@ interface ExerciseCalendarProps {
 }
 
 /**
- * [수정됨] Date 객체를 시간대 문제 없이 'YYYY-MM-DD' 문자열로 변환합니다.
+ * Date 객체를 시간대(timezone) 문제 없이 'YYYY-MM-DD' 형식의 문자열로 변환합니다.
+ * 이는 날짜 선택 시 발생할 수 있는 클라이언트-서버 간 시간대 불일치 문제를 방지합니다.
  * @param date - 변환할 Date 객체
+ * @returns {string} 'YYYY-MM-DD' 형식의 날짜 문자열
  */
 const toYYYYMMDD = (date: Date): string => {
   const year = date.getFullYear();
@@ -21,7 +23,12 @@ const toYYYYMMDD = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-// 파란색 테마의 색상 키 반환
+/**
+ * 주어진 완료율(rate)에 따라 달력에 표시할 색상 레벨 키를 반환합니다.
+ * 이 키는 Tailwind CSS의 `modifiersClassNames`와 연결되어 색상을 동적으로 적용합니다.
+ * @param rate - 운동 완료율 (0-100)
+ * @returns {string} 색상 레벨을 나타내는 문자열 (level0 ~ level4)
+ */
 const getCompletionLevel = (rate: number): string => {
   if (rate === 100) return 'level4';
   if (rate >= 80) return 'level3';
