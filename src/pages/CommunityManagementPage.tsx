@@ -241,17 +241,17 @@ export const ContentManagementPage: React.FC = () => {
                     const commentCount = post.comments || post.commentCount || 0;
                     
                     return (
-                        <TableRow key={post.id} className="hover:bg-gray-50/80 transition-colors border-b border-gray-100">
-                            <TableCell className="font-medium text-gray-700">
+                        <TableRow key={post.id} className="hover:bg-gray-50/80 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700">
+                            <TableCell className="font-medium text-gray-700 dark:text-gray-200">
                                 <div className="flex items-center gap-2">
                                     <Folder className="h-4 w-4 text-blue-500/70" />
                                     {categoryName}
                                 </div>
                             </TableCell>
-                            <TableCell className="font-medium text-gray-800">
+                            <TableCell className="font-medium text-gray-800 dark:text-gray-100">
                                 {post.title}
                             </TableCell>
-                            <TableCell className="text-gray-600">
+                            <TableCell className="text-gray-600 dark:text-gray-300">
                                 <div className="flex items-center gap-2">
                                     <User className="h-4 w-4 text-gray-400" />
                                     {authorName}
@@ -261,11 +261,11 @@ export const ContentManagementPage: React.FC = () => {
                                 <div className="flex items-center gap-3 text-sm">
                                     <div className="flex items-center gap-1 text-red-400">
                                         <Heart className="h-4 w-4" />
-                                        <span className="text-gray-600">{likeCount}</span>
+                                        <span className="text-gray-600 dark:text-gray-300">{likeCount}</span>
                                     </div>
                                     <div className="flex items-center gap-1 text-blue-400">
                                         <MessageSquare className="h-4 w-4" />
-                                        <span className="text-gray-600">{commentCount}</span>
+                                        <span className="text-gray-600 dark:text-gray-300">{commentCount}</span>
                                     </div>
                                 </div>
                             </TableCell>
@@ -274,7 +274,7 @@ export const ContentManagementPage: React.FC = () => {
                                     variant="outline" 
                                     size="sm" 
                                     onClick={() => handleDeletePost(post.id)}
-                                    className="border-gray-200 text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
+                                    className="border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-400 transition-all"
                                 >
                                     <Trash2 className="h-4 w-4 mr-1" />
                                     삭제
@@ -289,22 +289,21 @@ export const ContentManagementPage: React.FC = () => {
 
     return (
         <MainLayout>
-            <Card className="mb-6 border-gray-200 shadow-sm">
-                <CardHeader className="bg-gray-50/50 border-b border-gray-200">
-                    <CardTitle className="text-gray-800 flex items-center gap-2">
+            <PageHeader title="콘텐츠 관리" />
+            <Card className="border-gray-200 dark:border-gray-700 shadow-sm mb-6 bg-white dark:bg-gray-800">
+                <CardHeader className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                    <CardTitle className="text-gray-800 dark:text-gray-100 flex items-center gap-2">
                         <Folder className="h-5 w-5 text-blue-500/70" />
-                        게시글 카테고리 관리
+                        카테고리 관리
                     </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="mt-2 flex flex-wrap gap-2">
                         {categories.map(cat => (
                             <EditableCategoryBadge key={cat.id} category={cat} onUpdate={handleUpdateCategory} onDelete={handleDeleteCategory} />
                         ))}
                         <Button 
                             variant="outline" 
                             size="sm" 
-                            className="h-9 border-dashed border-gray-300 text-gray-600 hover:bg-blue-50/50 hover:border-blue-300 hover:text-blue-600 transition-all"
+                            className="h-9 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
                             onClick={() => setIsAddingCategory(true)}
                         >
                             <PlusCircle className="mr-2 h-4 w-4" />
@@ -320,7 +319,7 @@ export const ContentManagementPage: React.FC = () => {
                                         if (e.key === 'Escape') handleCancelAddCategory();
                                     }}
                                     placeholder="새 카테고리 이름" 
-                                    className="h-9 max-w-xs border-gray-300 focus-visible:ring-blue-500/50"
+                                    className="h-9 max-w-xs border-gray-300 dark:border-gray-600 focus-visible:ring-blue-500/50 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                     autoFocus
                                 />
                                 <Button 
@@ -333,47 +332,56 @@ export const ContentManagementPage: React.FC = () => {
                                 <Button 
                                     variant="outline" 
                                     onClick={handleCancelAddCategory} 
-                                    className="h-9 text-gray-600 border-gray-300 hover:bg-gray-50 transition-all"
+                                    className="h-9 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                                 >
                                     취소
                                 </Button>
                             </div>
                         )}
                     </div>
+                </CardHeader>
+                <CardContent>
+                    {/* ...카테고리 추가 폼 등... */}
                 </CardContent>
             </Card>
-
-            <PageHeader title="게시글 관리" />
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <Table>
-                    <TableHeader className="bg-gray-50/80 border-b border-gray-200">
-                        <TableRow>
-                            <TableHead className="font-semibold text-gray-700">
-                                <div className="flex items-center gap-2">
-                                    <Folder className="h-4 w-4 text-blue-500/60" />
-                                    카테고리
-                                </div>
-                            </TableHead>
-                            <TableHead className="w-[45%] font-semibold text-gray-700">제목</TableHead>
-                            <TableHead className="font-semibold text-gray-700">
-                                <div className="flex items-center gap-2">
-                                    <User className="h-4 w-4 text-gray-500" />
-                                    작성자
-                                </div>
-                            </TableHead>
-                            <TableHead className="font-semibold text-gray-700">
-                                <div className="flex items-center gap-2">
-                                    <Heart className="h-4 w-4 text-gray-500" />
-                                    <MessageSquare className="h-4 w-4 text-gray-500" />
-                                    반응
-                                </div>
-                            </TableHead>
-                            <TableHead className="text-right font-semibold text-gray-700">관리</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    {renderContent()}
-                </Table>
-            </div>
+            <Card className="border-gray-200 dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800">
+                <CardHeader className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                    <CardTitle className="text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                        <MessageSquare className="h-5 w-5 text-blue-500/70" />
+                        게시글 목록
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <Table className="bg-white dark:bg-gray-800">
+                        <TableHeader className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                            <TableRow>
+                                <TableHead className="font-semibold text-gray-700 dark:text-gray-200">
+                                    <div className="flex items-center gap-2">
+                                        <Folder className="h-4 w-4 text-blue-500/60" />
+                                        카테고리
+                                    </div>
+                                </TableHead>
+                                <TableHead className="w-[45%] font-semibold text-gray-700 dark:text-gray-200">제목</TableHead>
+                                <TableHead className="font-semibold text-gray-700 dark:text-gray-200">
+                                    <div className="flex items-center gap-2">
+                                        <User className="h-4 w-4 text-gray-500" />
+                                        작성자
+                                    </div>
+                                </TableHead>
+                                <TableHead className="font-semibold text-gray-700 dark:text-gray-200">
+                                    <div className="flex items-center gap-2">
+                                        <Heart className="h-4 w-4 text-gray-500" />
+                                        <MessageSquare className="h-4 w-4 text-gray-500" />
+                                        반응
+                                    </div>
+                                </TableHead>
+                                <TableHead className="text-right font-semibold text-gray-700 dark:text-gray-200">관리</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        {renderContent()}
+                    </Table>
+                </CardContent>
+            </Card>
         </MainLayout>
     );
 };

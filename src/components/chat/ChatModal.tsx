@@ -52,7 +52,7 @@ const ChatModal = ({ isOpen, onClose, initType, initPayload }: Props) => {
     } else if (initType === 'consult' && initPayload) {
       initial.push({ type: 'bot', content: <div>{initPayload.message}</div> });
     } else {
-      initial.push({ type: 'bot', content: <div>어디가 불편하신가요?</div> });
+      initial.push({ type: 'bot', content: <div>어떤 내용이 궁금하실까요?</div> });
     }
     setMessages(initial);
   }, [isOpen, initType, initPayload]);
