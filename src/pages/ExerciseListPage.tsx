@@ -79,11 +79,20 @@ const ExerciseListPage: React.FC = () => {
     }
   };
 
+  /**
+   * '루틴에 추가' 모달을 열고, 선택된 운동을 모달에 전달하기 위한 핸들러입니다.
+   * @param exercise - 루틴에 추가할 운동 객체
+   */
   const handleOpenAddToRoutine = (exercise: Exercise) => {
     setSelectedExercise(exercise);
     setIsModalOpen(true);
   };
 
+  /**
+   * '루틴에 추가' 모달에서 특정 루틴을 선택했을 때 호출되는 비동기 핸들러입니다.
+   * 선택된 루틴에 운동을 추가하는 API를 호출합니다.
+   * @param routineId - 운동을 추가할 루틴의 ID
+   */
   const handleSelectRoutine = async (routineId: number) => {
     if (!selectedExercise || !user?.id) return;
     try {

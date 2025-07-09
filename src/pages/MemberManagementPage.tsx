@@ -86,6 +86,11 @@ export const MemberManagementPage: React.FC = () => {
         member.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    /**
+   * 회원을 강제 탈퇴 처리하는 비동기 핸들러입니다.
+   * @param e - 클릭 이벤트 객체 (이벤트 전파 방지를 위함)
+   * @param memberId - 삭제할 회원의 ID (문자열 형태)
+   */
     const handleRemoveMember = async (e: React.MouseEvent, memberId: string) => {
         // Dropdown 메뉴를 열었을 때, 뒤의 테이블 행이 클릭(페이지 이동)되는 것을 방지
         e.stopPropagation(); 

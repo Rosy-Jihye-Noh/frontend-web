@@ -27,6 +27,10 @@ const RoutineEditPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  /**
+   * '선택된 운동' 목록에서 특정 운동의 순서를 위로 옮기는 핸들러입니다.
+   * @param index - 이동할 운동의 현재 인덱스
+   */
   const handleMoveUp = (index: number) => {
     if (index === 0) return; // 맨 위 항목은 이동 불가
     const newExercises = [...selectedExercises];
@@ -35,6 +39,10 @@ const RoutineEditPage: React.FC = () => {
     setSelectedExercises(newExercises);
   };
 
+  /**
+   * '선택된 운동' 목록에서 특정 운동의 순서를 아래로 옮기는 핸들러입니다.
+   * @param index - 이동할 운동의 현재 인덱스
+   */
   const handleMoveDown = (index: number) => {
     if (index === selectedExercises.length - 1) return; // 맨 아래 항목은 이동 불가
     const newExercises = [...selectedExercises];
@@ -54,7 +62,8 @@ const RoutineEditPage: React.FC = () => {
         
         setRoutineName(routineData.name);
         setDescription(routineData.description || '');
-        // 정렬된 운동 목록으로 상태 설정
+        // 루틴에 포함된 운동들을 순서(order)에 따라 정렬하고, 각 운동의 상세 정보를 매핑합니다.
+        // `find`가 실패할 수 있으므로 `filter(Boolean)`으로 유효한 운동만 남깁니다.
         const sortedExercises = routineData.exercises.sort((a, b) => a.order - b.order);
         const exerciseDetails = sortedExercises.map(re => allExercises.find((e: Exercise) => e.id === re.exerciseId)).filter(Boolean) as Exercise[];
         setSelectedExercises(exerciseDetails);
@@ -84,14 +93,26 @@ const RoutineEditPage: React.FC = () => {
     );
   }, [searchTerm, availableExercises, selectedExercises]);
 
+  /**
+   * 운동을 '선택된 운동' 목록에 추가하는 핸들러입니다.
+   * @param exercise - 추가할 운동 객체
+   */
   const handleAddExercise = (exercise: Exercise) => {
     setSelectedExercises(prev => [...prev, exercise]);
   };
 
+  /**
+   * 운동을 '선택된 운동' 목록에서 제거하는 핸들러입니다.
+   * @param exerciseId - 제거할 운동의 ID
+   */
   const handleRemoveExercise = (exerciseId: number) => {
     setSelectedExercises(prev => prev.filter(ex => ex.id !== exerciseId));
   };
 
+  /**
+   * 루틴 변경사항을 저장하는 비동기 핸들러입니다.
+   * 유효성 검사를 수행하고, API를 호출하여 루틴을 업데이트합니다.
+   */
   const handleUpdateRoutine = async () => {
     if (!routineId) return;
 

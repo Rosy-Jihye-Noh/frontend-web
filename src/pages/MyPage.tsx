@@ -52,6 +52,10 @@ const MyPage: React.FC = () => {
             return;
         }
 
+        /**
+         * 특정 사용자 ID에 대한 모든 마이페이지 관련 데이터를 비동기적으로 불러오는 함수입니다.
+         * @param userId - 데이터를 불러올 사용자의 ID
+         */
         const fetchDataForUser = async (userId: number) => {
             setIsPageLoading(true);
             setError(null);
@@ -79,6 +83,10 @@ const MyPage: React.FC = () => {
         fetchDataForUser(user.id);
     }, [hasHydrated, user, navigate]);
 
+    /**
+     * 루틴을 삭제하는 비동기 핸들러입니다.
+     * @param routineId - 삭제할 루틴의 ID
+     */
     const handleDeleteRoutine = async (routineId: number) => {
       try {
         await deleteRoutineById(routineId);

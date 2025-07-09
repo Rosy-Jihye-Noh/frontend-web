@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { Exercise, Routine } from '@/types/index';
 import { useUserStore } from '@/store/userStore';
-// ✨ 1. exerciseApi와 routineApi에서 필요한 함수들을 각각 import 합니다.
 import { fetchExerciseById, fetchUserLikes, addLikeApi, removeLikeApi, fetchExerciseLikeCount } from '@/services/api/exerciseApi';
 import { fetchUserRoutines, addExerciseToRoutineApi } from '@/services/api/exerciseApi';
 import Header from '@/components/common/Header';
@@ -85,6 +84,11 @@ const ExerciseDetailPage: React.FC = () => {
     }
   }, [notification]);
 
+  /**
+   * '루틴에 추가' 모달에서 루틴을 선택했을 때 호출되는 핸들러입니다.
+   * 선택된 루틴에 현재 운동을 추가하는 API를 호출합니다.
+   * @param routineId - 운동을 추가할 루틴의 ID
+   */
   const handleSelectRoutine = async (routineId: number) => {
     if (!exercise) return;
     try {
@@ -97,6 +101,10 @@ const ExerciseDetailPage: React.FC = () => {
     }
   };
 
+  /**
+   * 좋아요 버튼을 토글할 때 호출되는 핸들러입니다.
+   * 사용자의 좋아요 상태를 변경하고, 서버에 반영하며, 좋아요 수를 업데이트합니다.
+   */
   const handleLikeToggle = async () => {
     if (!user || !exercise) return;
     

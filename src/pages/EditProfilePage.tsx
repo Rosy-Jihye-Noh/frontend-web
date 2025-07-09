@@ -35,7 +35,11 @@ const EditProfilePage: React.FC = () => {
             navigate('/login');
             return;
         }
-
+        
+        /**
+         * 사용자 ID를 기반으로 서버에서 사용자 정보를 불러와 폼 상태를 초기화하는 비동기 함수입니다.
+         * @param userId - 정보를 가져올 사용자의 ID
+         */
         const fetchUserData = async (userId: number) => {
             try {
                 const res = await axiosInstance.get(`/users/${userId}`);
@@ -74,6 +78,11 @@ const EditProfilePage: React.FC = () => {
         };
     }, [hasHydrated, user, navigate]);
 
+    /**
+     * 파일 입력 필드(input type="file")의 변경 이벤트 핸들러입니다.
+     * 선택된 이미지 파일을 검증하고 미리보기 URL을 생성합니다.
+     * @param e - 파일 입력 변경 이벤트 객체
+     */
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
@@ -100,6 +109,10 @@ const EditProfilePage: React.FC = () => {
         }
     };
 
+    /**
+     * '저장하기' 버튼 클릭 시 호출되는 비동기 핸들러입니다.
+     * 사용자 프로필 정보를 서버에 업데이트하고, 전역 상태를 갱신합니다.
+     */
     const handleSave = async () => {
         if (!user) return;
         setIsSaving(true);

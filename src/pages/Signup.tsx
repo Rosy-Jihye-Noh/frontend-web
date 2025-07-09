@@ -24,24 +24,51 @@ const SignupPage = () => {
         height: 0,
     });
     const [profileImage, setProfileImage] = useState<File | null>(null);
+    // UI 상태 관리: 회원가입 진행 단계를 추적
+    // 'idle': 초기 상태
+    // 'checking': 이메일 중복 확인 중
+    // 'checked': 이메일 중복 확인 완료 (사용 가능)
+    // 'sending': 인증번호 발송 중
+    // 'sent': 인증번호 발송 완료
+    // 'verifying': 인증번호 확인 중
+    // 'verified': 이메일 인증 완료 (나머지 정보 입력 가능)
     const [uiState, setUiState] = useState<'idle' | 'checking' | 'checked' | 'sending' | 'sent' | 'verifying' | 'verified'>('idle');
     const [verificationCode, setVerificationCode] = useState('');
 
+    /**
+     * 입력 필드(`Input`)의 값이 변경될 때 호출되는 일반적인 변경 핸들러입니다.
+     * `formData` 상태를 업데이트합니다.
+     * @param e - 변경 이벤트 객체
+     */
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
         setFormData(prev => ({ ...prev, [id]: value }));
     };
 
+    /**
+     * 성별(`Select`) 값이 변경될 때 호출되는 핸들러입니다.
+     * `formData`의 `gender` 필드를 업데이트합니다.
+     * @param value - 선택된 성별 값 ('MALE' 또는 'FEMALE')
+     */
     const handleGenderChange = (value: string) => {
         setFormData(prev => ({ ...prev, gender: value }));
     };
 
+    /**
+     * 프로필 이미지 파일 입력 필드(`Input type="file"`)의 변경 핸들러입니다.
+     * 선택된 이미지 파일을 `profileImage` 상태에 저장합니다.
+     * @param e - 변경 이벤트 객체
+     */
     const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             setProfileImage(e.target.files[0]);
         }
     };
     
+    /**
+     * 이메일 중복 확인 버튼 클릭 시 호출되는 비동기 핸들러입니다.
+     * 입력된 이메일이 이미 사용 중인지 확인합니다.
+     */
     const handleCheckEmail = async () => {
         if (!formData.email) return alert('이메일을 입력해주세요.');
         setUiState('checking');
@@ -60,6 +87,10 @@ const SignupPage = () => {
         }
     };
 
+    /**
+     * 인증번호 발송 버튼 클릭 시 호출되는 비동기 핸들러입니다.
+     * 입력된 이메일로 인증 코드를 요청합니다.
+     */
     const handleSendCode = async () => {
         setUiState('sending');
         try {
@@ -72,6 +103,10 @@ const SignupPage = () => {
         }
     };
 
+    /**
+     * 인증번호 확인 버튼 클릭 시 호출되는 비동기 핸들러입니다.
+     * 입력된 인증 코드가 유효한지 검증합니다.
+     */
     const handleVerifyCode = async () => {
         setUiState('verifying');
         try {
@@ -89,6 +124,11 @@ const SignupPage = () => {
         }
     };
     
+    /**
+     * 회원가입 폼 제출 시 호출되는 최종 핸들러입니다.
+     * 모든 회원 정보를 취합하여 서버에 회원가입 요청을 보냅니다.
+     * @param e - 폼 제출 이벤트 객체
+     */
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.password || !formData.name || !formData.birthday) {

@@ -46,6 +46,10 @@ export const useLogStore = create<LogSessionState>()(
       currentDayMemo: '',
       isLoading: false,
 
+      /**
+       * 특정 사용자의 과거 운동 기록을 서버에서 불러와 상태를 업데이트합니다.
+       * @param userId - 과거 기록을 불러올 사용자의 ID
+       */
       fetchPastLogs: async (userId) => {
         if (!userId) {
           set({ pastLogs: [], currentDayMemo: '' });
@@ -88,6 +92,10 @@ export const useLogStore = create<LogSessionState>()(
         }
       },
 
+      /**
+       * 달력에서 선택된 날짜를 변경하고, 해당 날짜의 메모를 로드합니다.
+       * @param date - 새로 선택된 날짜 (YYYY-MM-DD 형식)
+       */
       setSelectedDate: (date) => {
         const { pastLogs } = get();
         
@@ -98,6 +106,12 @@ export const useLogStore = create<LogSessionState>()(
         set({ selectedDate: date, currentDayMemo: memo });
       },
 
+      /**
+       * 특정 날짜에 새 운동 세션을 시작하거나, 기존에 저장된 세션(로그)을 로드합니다.
+       * 루틴별 운동 완료 상태를 로컬 스토리지에 저장하여 세션 유지력을 높입니다.
+       * @param userId - 세션을 시작/로드할 사용자의 ID
+       * @param routines - 세션에 포함할 루틴 배열
+       */
       startOrLoadSession: async (userId, routines) => {
         if (!userId) {
           console.error('사용자 ID가 필요합니다.');
@@ -112,7 +126,7 @@ export const useLogStore = create<LogSessionState>()(
           return;
         }
         
-        const { selectedDate, pastLogs } = get();
+        const { selectedDate, pastLogs } = get(); // 현재 선택된 날짜와 과거 로그 가져오기
 
         // 해당 날짜의 로그를 사용자 ID로 필터링
         const logsForSelectedDate = pastLogs.filter(log => 
@@ -121,6 +135,7 @@ export const useLogStore = create<LogSessionState>()(
 
         console.log('사용자', userId, '의', selectedDate, '날짜 세션 시작 (보안 검증 후), 로그:', logsForSelectedDate.length, '개');
 
+        // 각 루틴에 대해 세션 데이터를 구성합니다.
         const newSessionRoutines = routines.map(routine => {
           const existingLog = logsForSelectedDate.find(log => log.routineIds.includes(routine.id));
           
@@ -193,6 +208,11 @@ export const useLogStore = create<LogSessionState>()(
         }));
       },
 
+      /**
+       * 현재 세션에 새로운 루틴들을 추가합니다.
+       * 이미 세션에 있는 루틴은 중복 추가되지 않습니다.
+       * @param routinesToAdd - 세션에 추가할 루틴 배열
+       */
       addRoutinesToSession: (routinesToAdd) => {
         const { selectedDate, sessions } = get();
         const currentRoutines = sessions[selectedDate] || [];
@@ -200,6 +220,7 @@ export const useLogStore = create<LogSessionState>()(
         // 보안 참고: 이 함수는 userId를 받지 않으므로 호출부에서 사전 검증 필요
         console.log('루틴 세션 추가:', routinesToAdd.map(r => r.name).join(', '));
         
+        // 추가하려는 루틴 중 현재 세션에 없는 루틴만 필터링하여 `newRoutines` 배열 생성
         const newRoutines = routinesToAdd
           .filter(newRoutine => !currentRoutines.some(existing => existing.routineId === newRoutine.id))
           .map(routine => ({
@@ -227,6 +248,13 @@ export const useLogStore = create<LogSessionState>()(
         }
       },
 
+      /**
+       * 특정 루틴 내 특정 운동의 완료 상태를 토글(체크/체크 해제)하고,
+       * 루틴의 완료율을 업데이트하며, 변경사항을 서버에 자동 저장합니다.
+       * @param userId - 현재 사용자 ID
+       * @param routineId - 상태를 변경할 루틴의 ID
+       * @param exerciseId - 상태를 토글할 운동의 ID
+       */
       toggleExerciseCheck: async (userId, routineId, exerciseId) => {
         set({ isLoading: true });
         const { selectedDate, sessions } = get();
@@ -235,13 +263,16 @@ export const useLogStore = create<LogSessionState>()(
         
         if (!targetRoutine) { set({ isLoading: false }); return; }
 
+        // 해당 운동의 완료 상태를 토글한 새 운동 배열 생성
         const updatedExercises = targetRoutine.exercises.map(ex => 
           ex.exerciseId === exerciseId ? { ...ex, isCompleted: !ex.isCompleted } : ex
         );
+        // 완료된 운동 개수 및 새 완료율 계산
         const completedCount = updatedExercises.filter(ex => ex.isCompleted).length;
         const newCompletionRate = (completedCount / updatedExercises.length) * 100;
+        // 업데이트된 루틴 객체 생성
         const updatedRoutine = { ...targetRoutine, exercises: updatedExercises, completionRate: newCompletionRate };
-        
+        // 로컬 세션 상태를 먼저 업데이트 (낙관적 업데이트)
         const newSession = originalSession.map(r => r.routineId === routineId ? updatedRoutine : r);
         set(state => ({ sessions: { ...state.sessions, [selectedDate]: newSession } }));
 
@@ -257,27 +288,42 @@ export const useLogStore = create<LogSessionState>()(
         try {
           let newLogId = updatedRoutine.logId;
           if (newLogId) {
+            // 기존 로그가 있으면 해당 로그의 완료율만 업데이트
             await exerciseLogApi.updateLog(newLogId, { completionRate: newCompletionRate });
           } else {
+            // 기존 로그가 없으면 새로운 로그 생성
             const createData = { userId, exerciseDate: selectedDate, completionRate: newCompletionRate, routineIds: [routineId], memo: "" };
             newLogId = await exerciseLogApi.createLog(createData);
+            // 생성된 logId를 해당 세션 루틴에 반영 (로컬 상태 업데이트)
             const finalSession = get().sessions[selectedDate].map(r => r.routineId === routineId ? { ...r, logId: newLogId } : r);
             set(state => ({ sessions: { ...state.sessions, [selectedDate]: finalSession } }));
           }
+          // 완료율이 100%가 되면 완료 토스트 메시지 표시
           if (newCompletionRate === 100) toast.success(`'${updatedRoutine.routineName}' Complete!`);
+          // 변경사항 반영을 위해 과거 로그 데이터를 다시 불러옴
           await get().fetchPastLogs(userId);
         } catch (error) {
           toast.error("Auto-save failed. Please try again.");
+          // 오류 발생 시 UI를 원래 상태로 롤백
           set(state => ({ sessions: { ...state.sessions, [selectedDate]: originalSession } }));
         } finally {
           set({ isLoading: false });
         }
       },
       
+      /**
+       * 현재 날짜의 메모 내용을 업데이트합니다 (로컬 상태만 변경).
+       * @param memo - 새로운 메모 내용
+       */
       updateMemo: (memo) => {
         set({ currentDayMemo: memo });
       },
 
+      /**
+       * 현재 날짜의 메모를 서버에 저장합니다.
+       * 해당 날짜의 기존 로그가 있으면 메모만 업데이트하고, 없으면 새로운 로그를 생성합니다.
+       * @param userId - 메모를 저장할 사용자의 ID
+       */
       saveMemo: async (userId) => {
         const { selectedDate, currentDayMemo, pastLogs, sessions } = get();
         
@@ -289,19 +335,24 @@ export const useLogStore = create<LogSessionState>()(
             // 기존 로그가 있으면 메모만 업데이트
             await exerciseLogApi.updateMemo(existingLog.id, currentDayMemo);
           } else {
-            // 기존 로그가 없으면 새로 생성 (세션이 있을 경우에만)
+            // 기존 로그가 없으면 새로 생성
             const todaysSession = sessions[selectedDate];
+            let routineIds: number[] = [];
+            
+            // 세션이 있으면 루틴 ID들을 가져옴
             if (todaysSession && todaysSession.length > 0) {
-              const routineIds = todaysSession.map(session => session.routineId);
-              const createData = { 
-                userId, 
-                exerciseDate: selectedDate, 
-                completionRate: 0, 
-                routineIds, 
-                memo: currentDayMemo 
-              };
-              await exerciseLogApi.createLog(createData);
+              routineIds = todaysSession.map(session => session.routineId);
             }
+            
+            // 메모만 있어도 로그 생성 (routineIds가 빈 배열이어도 됨)
+            const createData = { 
+              userId, 
+              exerciseDate: selectedDate, 
+              completionRate: 0, 
+              routineIds, 
+              memo: currentDayMemo 
+            };
+            await exerciseLogApi.createLog(createData);
           }
           
           // 메모 저장 후 다시 로그 데이터 fetch
@@ -313,6 +364,10 @@ export const useLogStore = create<LogSessionState>()(
         }
       },
 
+      /**
+       * 현재 선택된 날짜의 모든 운동 기록(로그)을 서버와 로컬 스토어에서 삭제합니다.
+       * @param userId - 운동 기록을 삭제할 사용자의 ID
+       */
       deleteCurrentDayLogs: async (userId) => {
         const { selectedDate, pastLogs } = get();
         
@@ -358,6 +413,11 @@ export const useLogStore = create<LogSessionState>()(
         }
       },
 
+      /**
+       * 현재 세션에서 특정 루틴을 삭제하고, 해당 루틴과 연결된 서버 로그도 삭제합니다.
+       * @param userId - 현재 사용자 ID
+       * @param routineId - 세션에서 삭제할 루틴의 ID
+       */
       deleteRoutineFromSession: async (userId: number, routineId: number) => {
         const { selectedDate, sessions } = get();
         
@@ -414,6 +474,10 @@ export const useLogStore = create<LogSessionState>()(
         }
       },
 
+      /**
+       * 현재 선택된 날짜의 세션 루틴을 초기화합니다.
+       * (주로 날짜 변경 시 또는 특정 상황에서 세션을 비울 때 사용)
+       */
       clearSessionRoutines: () => {
         const { selectedDate } = get();
         console.log('세션 루틴 초기화:', selectedDate);
@@ -424,6 +488,8 @@ export const useLogStore = create<LogSessionState>()(
     }),
     {
       name: 'exercise-log-storage',
+      // `partialize`를 사용하여 스토어 상태 중 일부만 영속화합니다.
+      // `pastLogs`는 매번 `fetchPastLogs`를 통해 서버에서 불러오므로 영속화할 필요가 없습니다.
       partialize: (state) => ({ 
         selectedDate: state.selectedDate,
         sessions: state.sessions,
