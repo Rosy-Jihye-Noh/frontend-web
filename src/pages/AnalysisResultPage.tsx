@@ -125,15 +125,19 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
   const openChatbot = (type: 'video' | 'consult') => {
     if (typeof window !== 'undefined' && typeof (window as any).openChatbot === 'function') {
       if (type === 'video') {
-        (window as any).openChatbot('video', {
+        const payload = {
           videoUrl: 'https://www.youtube.com/watch?v=fFIL0rlRH78',
           thumbnail: 'https://img.youtube.com/vi/fFIL0rlRH78/0.jpg',
-          message: '스크립트 요약과 댓글의 분석이 필요할 경우 챗으로 요청주세요.'
-        });
+          message: '스크립트 요약과 댓글의 분석이 필요할 경우 요청주세요.'
+        };
+        console.log('openChatbot called', type, payload);
+        (window as any).openChatbot('video', payload);
       } else if (type === 'consult') {
-        (window as any).openChatbot('consult', {
-          message: '운동을 추천해드릴게요! 어떤 목표가 있으신가요?'
-        });
+        const payload = {
+          message: 'OOO 운동을 추천드립니다. 루틴에 추가하시겠습니까?'
+        };
+        console.log('openChatbot called', type, payload);
+        (window as any).openChatbot('consult', payload);
       }
     } else {
       alert('챗봇 오픈! (실제 구현 필요)\n타입: ' + type);
