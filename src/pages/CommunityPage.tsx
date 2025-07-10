@@ -11,7 +11,7 @@ import { useRequireAuth } from "../hooks/useRequireAuth";
 const PAGE_SIZE = 10;
 
 const CommunityPage = () => {
-  useRequireAuth("/community");
+  useRequireAuth("/community"); // 페이지 최상단에서 인증 체크
 
   // 커스텀 훅: 게시글 목록 관리
   const usePostsList = () => {
@@ -188,181 +188,181 @@ const CommunityPage = () => {
     };
   };
 
-  const CommunityPage: React.FC = () => {
-    const [categories, setCategories] = useState<CategoryDTO[]>([]);
-    const [searchInputValue, setSearchInputValue] = useState('');
-    const [categoryError, setCategoryError] = useState<string | null>(null);
-    const navigate = useNavigate();
-    const { user } = useUserStore();
-    const userId = user?.id;
-    const listRef = useRef<HTMLDivElement>(null);
-    const [searchParams, setSearchParams] = useSearchParams();
-    const location = useLocation();
+  const [categories, setCategories] = useState<CategoryDTO[]>([]);
+  const [searchInputValue, setSearchInputValue] = useState('');
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { user } = useUserStore();
+  const userId = user?.id;
+  const listRef = useRef<HTMLDivElement>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
 
-    // 커스텀 훅 사용
-    const { posts, loading, error, totalPages, loadPosts } = usePostsList();
-    const { likedMap, likeLoading, handleLikeClick } = useLikeStates(posts, userId);
+  // 커스텀 훅 사용
+  const { posts, loading, error, totalPages, loadPosts } = usePostsList();
+  const { likedMap, likeLoading, handleLikeClick } = useLikeStates(posts, userId);
 
-    // 쿼리스트링에서 상태 추출
-    const category = searchParams.get('category') || '전체';
-    const sort = (searchParams.get('sort') as 'latest' | 'popular') || 'latest';
-    const keyword = searchParams.get('keyword') || '';
-    const page = Number(searchParams.get('page')) || 0;
+  // 쿼리스트링에서 상태 추출
+  const category = searchParams.get('category') || '전체';
+  const sort = (searchParams.get('sort') as 'latest' | 'popular') || 'latest';
+  const keyword = searchParams.get('keyword') || '';
+  const page = Number(searchParams.get('page')) || 0;
 
-    // 검색창 입력값과 쿼리스트링 동기화
-    useEffect(() => {
-      setSearchInputValue(keyword);
-    }, [keyword]);
+  // 검색창 입력값과 쿼리스트링 동기화
+  useEffect(() => {
+    setSearchInputValue(keyword);
+  }, [keyword]);
 
-    // 페이지 타이틀 설정
-    useEffect(() => {
-      document.title = '커뮤니티 - Synergym';
-    }, []);
+  // 페이지 타이틀 설정
+  useEffect(() => {
+    document.title = '커뮤니티 - Synergym';
+  }, []);
 
-    // 카테고리 로드
-    useEffect(() => {
-      setCategoryError(null);
-      fetchCategories()
-        .then(data => setCategories(data))
-        .catch(() => setCategoryError('카테고리 불러오기 실패'));
-    }, []);
+  // 카테고리 로드
+  useEffect(() => {
+    setCategoryError(null);
+    fetchCategories()
+      .then(data => setCategories(data))
+      .catch(() => setCategoryError('카테고리 불러오기 실패'));
+  }, []);
 
-    // 게시글 로드
-    useEffect(() => {
-      if (categories.length > 0 || category === '전체') {
-        loadPosts(category, sort, page, keyword, categories).then(result => {
-          if (result.shouldRedirect) {
-            setSearchParams({
-              category,
-              sort,
-              keyword,
-              page: String(result.newPage)
-            });
-          }
-        });
-      }
-    }, [category, sort, page, keyword, categories]);
-
-    // 페이지 변경 시 스크롤 최상단으로
-    useEffect(() => {
-      if (listRef.current) {
-        listRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, [page]);
-
-    const handleCategoryChange = (newCategory: string) => {
-      setSearchParams({
-        category: newCategory,
-        sort,
-        keyword,
-        page: '0'
+  // 게시글 로드
+  useEffect(() => {
+    if (categories.length > 0 || category === '전체') {
+      loadPosts(category, sort, page, keyword, categories).then(result => {
+        if (result.shouldRedirect) {
+          setSearchParams({
+            category,
+            sort,
+            keyword,
+            page: String(result.newPage)
+          });
+        }
       });
-    };
+    }
+  }, [category, sort, page, keyword, categories]);
 
-    const handleSortChange = (newSort: 'latest' | 'popular') => {
-      setSearchParams({
-        category,
-        sort: newSort,
-        keyword,
-        page: '0'
-      });
-    };
+  // 페이지 변경 시 스크롤 최상단으로
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [page]);
 
-    const handleSearch = (e: React.FormEvent) => {
-      e.preventDefault();
-      setSearchParams({
-        category,
-        sort,
-        keyword: searchInputValue.trim(),
-        page: '0'
-      });
-    };
-
-    const goToWrite = () => {
-      navigate('/community/write', { state: { from: location.search } });
-    };
-    
-    const goToDetail = (id: number) => {
-      navigate(`/community/${id}`, { state: { from: location.search } });
-    };
-
-    return (
-      <div className="bg-background min-h-screen">
-        <Header />
-        <main className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8" style={{ paddingTop: 'var(--header-height, 90px)' }}>
-          {/* 제목 */}
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">커뮤니티</h1>
-
-          <CommunityFilters
-            categories={categories}
-            currentCategory={category}
-            currentSort={sort}
-            searchValue={searchInputValue}
-            onCategoryChange={handleCategoryChange}
-            onSortChange={handleSortChange}
-            onSearchChange={setSearchInputValue}
-            onSearchSubmit={handleSearch}
-            onWriteClick={goToWrite}
-          />
-
-          {/* 에러 메시지 */}
-          {categoryError && (
-            <div className="text-red-500 text-sm mb-2 p-2 bg-red-50 rounded">
-              {categoryError}
-            </div>
-          )}
-          {error && (
-            <div className="text-red-500 text-sm mb-2 p-2 bg-red-50 rounded">
-              {error}
-            </div>
-          )}
-          
-          {/* 게시글 목록 */}
-          <div ref={listRef} className="mt-4 space-y-3">
-            {loading ? (
-              <div className="text-center py-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <p className="mt-2 text-gray-600">로딩 중...</p>
-              </div>
-            ) : posts.length === 0 ? (
-              <div className="text-center text-muted-foreground py-8">
-                {keyword ? '검색 결과가 없습니다.' : '게시글이 없습니다.'}
-              </div>
-            ) : (
-              posts.map(post => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  isLiked={likedMap[post.id]}
-                  likeLoading={likeLoading[post.id]}
-                  onLikeClick={e => handleLikeClick(e, post.id)}
-                  onClick={() => goToDetail(post.id)}
-                />
-              ))
-            )}
-          </div>
-          
-          {/* 페이지네이션 */}
-          {totalPages > 1 && (
-            <div className="mt-8">
-              <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                onPageChange={newPage => {
-                  setSearchParams({
-                    category,
-                    sort,
-                    keyword,
-                    page: String(newPage)
-                  });
-                }}
-              />
-            </div>
-          )}
-        </main>
-      </div>
-    );
+  const handleCategoryChange = (newCategory: string) => {
+    setSearchParams({
+      category: newCategory,
+      sort,
+      keyword,
+      page: '0'
+    });
   };
+
+  const handleSortChange = (newSort: 'latest' | 'popular') => {
+    setSearchParams({
+      category,
+      sort: newSort,
+      keyword,
+      page: '0'
+    });
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchParams({
+      category,
+      sort,
+      keyword: searchInputValue.trim(),
+      page: '0'
+    });
+  };
+
+  const goToWrite = () => {
+    navigate('/community/write', { state: { from: location.search } });
+  };
+  
+  const goToDetail = (id: number) => {
+    navigate(`/community/${id}`, { state: { from: location.search } });
+  };
+
+
+
+  return (
+    <div className="bg-background min-h-screen">
+      <Header />
+      <main className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8" style={{ paddingTop: 'var(--header-height, 90px)' }}>
+        {/* 제목 */}
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">커뮤니티</h1>
+
+        <CommunityFilters
+          categories={categories}
+          currentCategory={category}
+          currentSort={sort}
+          searchValue={searchInputValue}
+          onCategoryChange={handleCategoryChange}
+          onSortChange={handleSortChange}
+          onSearchChange={setSearchInputValue}
+          onSearchSubmit={handleSearch}
+          onWriteClick={goToWrite}
+        />
+
+        {/* 에러 메시지 */}
+        {categoryError && (
+          <div className="text-red-500 text-sm mb-2 p-2 bg-red-50 rounded">
+            {categoryError}
+          </div>
+        )}
+        {error && (
+          <div className="text-red-500 text-sm mb-2 p-2 bg-red-50 rounded">
+            {error}
+          </div>
+        )}
+        
+        {/* 게시글 목록 */}
+        <div ref={listRef} className="mt-4 space-y-3">
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p className="mt-2 text-gray-600">로딩 중...</p>
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              {keyword ? '검색 결과가 없습니다.' : '게시글이 없습니다.'}
+            </div>
+          ) : (
+            posts.map(post => (
+              <PostCard
+                key={post.id}
+                post={post}
+                isLiked={likedMap[post.id]}
+                likeLoading={likeLoading[post.id]}
+                onLikeClick={e => handleLikeClick(e, post.id)}
+                onClick={() => goToDetail(post.id)}
+              />
+            ))
+          )}
+        </div>
+        
+        {/* 페이지네이션 */}
+        {totalPages > 1 && (
+          <div className="mt-8">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={newPage => {
+                setSearchParams({
+                  category,
+                  sort,
+                  keyword,
+                  page: String(newPage)
+                });
+              }}
+            />
+          </div>
+        )}
+      </main>
+    </div>
+  );
 };
 
 export default CommunityPage;
