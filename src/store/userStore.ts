@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '@/types/index';
+import { useDashboardStore } from './dashboardStore';
 
 export type Role = 'MEMBER' | 'ADMIN';
 
@@ -37,8 +38,7 @@ export const useUserStore = create<UserStore>()(
         // 다른 스토어들의 데이터도 정리
         try {
           // dashboard store 데이터 정리
-          const dashboardStore = require('./dashboardStore').useDashboardStore;
-          dashboardStore.getState().clearUserData();
+          useDashboardStore.getState().clearUserData();
           
           // localStorage에서 관련 데이터 정리
           localStorage.removeItem('dashboard-storage');
