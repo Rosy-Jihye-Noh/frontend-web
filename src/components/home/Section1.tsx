@@ -39,7 +39,7 @@ const Section1 = () => {
           : 'translate-y-10 opacity-0'
       }`}>
         <p className="mt-6 text-lg text-gray-600 max-w-2xl">
-          당신의 몸을 가장 잘 아는 파트너, SynergyM AI가 24시간 함께합니다.
+          당신의 몸을 가장 잘 아는 파트너, Synergym AI가 24시간 함께합니다.
         </p>
       </div>
 

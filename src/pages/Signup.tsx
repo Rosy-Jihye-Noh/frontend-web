@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ChangeEvent } from 'react';
+import { FcGoogle } from "react-icons/fc";
+import { SiNaver } from 'react-icons/si';
+import { RiKakaoTalkFill } from "react-icons/ri";
 
 import { checkEmailExists, sendVerificationCode, verifyCode, signup } from '@/api/authApi';
 import type { SignupRequest } from '@/types/auth';
@@ -146,8 +149,8 @@ const SignupPage = () => {
     };
 
     return (
-        <div className="bg-background min-h-screen flex flex-col items-center justify-center p-4">
-            <h1 className="text-3xl font-extrabold text-blue-600 mb-8">SynergyM</h1>
+        <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-4">
+            <h1 className="text-3xl font-extrabold text-blue-600 mb-8">Synergym</h1>
             <Card className="w-full max-w-lg p-8">
                 <h2 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-white">
                     회원가입
@@ -157,8 +160,8 @@ const SignupPage = () => {
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="email">이메일</label>
                         <div className="flex gap-2">
                             <Input type="email" id="email" value={formData.email} onChange={handleChange} disabled={uiState === 'verified'} placeholder="email@example.com" className="bg-white dark:bg-transparent dark:text-white" />
-                            {uiState === 'idle' && <Button type="button" onClick={handleCheckEmail}>중복 확인</Button>}
-                            {uiState === 'checked' && <Button type="button" onClick={handleSendCode}>인증번호 발송</Button>}
+                            {uiState === 'idle' && <Button type="button" onClick={handleCheckEmail} className="bg-blue-600 text-white hover:bg-blue-700">중복 확인</Button>}
+                            {uiState === 'checked' && <Button type="button" onClick={handleSendCode} className="bg-blue-600 text-white hover:bg-blue-700">인증번호 발송</Button>}
                         </div>
                     </div>
 
@@ -167,7 +170,7 @@ const SignupPage = () => {
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="verificationCode">인증번호</label>
                             <div className="flex gap-2">
                                 <Input type="text" id="verificationCode" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} placeholder="인증번호 6자리" className="bg-white dark:bg-transparent dark:text-white" />
-                                <Button type="button" onClick={handleVerifyCode} disabled={uiState === 'verifying'}>
+                                <Button type="button" onClick={handleVerifyCode} className="bg-blue-600 text-white hover:bg-blue-700" disabled={uiState === 'verifying'}>
                                     {uiState === 'verifying' ? '확인 중...' : '인증 확인'}
                                 </Button>
                             </div>
@@ -214,23 +217,29 @@ const SignupPage = () => {
 
                 <div className="relative my-6">
                     <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
+                        <span className="w-full border-t border-blue-300" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-white px-2 text-muted-foreground dark:bg-gray-800">
+                        <span className="bg-white px-2 text-blue-600 dark:bg-gray-800">
                             Or sign up with
                         </span>
                     </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <Button variant="outline" asChild>
-                        <a href="http://localhost:8081/oauth2/authorization/google">Google</a>
+                <div className="grid grid-cols-3 gap-4">
+                    <Button className="flex items-center justify-center gap-2 bg-gray-200 text-gray-800 hover:bg-gray-300">
+                        <a href="http://localhost:8081/oauth2/authorization/google" className="flex items-center gap-2">
+                            <FcGoogle /> Google
+                        </a>
                     </Button>
-                    <Button variant="outline" asChild>
-                        <a href="http://localhost:8081/oauth2/authorization/naver">Naver</a>
+                    <Button className="flex items-center justify-center gap-2 bg-green-500 text-white hover:bg-green-600">
+                        <a href="http://localhost:8081/oauth2/authorization/naver" className="flex items-center gap-2">
+                            <SiNaver /> Naver
+                        </a>
                     </Button>
-                    <Button variant="outline" asChild>
-                        <a href="http://localhost:8081/oauth2/authorization/kakao">Kakao</a>
+                    <Button className="flex items-center justify-center gap-2 bg-yellow-400 text-brown hover:bg-yellow-500">
+                        <a href="http://localhost:8081/oauth2/authorization/kakao" className="flex items-center gap-2">
+                            <RiKakaoTalkFill /> Kakao
+                        </a>
                     </Button>
                 </div>
 

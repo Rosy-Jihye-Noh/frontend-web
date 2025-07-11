@@ -72,7 +72,7 @@ const Header: React.FC = () => {
             onClick={() => navigate("/dashboard")}
             style={{ cursor: 'pointer' }}
           >
-            SynergyM AI
+            Synergym AI
           </h1>
         </div>
         {/* 데스크탑: 메뉴/버튼 */}

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-// useLocation 훅을 새로 임포트합니다.
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { findEmail, sendVerificationCode, verifyCode, changePassword } from '@/api/authApi';
 import type { FindEmailRequest, ChangePasswordRequest } from '@/types/auth';
+import { FaUser, FaCalendarAlt } from 'react-icons/fa'; // Add react-icons for icons
 
 const FindCredentials = () => {
     const navigate = useNavigate();
@@ -99,27 +99,33 @@ const FindCredentials = () => {
 
 
     return (
-        <div className="bg-background min-h-screen flex flex-col items-center justify-center p-4">
-            <h1 className="text-3xl font-extrabold text-blue-600 mb-8 cursor-pointer" onClick={() => navigate('/')}>SynergyM</h1>
-            <Card className="w-full max-w-md p-8">
+        <div className="bg-background min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
+            <h1 className="text-3xl font-extrabold text-blue-600 mb-8 cursor-pointer" onClick={() => navigate('/')}>Synergym</h1>
+            <Card className="w-full max-w-md p-8 shadow-md">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="find-email">아이디 찾기</TabsTrigger>
-                        <TabsTrigger value="find-password">비밀번호 찾기</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-2 bg-blue-50">
+                        <TabsTrigger value="find-email" className="text-gray-900 hover:text-blue-700">아이디 찾기</TabsTrigger>
+                        <TabsTrigger value="find-password" className="text-gray-900 hover:text-blue-700">비밀번호 찾기</TabsTrigger>
                     </TabsList>
 
                     {/* 아이디 찾기 탭 */}
                     <TabsContent value="find-email">
-                        {/* ... 아이디 찾기 폼 ... */}
                         <form onSubmit={handleFindEmail} className="space-y-6 mt-6">
-                            <h2 className="text-xl font-bold text-center text-gray-900 dark:text-white">아이디(이메일) 찾기</h2>
-                            <div>
+                            <h2 className="text-xl font-bold text-center text-gray-900 dark:text-white py-2 rounded-md">아이디(이메일) 찾기</h2>
+                            <p className="text-sm text-center text-gray-500">가입 시 입력한 이름과 생년월일을 입력하세요.</p>
+                            <div className="relative">
                                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">이름</label>
-                                <Input id="name" type="text" placeholder="가입 시 입력한 이름" value={findEmailForm.name} onChange={(e) => setFindEmailForm({...findEmailForm, name: e.target.value})} />
+                                <Input id="name" type="text" placeholder="ex. 홍길동" value={findEmailForm.name} onChange={(e) => setFindEmailForm({...findEmailForm, name: e.target.value})} className="pl-10" />
+                                <span className="absolute left-3 top-9 text-gray-400">
+                                    <FaUser />
+                                </span>
                             </div>
-                            <div>
+                            <div className="relative">
                                 <label htmlFor="birthday" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">생년월일</label>
-                                <Input id="birthday" type="date" value={findEmailForm.birthday} onChange={(e) => setFindEmailForm({...findEmailForm, birthday: e.target.value})} />
+                                <Input id="birthday" type="date" value={findEmailForm.birthday} onChange={(e) => setFindEmailForm({...findEmailForm, birthday: e.target.value})} className="pl-10" />
+                                <span className="absolute left-3 top-9 text-gray-400">
+                                    <FaCalendarAlt />
+                                </span>
                             </div>
                             <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium py-3 rounded-md">
                                 아이디 찾기
@@ -127,8 +133,8 @@ const FindCredentials = () => {
                             {foundEmail && (
                                 <div className="mt-4 text-center p-3 bg-gray-100 dark:bg-gray-800 rounded-md">
                                     <p className="text-sm text-gray-600 dark:text-gray-300">회원님의 아이디는</p>
-                                    <p className="font-semibold text-lg">{foundEmail}</p>
-                                    <Button variant="link" onClick={() => navigate('/login')}>로그인하기</Button>
+                                    <p className="font-semibold text-lg text-blue-600">{foundEmail}</p>
+                                    <Button variant="link" onClick={() => navigate('/login')} className="text-blue-600">로그인하기</Button>
                                 </div>
                             )}
                         </form>
@@ -136,45 +142,44 @@ const FindCredentials = () => {
 
                     {/* 비밀번호 찾기 탭 */}
                     <TabsContent value="find-password">
-                        {/* ... 비밀번호 찾기 폼 ... */}
-                         <div className="space-y-6 mt-6">
-                             <h2 className="text-xl font-bold text-center text-gray-900 dark:text-white">비밀번호 찾기</h2>
-                             {uiState === 'idle' && (
-                                 <div className="space-y-4">
-                                     <p className="text-sm text-center text-gray-500">가입 시 사용한 이메일을 입력하고 인증을 진행하세요.</p>
-                                     <div>
-                                         <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">이메일</label>
-                                         <Input id="reset-email" type="email" placeholder="email@example.com" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} />
-                                     </div>
-                                     <Button onClick={handleSendCodeForReset} className="w-full bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium py-3 rounded-md">
+                        <div className="space-y-6 mt-6">
+                            <h2 className="text-xl font-bold text-center text-gray-900 dark:text-white py-2 rounded-md">비밀번호 찾기</h2>
+                            {uiState === 'idle' && (
+                                <div className="space-y-4">
+                                    <p className="text-sm text-center text-gray-500">가입 시 사용한 이메일을 입력하고 인증을 진행하세요.</p>
+                                    <div>
+                                        <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">이메일</label>
+                                        <Input id="reset-email" type="email" placeholder="email@example.com" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} />
+                                    </div>
+                                    <Button onClick={handleSendCodeForReset} className="w-full bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium py-3 rounded-md">
                                         인증번호 발송
-                                     </Button>
-                                 </div>
-                             )}
-                             {(uiState === 'code-sent' || uiState === 'verifying') && (
-                                 <div className="space-y-4">
-                                     <p className="text-sm text-center text-green-600">{resetEmail}(으)로 인증번호를 발송했습니다.</p>
-                                     <div>
+                                    </Button>
+                                </div>
+                            )}
+                            {(uiState === 'code-sent' || uiState === 'verifying') && (
+                                <div className="space-y-4">
+                                    <p className="text-sm text-center text-green-600">{resetEmail}(으)로 인증번호를 발송했습니다.</p>
+                                    <div>
                                         <label htmlFor="code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">인증번호</label>
                                         <Input id="code" type="text" placeholder="인증번호 6자리" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} />
-                                     </div>
-                                     <Button onClick={handleVerifyCodeForReset} disabled={uiState === 'verifying'} className="w-full bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium py-3 rounded-md">
+                                    </div>
+                                    <Button onClick={handleVerifyCodeForReset} disabled={uiState === 'verifying'} className="w-full bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium py-3 rounded-md">
                                         {uiState === 'verifying' ? '확인 중...' : '인증 확인'}
-                                     </Button>
-                                 </div>
-                             )}
-                             {uiState === 'verified' && (
-                                 <form onSubmit={handleChangePassword} className="space-y-4">
-                                     <p className="text-sm text-center text-blue-600">인증이 완료되었습니다. 새 비밀번호를 설정하세요.</p>
-                                     <div>
+                                    </Button>
+                                </div>
+                            )}
+                            {uiState === 'verified' && (
+                                <form onSubmit={handleChangePassword} className="space-y-4">
+                                    <p className="text-sm text-center text-blue-600">인증이 완료되었습니다. 새 비밀번호를 설정하세요.</p>
+                                    <div>
                                         <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">새 비밀번호</label>
                                         <Input id="new-password" type="password" placeholder="8자 이상 입력" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-                                     </div>
-                                     <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium py-3 rounded-md">
+                                    </div>
+                                    <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium py-3 rounded-md">
                                         비밀번호 변경 완료
-                                     </Button>
-                                 </form>
-                             )}
+                                    </Button>
+                                </form>
+                            )}
                         </div>
                     </TabsContent>
                 </Tabs>
