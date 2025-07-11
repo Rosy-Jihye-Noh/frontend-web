@@ -6,6 +6,9 @@ import { Card } from "@/components/ui/card";
 import { login } from "@/api/authApi";
 import type { LoginRequest } from "@/types/auth";
 import { useUserStore } from "@/store/userStore";
+import { FcGoogle } from "react-icons/fc";
+import { SiNaver } from 'react-icons/si';
+import { RiKakaoTalkFill } from "react-icons/ri";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -79,7 +82,7 @@ const LoginPage = () => {
         className="text-3xl font-extrabold text-blue-600 mb-8 cursor-pointer hover:text-blue-700 transition-colors"
         onClick={() => navigate("/")}
       >
-        SynergyM
+        Synergym
       </h1>
       <Card className="w-full max-w-md p-8">
         <h2 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-white">
@@ -123,23 +126,29 @@ const LoginPage = () => {
 
           <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
+                  <span className="w-full border-t border-blue-300" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted-foreground dark:bg-gray-800">
+                  <span className="bg-white px-2 text-blue-600 dark:bg-gray-800">
                       Or continue with
                   </span>
               </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" asChild>
-                  <a href="http://localhost:8081/oauth2/authorization/google">Google</a>
+              <Button className="flex items-center justify-center gap-2 bg-gray-200 text-gray-800 hover:bg-gray-300" asChild>
+                  <a href="http://localhost:8081/oauth2/authorization/google" className="flex items-center gap-2">
+                  <FcGoogle /> Google
+                  </a>
               </Button>
-              <Button variant="outline" asChild>
-                  <a href="http://localhost:8081/oauth2/authorization/naver">Naver</a>
+              <Button className="flex items-center justify-center gap-2 bg-green-500 text-white hover:bg-green-600" asChild>
+                  <a href="http://localhost:8081/oauth2/authorization/naver">
+                  <SiNaver /> Naver
+                  </a>
               </Button>
-              <Button variant="outline" asChild>
-                  <a href="http://localhost:8081/oauth2/authorization/kakao">Kakao</a>
+              <Button className="flex items-center justify-center gap-2 bg-yellow-400 text-brown hover:bg-yellow-500" asChild>
+                  <a href="http://localhost:8081/oauth2/authorization/kakao">
+                  <RiKakaoTalkFill /> Kakao
+                  </a>
               </Button>
           </div>
           

@@ -62,7 +62,7 @@ const DarkModeToggle: React.FC = () => {
 // 사이드바 컴포넌트: 관리자 메뉴 및 다크모드 토글
 const SidebarNav: React.FC = () => (
   <nav className="flex flex-col gap-2 p-4 h-full">
-    <h1 className="text-xl sm:text-2xl font-bold p-2 mb-4 text-gray-100 dark:text-gray-100">SynergyM AI Admin</h1>
+    <h1 className="text-xl sm:text-2xl font-bold p-2 mb-4 text-gray-100 dark:text-gray-100">Synergym AI Admin</h1>
     {navLinks.map((link) => (
       <NavLink
         key={link.href}
@@ -111,7 +111,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               <SidebarNav />
             </SheetContent>
           </Sheet>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">SynergyM AI Admin</h1>
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Synergym AI Admin</h1>
         </header>
 
         {/* 메인 콘텐츠 */}

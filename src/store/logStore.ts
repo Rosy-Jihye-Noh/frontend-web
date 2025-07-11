@@ -18,6 +18,7 @@ interface SessionRoutine {
   routineName: string;
   exercises: SessionExercise[];
   completionRate: number;
+  userId: number;
 }
 interface LogSessionState {
   selectedDate: string;
@@ -28,7 +29,7 @@ interface LogSessionState {
   fetchPastLogs: (userId: number) => Promise<void>;
   setSelectedDate: (date: string) => void;
   startOrLoadSession: (userId: number, routines: Routine[]) => Promise<void>;
-  addRoutinesToSession: (routines: Routine[]) => void;
+  addRoutinesToSession: (userId: number, routines: Routine[]) => void;
   toggleExerciseCheck: (userId: number, routineId: number, exerciseId: number) => Promise<void>;
   clearSessionRoutines: () => void;
   updateMemo: (memo: string) => void;
@@ -200,6 +201,7 @@ export const useLogStore = create<LogSessionState>()(
             routineName: routine.name,
             exercises: exercises,
             completionRate: existingLog?.completionRate || 0,
+            userId: userId,
           };
         });
         
@@ -213,12 +215,9 @@ export const useLogStore = create<LogSessionState>()(
        * 이미 세션에 있는 루틴은 중복 추가되지 않습니다.
        * @param routinesToAdd - 세션에 추가할 루틴 배열
        */
-      addRoutinesToSession: (routinesToAdd) => {
+      addRoutinesToSession: (userId, routinesToAdd) => {
         const { selectedDate, sessions } = get();
         const currentRoutines = sessions[selectedDate] || [];
-        
-        // 보안 참고: 이 함수는 userId를 받지 않으므로 호출부에서 사전 검증 필요
-        console.log('루틴 세션 추가:', routinesToAdd.map(r => r.name).join(', '));
         
         // 추가하려는 루틴 중 현재 세션에 없는 루틴만 필터링하여 `newRoutines` 배열 생성
         const newRoutines = routinesToAdd
@@ -233,6 +232,7 @@ export const useLogStore = create<LogSessionState>()(
               isCompleted: false,
             })),
             completionRate: 0,
+            userId: userId,
           }));
         
         if(newRoutines.length > 0) {

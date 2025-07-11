@@ -170,7 +170,7 @@ const ChatModal = ({ isOpen, onClose, initType, initPayload }: Props) => {
     >
       {/* 헤더: 타이틀, 닫기 버튼 */}
       <div className="flex justify-between items-center p-4 border-b">
-        <span className="font-semibold text-lg">SynergyM AI</span>
+        <span className="font-semibold text-lg">Synergym AI</span>
         <button onClick={onClose}>
           <X className="w-5 h-5 text-gray-600 hover:text-black" />
         </button>

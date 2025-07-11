@@ -25,7 +25,12 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
   const userId = user?.id;
 
   // exercise-log-storage 데이터에서 주간/월간 완료된 루틴 개수 계산
-  const calculateRoutineStats = () => {
+  const calculateRoutineStats = (userId: number | undefined) => {
+    // userId가 없으면 계산 중단
+    if (!userId) {
+      return { weeklyCompletedRoutines: 0, monthlyCompletedRoutines: 0 };
+    }
+    
     try {
       const logData = localStorage.getItem('exercise-log-storage');
       if (!logData) {
@@ -35,16 +40,19 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
       const parsedData = JSON.parse(logData);
       const sessions = parsedData?.state?.sessions || {};
 
+      // [디버깅용] 현재 함수가 어떤 데이터를 기반으로 계산하는지 확인
+      console.log("calculateRoutineStats's source data:", JSON.stringify(sessions, null, 2));
+
       // 현재 날짜 기준 계산
       const now = new Date();
-      
+
       // 이번주 월요일부터 일요일까지 계산
       const currentDay = now.getDay(); // 0=일요일, 1=월요일, ..., 6=토요일
       const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1; // 일요일인 경우 6일 전이 월요일
       const startOfWeek = new Date(now);
       startOfWeek.setDate(now.getDate() - daysFromMonday);
       startOfWeek.setHours(0, 0, 0, 0);
-      
+
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(startOfWeek.getDate() + 6); // 일요일
       endOfWeek.setHours(23, 59, 59, 999);
@@ -64,9 +72,12 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
 
         if (!daySessions || typeof daySessions !== 'object') return;
 
-        // 해당 날짜의 완료된 루틴들 (completionRate === 100)
+        // 현재 사용자의 세션만 필터링
+        const userDaySessions = daySessions.filter((session: any) => session.userId === userId);
+
+        // 필터링된 세션을 기반으로 루틴 계산
         const completedRoutinesForDay = new Set<string>();
-        Object.values(daySessions).forEach((session: any) => {
+        userDaySessions.forEach((session: any) => {
           if (session && session.routineName && session.completionRate === 100) {
             completedRoutinesForDay.add(session.routineName);
           }
@@ -127,6 +138,7 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
 
     // 이번달 1일부터 마지막 날까지
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    startOfMonth.setHours(0, 0, 0, 0);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     endOfMonth.setHours(23, 59, 59, 999);
     
@@ -154,19 +166,16 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
     }
 
     const logStats = calculateLogStats(pastLogs);
-    const routineStats = calculateRoutineStats();
+    const routineStats = calculateRoutineStats(userId);   
     
-    setStats({
-      ...logStats,
-      ...routineStats
-    });
-  }, [userId, pastLogs]);
+    setStats({ ...logStats, ...routineStats });
+}, [userId, pastLogs]);
 
   // 컴포넌트 마운트 시 즉시 통계 초기화
   useEffect(() => {
     if (userId) {
       // 로컬 스토리지에서 즉시 루틴 통계 로드
-      const routineStats = calculateRoutineStats();
+      const routineStats = calculateRoutineStats(userId); 
       setStats({
         weeklyExerciseCount: 0,
         monthlyExerciseCount: 0,
@@ -216,7 +225,7 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
     window.addEventListener('focus', handleFocus);
     
     // 5초마다 업데이트 (실시간 반영)
-    const interval = setInterval(updateAllStats, 5000);
+    const interval = setInterval(updateAllStats, 2000);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -224,6 +233,12 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
       clearInterval(interval);
     };
   }, [userId, updateAllStats]);
+
+  // --- 7. 디버깅용: 최종 stats 상태가 바뀔 때마다 로그 출력 ---
+  useEffect(() => {
+    console.log('--- ✨ [Re-render] stats 상태가 성공적으로 업데이트되어 화면이 갱신됩니다 ---');
+    console.log('최종 stats:', stats);
+  }, [stats]);
 
   // 사용자 정보가 없는 경우 처리 (user 상태가 undefined가 아니라 null일 때만)
   if (user === null) {
