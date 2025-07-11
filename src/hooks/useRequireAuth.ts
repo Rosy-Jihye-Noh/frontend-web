@@ -8,7 +8,7 @@ export function useRequireAuth(redirectTo: string) {
 
   useEffect(() => {
     if (!user) {
-      navigate("/login", { state: { from: redirectTo } });
+      navigate("/login", { replace: true, state: { from: redirectTo } });
     }
   }, [user, navigate, redirectTo]);
 }

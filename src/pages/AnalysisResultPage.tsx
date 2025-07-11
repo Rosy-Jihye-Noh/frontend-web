@@ -46,6 +46,7 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
   const { frontPhoto, sidePhoto } = (location.state as LocationState) || {};
 
   useEffect(() => {
+    console.log('[AnalysisResultPage] useUserStore user changed:', user);
     if (analysisFromState) {
       setStatus('loading');
       setTimeout(() => {
@@ -121,29 +122,28 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
     }
   };
 
-  // 챗봇 오픈 트리거 (실제 구현은 전역 상태/컨텍스트 등에서 처리 필요)
-  const openChatbot = (type: 'video' | 'consult') => {
+  // 챗봇 오픈 트리거 - ChatModal에서 관리하는 전역 함수 사용
+  const openChatbot = (type: 'video' | 'consult', payload?: any) => {
+    console.log('[AnalysisResultPage] openChatbot called. type:', type, 'payload:', payload);
+    console.log('[AnalysisResultPage] current user:', user);
     if (typeof window !== 'undefined' && typeof (window as any).openChatbot === 'function') {
-      if (type === 'video') {
-        const payload = {
-          videoUrl: 'https://www.youtube.com/watch?v=fFIL0rlRH78',
-          thumbnail: 'https://img.youtube.com/vi/fFIL0rlRH78/0.jpg',
-          message: '스크립트 요약과 댓글의 분석이 필요할 경우 요청주세요.'
-        };
-        console.log('openChatbot called', type, payload);
-        (window as any).openChatbot('video', payload);
-      } else if (type === 'consult') {
-        const payload = {
-          message: 'OOO 운동을 추천드립니다. 루틴에 추가하시겠습니까?'
-        };
-        console.log('openChatbot called', type, payload);
-        (window as any).openChatbot('consult', payload);
+      (window as any).openChatbot(type, payload);
+      // 버튼 클릭 시 안내 메시지 강제 추가
+      if ((window as any).forceAddChatbotMessage) {
+        (window as any).forceAddChatbotMessage(type, payload);
       }
     } else {
       alert('챗봇 오픈! (실제 구현 필요)\n타입: ' + type);
     }
     setIsModalOpen(false);
   };
+
+  // 모달 닫기 핸들러
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+  };
+
+
 
   // 공유 기능
   const handleShare = async () => {
@@ -299,7 +299,7 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
 
 
         {/* 모달 */}
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Dialog open={isModalOpen} onOpenChange={handleModalClose}>
           <DialogContent className="max-w-md w-full">
             <DialogTitle>원하는 추천 방식을 선택하세요</DialogTitle>
             <DialogDescription>
@@ -308,13 +308,19 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
             <div className="flex flex-col gap-6 items-center p-4">
               <Button
                 className="w-full py-3 text-lg bg-blue-500 hover:bg-blue-600 text-white"
-                onClick={() => openChatbot('video')}
+                onClick={() => openChatbot('video', {
+                  videoUrl: 'https://www.youtube.com/watch?v=fFIL0rlRH78',
+                  thumbnail: 'https://img.youtube.com/vi/fFIL0rlRH78/0.jpg',
+                  message: '스크립트 요약과 댓글의 분석이 필요할 경우 요청주세요.'
+                })}
               >
                 추천 운동 영상 바로 시청
               </Button>
               <Button
                 className="w-full py-3 text-lg bg-blue-500 hover:bg-blue-600 text-white"
-                onClick={() => openChatbot('consult')}
+                onClick={() => openChatbot('consult', {
+                  message: 'OOO 운동을 추천드립니다. 루틴에 추가하시겠습니까?'
+                })}
               >
                 AI 운동 코치와 맞춤 운동 상담하기
               </Button>

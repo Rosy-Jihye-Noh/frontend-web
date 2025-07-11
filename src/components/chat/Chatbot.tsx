@@ -1,12 +1,19 @@
-import { useState, forwardRef, useImperativeHandle } from "react";
+import { useState, forwardRef, useImperativeHandle, useEffect } from "react";
 import ChatButton from "./ChatButton";
 import ChatModal from "./ChatModal";
 import TopButton from "./TopButton";
+import { useLocation } from "react-router-dom";
+import { useUserStore } from "../../store/userStore";
+import { useRef } from "react";
 
 const Chatbot = forwardRef((props, ref) => {
   const [isChatOpen, setIsChatOpen] = useState(false); // 챗봇 모달의 열림 여부 상태
   const [initType, setInitType] = useState<'video' | 'consult' | null>(null); // 초기 대화 타입 ('video' 또는 'consult')
   const [initPayload, setInitPayload] = useState<any>(null); // 초기 대화에 전달할 추가 데이터 (선택 사항)
+  const location = useLocation();
+  const { user } = useUserStore();
+  const prevLocation = useRef(location.pathname);
+  const chatModalRef = useRef<any>(null);
 
   // 부모 컴포넌트에서 Chatbot을 제어할 수 있도록 핸들러 등록
   useImperativeHandle(ref, () => ({
@@ -14,22 +21,102 @@ const Chatbot = forwardRef((props, ref) => {
       setInitType(type); // 초기 타입 설정
       setInitPayload(payload); // 초기 페이로드 설정
       setIsChatOpen(true); // 모달 열기
+      setTimeout(() => {
+        chatModalRef.current?.maximize();
+      }, 0);
     }
   }));
+
+  // 전역 챗봇 이벤트 감지
+  useEffect(() => {
+    const handleChatbotStateChange = (event: CustomEvent) => {
+      console.log('Chatbot: Received chatbotStateChanged event:', event.detail);
+      if (event.detail && event.detail.type) {
+        setInitType(event.detail.type);
+        
+        // 전역 상태에서 payload 가져오기
+        const globalState = (window as any).globalChatbotState;
+        let payload = null;
+        
+        if (event.detail.payload) {
+          payload = event.detail.payload;
+        } else if (globalState && globalState.initPayload) {
+          payload = globalState.initPayload;
+        }
+        
+        console.log('Chatbot: Setting payload from event:', payload);
+        console.log('Chatbot: Global state:', globalState);
+        setInitPayload(payload);
+        setIsChatOpen(true);
+        setTimeout(() => {
+          chatModalRef.current?.maximize();
+        }, 0);
+      }
+    };
+
+    window.addEventListener('chatbotStateChanged', handleChatbotStateChange as EventListener);
+    return () => {
+      window.removeEventListener('chatbotStateChanged', handleChatbotStateChange as EventListener);
+    };
+  }, []);
+
+  // 페이지 이동 시 챗봇 최소화
+  useEffect(() => {
+    if (isChatOpen && prevLocation.current !== location.pathname) {
+      chatModalRef.current?.minimize();
+      prevLocation.current = location.pathname;
+    }
+  }, [location, isChatOpen]);
+
+  // 로그아웃 시 챗봇 닫기
+  useEffect(() => {
+    if (!user && isChatOpen) {
+      setIsChatOpen(false);
+    }
+  }, [user, isChatOpen]);
+
+  // 모달이 닫힐 때 상태 초기화
+  const handleClose = () => {
+    setIsChatOpen(false);
+    // 모달이 닫힐 때 전역 상태도 초기화
+    if (typeof window !== 'undefined' && (window as any).globalChatbotState) {
+      (window as any).globalChatbotState = {
+        isOpen: false,
+        initType: null,
+        initPayload: null,
+        onClose: null
+      };
+    }
+  };
+
+  // 챗봇 아이콘 클릭 시 토글 동작 (열려있으면 닫고, 닫혀있으면 열고 최대화)
+  const handleChatButtonClick = () => {
+    if (isChatOpen) {
+      setIsChatOpen(false);
+    } else {
+      setIsChatOpen(true);
+      setTimeout(() => {
+        chatModalRef.current?.maximize();
+      }, 0);
+    }
+  };
 
   return (
     <>
       {/* 챗봇 모달 컴포넌트: 상태에 따라 열리고 초기 타입/페이로드 전달 */}
       <ChatModal
+        ref={chatModalRef}
         isOpen={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
+        onClose={handleClose}
         initType={initType}
         initPayload={initPayload}
+        onInputFocus={() => chatModalRef.current?.maximize()}
       />
-      {/* 화면 우측 하단에 표시되는 챗봇 열기 버튼 */}
-      <ChatButton onClick={() => setIsChatOpen(true)} />
-      {/* 최상단으로 이동하는 버튼 */}
-      <TopButton />
+      {/* 모바일에서는 챗봇이 열려있을 때 버튼 숨김, 데스크탑은 항상 표시 */}
+      <div className={`${isChatOpen ? 'hidden' : ''} sm:block`}>
+        <ChatButton onClick={handleChatButtonClick} />
+        <TopButton />
+      </div>
     </>
   );
 });
