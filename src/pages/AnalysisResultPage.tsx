@@ -126,7 +126,17 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
   const openChatbot = (type: 'video' | 'consult', payload?: any) => {
     console.log('[AnalysisResultPage] openChatbot called. type:', type, 'payload:', payload);
     console.log('[AnalysisResultPage] current user:', user);
+    
+    // 현재 사용자가 없으면 실행하지 않음
+    if (!user?.id) {
+      console.warn('[AnalysisResultPage] No user found, cannot open chatbot');
+      return;
+    }
+    
     if (typeof window !== 'undefined' && typeof (window as any).openChatbot === 'function') {
+      // 현재 사용자 ID를 window에 설정 (혹시 모를 동기화 문제 방지)
+      (window as any).currentUserId = user.id;
+      
       (window as any).openChatbot(type, payload);
       // 버튼 클릭 시 안내 메시지 강제 추가
       if ((window as any).forceAddChatbotMessage) {
