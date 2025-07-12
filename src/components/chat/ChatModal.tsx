@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import { HiUser } from "react-icons/hi";
-import { useState, useEffect, useRef } from "react"; // useRef를 import 합니다.
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react"; // useRef를 import 합니다.
 import axiosInstance from "../../api/axiosInstance";
 import { useUserStore } from "../../store/userStore";
 
@@ -16,6 +16,7 @@ interface Props {
   onClose: () => void;
   initType?: 'video' | 'consult' | null;
   initPayload?: any;
+  onInputFocus?: () => void;
 }
 
 interface ChatMessage {
@@ -30,12 +31,205 @@ function getYoutubeId(url: string) {
   return match ? match[1] : '';
 }
 
-const ChatModal = ({ isOpen, onClose, initType, initPayload }: Props) => {
+// 전역 챗봇 오픈 함수 타입 정의
+type OpenChatbotFunction = (type: 'video' | 'consult', payload?: any) => void;
+
+// 전역 챗봇 상태 관리
+let globalChatbotState: {
+  isOpen: boolean;
+  initType: 'video' | 'consult' | null;
+  initPayload: any;
+  onClose: (() => void) | null;
+} = {
+  isOpen: false,
+  initType: null,
+  initPayload: null,
+  onClose: null
+};
+
+// 전역 챗봇 오픈 함수
+const openChatbot: OpenChatbotFunction = (type: 'video' | 'consult', payload?: any) => {
+  console.log('ChatModal: openChatbot called with type:', type);
+  
+  if (type === 'video') {
+    const videoPayload = {
+      videoUrl: 'https://www.youtube.com/watch?v=fFIL0rlRH78',
+      thumbnail: 'https://img.youtube.com/vi/fFIL0rlRH78/0.jpg',
+      message: '스크립트 요약과 댓글의 분석이 필요할 경우 요청주세요.'
+    };
+    console.log('ChatModal: Setting video payload:', videoPayload);
+    globalChatbotState = {
+      isOpen: true,
+      initType: 'video',
+      initPayload: videoPayload,
+      onClose: globalChatbotState.onClose
+    };
+  } else if (type === 'consult') {
+    const consultPayload = {
+      message: 'OOO 운동을 추천드립니다. 루틴에 추가하시겠습니까?'
+    };
+    console.log('ChatModal: Setting consult payload:', consultPayload);
+    globalChatbotState = {
+      isOpen: true,
+      initType: 'consult',
+      initPayload: consultPayload,
+      onClose: globalChatbotState.onClose
+    };
+  }
+  
+  console.log('ChatModal: Dispatching event with payload:', globalChatbotState.initPayload);
+  // 전역 상태 변경을 알리는 이벤트 발생
+  window.dispatchEvent(new CustomEvent('chatbotStateChanged', { 
+    detail: { type, payload: globalChatbotState.initPayload } 
+  }));
+  
+  // 전역 상태를 window 객체에 업데이트
+  if (typeof window !== 'undefined') {
+    (window as any).globalChatbotState = globalChatbotState;
+  }
+};
+
+// window 객체에 함수 등록
+if (typeof window !== 'undefined') {
+  (window as any).openChatbot = openChatbot;
+  (window as any).globalChatbotState = globalChatbotState;
+}
+
+const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPayload, onInputFocus }, ref) => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessionId, setSessionId] = useState<string>("");
   const { user } = useUserStore();
   const userId = user?.id;
+  // 챗봇 크기 상태: 처음엔 작게, 입력창 포커스 시 커짐
+  const [isMinimized, setIsMinimized] = useState(true);
+  console.log('[ChatModal] user:', user, 'userId:', userId);
+
+  // === [수정] 로그아웃/로그인 시 전역 상태 및 내부 상태 초기화 ===
+  useEffect(() => {
+    // user가 null(로그아웃)되거나 userId가 바뀔 때마다 상태 초기화
+    if (!userId) {
+      setSessionId("");
+      setMessages([]);
+      // 전역 상태도 초기화
+      globalChatbotState = {
+        isOpen: false,
+        initType: null,
+        initPayload: null,
+        onClose: null
+      };
+      if (typeof window !== 'undefined') {
+        (window as any).globalChatbotState = globalChatbotState;
+        (window as any).openChatbot = openChatbot;
+      }
+    }
+  }, [userId]);
+
+  // userId가 바뀌거나 챗봇이 열릴 때마다 sessionId를 받아오고, 이후 모든 API에 이 sessionId를 사용
+  useEffect(() => {
+    if (!isOpen || !userId) return;
+    // === 핵심 로그: 챗봇 오픈 트리거 정보와 실제 세션 정보만 출력 ===
+    console.log('[ChatModal][OPEN] Triggered by:', {
+      initType,
+      initPayload,
+      globalChatbotState,
+      userId
+    });
+    let isMounted = true;
+    const fetchSessionAndHistory = async () => {
+      try {
+        const res = await axiosInstance.get(`/chatbot/active-session/${userId}`);
+        const sid = res.data;
+        // 핵심 로그: 실제로 불러오는 세션 정보
+        console.log('[ChatModal][SESSION] userId:', userId, 'sessionId:', sid, 'Redis key:', `chat:session:${userId}:${sid}`);
+        if (isMounted) setSessionId(sid);
+        if (sid) {
+          const historyRes = await axiosInstance.get(`/chatbot/history/${userId}/${sid}`);
+          const historyData = historyRes.data || [];
+          setMessages(historyData.map((msg: any) => ({ type: msg.type, content: msg.content, timestamp: msg.timestamp })));
+        } else {
+          setMessages([]);
+        }
+      } catch (error) {
+        setMessages([]);
+      }
+    };
+    fetchSessionAndHistory();
+    return () => { isMounted = false; };
+  }, [isOpen, userId, initType, initPayload]);
+
+  // 안내 메시지 강제 추가 함수 (백엔드에 저장)
+  const forceAddMessage = async (type: 'video' | 'consult', payload: any) => {
+    if (!userId) return;
+    let sid = sessionId;
+    // sessionId가 없으면 먼저 받아온다
+    if (!sid) {
+      try {
+        const res = await axiosInstance.get(`/chatbot/active-session/${userId}`);
+        sid = res.data;
+        setSessionId(sid);
+      } catch (e) {
+        console.error('forceAddMessage: sessionId를 받아오지 못함', e);
+        return;
+      }
+    }
+    let content = '';
+    let videoUrl = '';
+    if (type === 'video') {
+      content = payload.message;
+      videoUrl = payload.videoUrl;
+    } else if (type === 'consult') {
+      content = payload.message;
+    }
+    try {
+      // 백엔드에 저장
+      const res = await axiosInstance.post('/chatbot/force-message', {
+        userId,
+        sessionId: sid,
+        message: type,
+        content,
+        videoUrl,
+      });
+      console.log('forceAddMessage: 메시지 추가 성공', res.data);
+
+      // sessionId가 새로 생성되었으면 반드시 갱신
+      if (res.data.sessionId && res.data.sessionId !== sid) {
+        setSessionId(res.data.sessionId);
+        sid = res.data.sessionId;
+        console.log('forceAddMessage: sessionId 갱신됨', sid);
+      }
+      // 메시지 추가 후 최신 대화 내역 불러오기 (항상 최신 sessionId 사용)
+      const historyRes = await axiosInstance.get(`/chatbot/history/${userId}/${sid}`);
+      const historyData = historyRes.data || [];
+      const convertedMessages: ChatMessage[] = historyData.map((msg: any) => {
+        if (msg.type === 'bot' && msg.videoUrl) {
+          const videoId = getYoutubeId(msg.videoUrl);
+          return {
+            type: 'bot',
+            content: (
+              <div>
+                <iframe
+                  width="320"
+                  height="180"
+                  src={`https://www.youtube.com/embed/${videoId}`}
+                  title="YouTube video player"
+                  style={{ border: 'none' }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="rounded mb-2"
+                ></iframe>
+                <div>{msg.content}</div>
+              </div>
+            ),
+          };
+        }
+        return { type: msg.type, content: msg.content };
+      });
+      setMessages(convertedMessages);
+    } catch (e) {
+      console.error('forceAddMessage: 메시지 추가 실패', e);
+    }
+  };
 
   // Ref를 사용하여 히스토리 로드 여부와 마지막으로 처리한 payload를 추적합니다.
   const historyLoadedRef = useRef(false);
@@ -57,6 +251,11 @@ const ChatModal = ({ isOpen, onClose, initType, initPayload }: Props) => {
     }
   }, [isOpen]);
 
+  // onClose 함수를 전역 상태에 저장
+  useEffect(() => {
+    globalChatbotState.onClose = onClose;
+  }, [onClose]);
+
   // 대화 불러오기 및 초기 메시지 추가 로직
   useEffect(() => {
     if (!isOpen || !userId) {
@@ -73,58 +272,150 @@ const ChatModal = ({ isOpen, onClose, initType, initPayload }: Props) => {
           setSessionId(sid);
           if (sid) {
             const historyRes = await axiosInstance.get(`/chatbot/history/${userId}/${sid}`);
-            setMessages(historyRes.data || []);
+            const historyData = historyRes.data || [];
+            console.log('Loaded chat history:', historyData);
+            
+            // 백엔드에서 받은 메시지를 프론트엔드 형식으로 변환
+            const convertedMessages: ChatMessage[] = historyData.map((msg: any) => ({
+              type: msg.type,
+              content: msg.content,
+              timestamp: msg.timestamp
+            }));
+            
+            setMessages(convertedMessages);
+            
+            // 히스토리 로드 후 초기 메시지 추가 로직 실행
+            await addInitialMessage(convertedMessages);
+          } else {
+            // 세션이 없으면 초기 메시지 추가
+            await addInitialMessage([]);
           }
         } catch (error) {
           console.error("Failed to load chat history:", error);
           setMessages([]);
+          // 에러 발생 시에도 초기 메시지 추가
+          await addInitialMessage([]);
         }
       }
     };
 
     // 2. 초기 메시지를 추가하는 함수
-    const addInitialMessage = () => {
+    const addInitialMessage = async (currentMessages: ChatMessage[]) => {
+      // props로 전달된 payload와 type을 우선 사용
+      const payload = initPayload || globalChatbotState.initPayload;
+      const type = initType || globalChatbotState.initType;
+      
+      console.log('=== DEBUG INFO ===');
+      console.log('initPayload:', initPayload);
+      console.log('initType:', initType);
+      console.log('globalChatbotState:', globalChatbotState);
+      console.log('Adding initial message:', { type, payload, lastPayload: lastPayloadRef.current, currentMessagesLength: currentMessages.length });
+      
+      // payload나 type이 없으면 건너뛰기
+      if (!payload || !type) {
+        console.log('Skipping - no payload or type available');
+        return;
+      }
+      
       // 새로운 payload가 있고, 이전에 처리한 payload와 다를 경우에만 메시지를 추가
-      if (initPayload && initPayload !== lastPayloadRef.current) {
-        lastPayloadRef.current = initPayload; // payload를 처리했다고 기록
+      if (payload !== lastPayloadRef.current) {
+        lastPayloadRef.current = payload; // payload를 처리했다고 기록
 
-        let newMessage: ChatMessage | null = null;
-        if (initType === "video") {
-          const videoId = getYoutubeId(initPayload.videoUrl);
-          newMessage = {
-            type: "bot",
-            content: (
-              <div>
-                <iframe
-                  width="320"
-                  height="180"
-                  src={`https://www.youtube.com/embed/${videoId}`} // 표준 embed URL을 사용합니다.
-                  title="YouTube video player"
-                  style={{ border: "none" }}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="rounded mb-2"
-                ></iframe>
-                <div>{initPayload.message}</div>
-              </div>
-            ),
-          };
-        } else if (initType === "consult") {
-          newMessage = { type: "bot", content: initPayload.message };
-        }
+        // 현재 메시지 개수 확인 (대화 내역이 없을 때만 초기 메시지 추가)
+        const currentMessageCount = currentMessages.length;
+        console.log('Current message count:', currentMessageCount);
+        
+        // 대화 내역이 없을 때만 초기 메시지 추가
+        if (currentMessageCount === 0) {
+          try {
+            // 백엔드에 초기 메시지 저장 요청
+            const response = await axiosInstance.post("/chatbot/init-message", {
+              userId,
+              sessionId,
+              message: type // "video" 또는 "consult"
+            });
 
-        if (newMessage) {
-          setMessages(prev => [...prev, newMessage!]);
+            if (response.data && response.data.response) {
+              // 백엔드에서 받은 메시지를 화면에 표시
+              let newMessage: ChatMessage | null = null;
+              
+              if (type === "video") {
+                const videoId = getYoutubeId(payload.videoUrl);
+                newMessage = {
+                  type: "bot",
+                  content: (
+                    <div>
+                      <iframe
+                        width="320"
+                        height="180"
+                        src={`https://www.youtube.com/embed/${videoId}`}
+                        title="YouTube video player"
+                        style={{ border: "none" }}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="rounded mb-2"
+                      ></iframe>
+                      <div>{response.data.response}</div>
+                    </div>
+                  ),
+                };
+              } else if (type === "consult") {
+                newMessage = { type: "bot", content: response.data.response };
+              }
+
+              if (newMessage) {
+                setMessages(prev => [...prev, newMessage!]);
+              }
+            }
+          } catch (error) {
+            console.error("Failed to save initial message:", error);
+            // 백엔드 호출 실패 시 로컬에서 메시지 추가
+            let newMessage: ChatMessage | null = null;
+            if (type === "video") {
+              const videoId = getYoutubeId(payload.videoUrl);
+              newMessage = {
+                type: "bot",
+                content: (
+                  <div>
+                    <iframe
+                      width="320"
+                      height="180"
+                      src={`https://www.youtube.com/embed/${videoId}`}
+                      title="YouTube video player"
+                      style={{ border: "none" }}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="rounded mb-2"
+                    ></iframe>
+                    <div>{payload.message}</div>
+                  </div>
+                ),
+              };
+            } else if (type === "consult") {
+              newMessage = { type: "bot", content: payload.message };
+            }
+
+            if (newMessage) {
+              setMessages(prev => [...prev, newMessage!]);
+            }
+          }
+        } else {
+          console.log('Skipping initial message - conversation already exists');
         }
       }
     };
 
-    // 3. 히스토리 로드를 먼저 실행하고, 완료된 후에 초기 메시지를 추가하여 순서를 보장합니다.
-    loadHistory().then(() => {
-      addInitialMessage();
-    });
+    // 3. 히스토리 로드 실행
+    loadHistory();
 
   }, [isOpen, userId, initType, initPayload]);
+
+  useEffect(() => {
+    (window as any).forceAddChatbotMessage = forceAddMessage;
+    return () => {
+      (window as any).forceAddChatbotMessage = undefined;
+    };
+  }, []);
 
   // 메시지 전송 핸들러 (입력값을 사용자 메시지로 추가 후 초기화)
   const handleSend = async () => {
@@ -159,14 +450,35 @@ const ChatModal = ({ isOpen, onClose, initType, initPayload }: Props) => {
     console.log('messages:', messages);
   }, [messages]);
 
+  useEffect(() => {
+    if (!isOpen || !userId) return;
+    console.log('[ChatModal] useEffect - isOpen:', isOpen, 'userId:', userId, 'sessionId:', sessionId);
+  }, [isOpen, userId, sessionId]);
+
+  // expose maximize/minimize methods to parent
+  useImperativeHandle(ref, () => ({
+    maximize: () => setIsMinimized(false),
+    minimize: () => setIsMinimized(true),
+  }));
+
+  // 챗봇이 열릴 때마다 minimized로 초기화
+  useEffect(() => {
+    if (isOpen) setIsMinimized(true);
+  }, [isOpen]);
+
   // ... 이하 렌더링(JSX) 부분은 기존 코드와 동일합니다 ...
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 mx-auto z-50 bg-white rounded-xl shadow-xl border border-gray-200 transition-all duration-300 flex flex-col
-        w-full h-[90vh] min-w-[0] min-h-[320px] max-w-full max-h-[100vh]
-        sm:w-[90vw] sm:h-[80vh] sm:max-w-[700px] sm:max-h-[700px]
-        md:w-[66vw] md:h-[80vh] md:max-w-[1100px] md:max-h-[900px]
-        ${isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
+      className={`
+        fixed z-50 bg-white shadow-xl border border-gray-200 transition-all duration-300 flex flex-col
+        left-0 top-0 w-screen h-screen rounded-none
+        sm:left-auto sm:top-auto sm:right-[6.5rem] sm:bottom-6 sm:rounded-xl
+        ${isMinimized
+          ? 'sm:w-100 sm:h-150' // minimized desktop
+          : 'sm:w-[1000px] sm:h-[800px]' // maximized desktop
+        }
+        ${isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}
+      `}
     >
       {/* 헤더: 타이틀, 닫기 버튼 */}
       <div className="flex justify-between items-center p-4 border-b">
@@ -243,6 +555,10 @@ const ChatModal = ({ isOpen, onClose, initType, initPayload }: Props) => {
           placeholder="메시지를 입력하세요..."
           value={input}
           onChange={e => setInput(e.target.value)}
+          onFocus={() => {
+            setIsMinimized(false);
+            if (onInputFocus) onInputFocus();
+          }}
         />
         <button
           type="submit"
@@ -253,6 +569,6 @@ const ChatModal = ({ isOpen, onClose, initType, initPayload }: Props) => {
       </form>
     </div>
   );
-};
+});
 
 export default ChatModal;

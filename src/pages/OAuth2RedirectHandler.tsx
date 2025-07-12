@@ -36,14 +36,14 @@ const OAuth2RedirectHandler = () => {
                     
                     // role이 ADMIN이면 admin 페이지로, 아니면 dashboard로 이동
                     const targetPath = user.role === 'ADMIN' ? '/admin' : '/dashboard';
-                    navigate(targetPath);
+                    navigate(targetPath, { replace: true });
                 })
                 .catch((error) => {
                     console.error("유저 정보 가져오기 실패:", error);
                 });
         } else {
             console.error("소셜 로그인 실패: 토큰이 없습니다.");
-            navigate('/login');
+            navigate('/login', { replace: true });
         }
     }, [location, navigate, loginUser]);
 

@@ -55,7 +55,7 @@ const LoginPage = () => {
         
         // role이 ADMIN이면 admin 페이지로, 아니면 원래 목적지로 이동
         const targetPath = responseData.user.role === 'ADMIN' ? '/admin' : from;
-        navigate(targetPath);
+        navigate(targetPath, { replace: true });
         alert(`🎉 로그인 성공!\n환영합니다, ${responseData.user.name}님!`);
       } else {
         alert(`❌ 로그인 실패: ${responseData.message}`);
