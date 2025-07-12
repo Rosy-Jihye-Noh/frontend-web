@@ -5,7 +5,7 @@ import type { ProfileUser } from '@/types/index';
 import { Button } from '@/components/ui/button';
 import { HiArrowLeft, HiUser } from 'react-icons/hi';
 import { toast } from 'sonner';
-import axiosInstance from '@/api/axiosInstance';
+import { fetchUserProfile, updateUserProfile } from '@/services/api/myPageApi';
 import { fetchAuthenticatedImage, revokeObjectUrl } from '@/utils/imageUtils';
 
 const EditProfilePage: React.FC = () => {
@@ -42,10 +42,7 @@ const EditProfilePage: React.FC = () => {
          */
         const fetchUserData = async (userId: number) => {
             try {
-                const res = await axiosInstance.get(`/users/${userId}`);
-                if (res.status !== 200) throw new Error('사용자 정보 로딩 실패');
-                
-                const userData: ProfileUser = res.data;
+                const userData: ProfileUser = await fetchUserProfile(userId);
                 
                 // 가져온 데이터로 모든 폼 상태 초기화
                 setName(userData.name);
@@ -133,25 +130,7 @@ const EditProfilePage: React.FC = () => {
         }
 
         try {
-            const response = await axiosInstance.put(`/users/${user.id}`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                }
-            });
-            
-            if (response.status !== 200) {
-                const errorText = response.statusText;
-                
-                // 파일 크기 초과 에러 체크
-                if (errorText.includes('MaxUploadSizeExceededException') || 
-                    errorText.includes('Maximum upload size exceeded') ||
-                    response.status === 413) {
-                    toast.error('업로드 파일 크기가 너무 큽니다. 5MB 이하의 이미지를 선택해주세요.');
-                    return;
-                }
-                
-                throw new Error('프로필 수정에 실패했습니다.');
-            }
+            await updateUserProfile(user.id, formData);
             
             // 저장 성공 시 userStore 업데이트
             updateUser({
@@ -171,9 +150,9 @@ const EditProfilePage: React.FC = () => {
                 navigate('/mypage');
             }, 1500);
             
-        } catch (error) {
+        } catch (error: any) {
             console.error('프로필 저장 실패:', error);
-            toast.error('저장에 실패했습니다. 다시 시도해주세요.');
+            toast.error(error.message || '저장에 실패했습니다. 다시 시도해주세요.');
         } finally {
             setIsSaving(false);
         }

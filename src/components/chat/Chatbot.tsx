@@ -34,23 +34,31 @@ const Chatbot = forwardRef((props, ref) => {
       if (event.detail && event.detail.type) {
         setInitType(event.detail.type);
         
-        // 전역 상태에서 payload 가져오기
-        const globalState = (window as any).globalChatbotState;
-        let payload = null;
+        // 현재 사용자와 이벤트의 사용자가 일치하는지 확인
+        const eventUserId = event.detail.userId;
+        const currentUserId = user?.id;
         
-        if (event.detail.payload) {
-          payload = event.detail.payload;
-        } else if (globalState && globalState.initPayload) {
-          payload = globalState.initPayload;
+        if (eventUserId === currentUserId && currentUserId) {
+          // 전역 상태에서 payload 가져오기
+          const globalStates = (window as any).globalChatbotStates;
+          let payload = null;
+          
+          if (event.detail.payload) {
+            payload = event.detail.payload;
+          } else if (globalStates && globalStates[currentUserId] && globalStates[currentUserId].initPayload) {
+            payload = globalStates[currentUserId].initPayload;
+          }
+          
+          console.log('Chatbot: Setting payload from event:', payload);
+          console.log('Chatbot: Global states:', globalStates);
+          setInitPayload(payload);
+          setIsChatOpen(true);
+          setTimeout(() => {
+            chatModalRef.current?.maximize();
+          }, 0);
+        } else {
+          console.log('Chatbot: Ignoring event from different user:', eventUserId, 'current:', currentUserId);
         }
-        
-        console.log('Chatbot: Setting payload from event:', payload);
-        console.log('Chatbot: Global state:', globalState);
-        setInitPayload(payload);
-        setIsChatOpen(true);
-        setTimeout(() => {
-          chatModalRef.current?.maximize();
-        }, 0);
       }
     };
 
@@ -58,7 +66,7 @@ const Chatbot = forwardRef((props, ref) => {
     return () => {
       window.removeEventListener('chatbotStateChanged', handleChatbotStateChange as EventListener);
     };
-  }, []);
+  }, [user?.id]);
 
   // 페이지 이동 시 챗봇 최소화
   useEffect(() => {
@@ -68,24 +76,44 @@ const Chatbot = forwardRef((props, ref) => {
     }
   }, [location, isChatOpen]);
 
-  // 로그아웃 시 챗봇 닫기
+  // 로그아웃 시 챗봇 닫기 및 상태 초기화
   useEffect(() => {
     if (!user && isChatOpen) {
       setIsChatOpen(false);
+      setInitType(null);
+      setInitPayload(null);
     }
   }, [user, isChatOpen]);
 
-  // 모달이 닫힐 때 상태 초기화
+  // 사용자 변경 시 상태 초기화
+  useEffect(() => {
+    if (user?.id) {
+      // 새로운 사용자 로그인 시 상태 초기화
+      setInitType(null);
+      setInitPayload(null);
+    }
+  }, [user?.id]);
+
+  // 모달이 닫힐 때 상태 초기화 (대화 내용은 유지)
   const handleClose = () => {
     setIsChatOpen(false);
-    // 모달이 닫힐 때 전역 상태도 초기화
-    if (typeof window !== 'undefined' && (window as any).globalChatbotState) {
-      (window as any).globalChatbotState = {
-        isOpen: false,
-        initType: null,
-        initPayload: null,
-        onClose: null
-      };
+    
+    // initType과 initPayload는 초기화 (다음에 열 때 새로운 대화를 위해)
+    setInitType(null);
+    setInitPayload(null);
+    
+    // 모달이 닫힐 때 현재 사용자의 전역 상태에서 isOpen만 false로 설정
+    // 대화 내용(initType, initPayload)은 유지하여 다음에 열 때 이어서 대화 가능
+    if (typeof window !== 'undefined' && user?.id) {
+      const globalStates = (window as any).globalChatbotStates;
+      if (globalStates && globalStates[user.id]) {
+        globalStates[user.id] = {
+          ...globalStates[user.id],
+          isOpen: false,
+          onClose: null
+        };
+        (window as any).globalChatbotStates = globalStates;
+      }
     }
   };
 

@@ -12,7 +12,8 @@ import PostureScoreCard from '@/components/dashboard/PostureScoreCard';
 import WeeklyReportCard from '@/components/dashboard/WeeklyReportCard';
 import PopularLikedExercisesCarousel from '@/components/dashboard/PopularLikedExercisesCarousel';
 import PopularRoutineExercisesCarousel from '@/components/dashboard/PopularRoutineExercisesCarousel';
-import axiosInstance from '@/api/axiosInstance';
+import { fetchCategories, fetchPopularPostsByCategory } from '@/services/api/communityApi';
+import { getRoutinesByUser } from '@/services/api/routineApi';
 import type { Routine } from '@/types/index';
 
 const Dashboard: React.FC = () => {
@@ -50,12 +51,9 @@ const Dashboard: React.FC = () => {
 
     // 1. 로그인한 사용자의 루틴만 불러오기 (인증된 사용자만)
     console.log('로그인한 사용자 ID:', user.id, '의 루틴을 가져오는 중...');
-    axiosInstance.get(`/routines/user/${user.id}`)
-      .then(res => {
-        // 응답 데이터가 배열인지 확인하고, 해당 사용자의 루틴인지 검증
-        const userRoutines = Array.isArray(res.data) ? res.data.filter((routine: any) => 
-          routine.userId === user.id
-        ) : [];
+    getRoutinesByUser(user.id)
+      .then(userRoutines => {
+        // API 함수에서 이미 사용자 검증을 수행하므로 추가 검증 불필요
         console.log('사용자 루틴 로드 성공:', userRoutines.length, '개의 루틴');
         setRoutines(userRoutines);
       })
@@ -71,15 +69,15 @@ const Dashboard: React.FC = () => {
       });
 
     // 2. 카테고리 불러오기 및 각 카테고리별 인기글 불러오기
-    axiosInstance.get('/categories')
-      .then(async res => {
-        setCategories(res.data);
+    fetchCategories()
+      .then(async categories => {
+        setCategories(categories);
         // 각 카테고리별 인기글 1개씩
         const hotPosts = await Promise.all(
-          res.data.map(async (cat: any) => {
+          categories.map(async (cat: any) => {
             try {
-              const postRes = await axiosInstance.get(`/posts/category/${cat.id}/popular`, { params: { size: 1 } });
-              const post = postRes.data.content?.[0];
+              const postRes = await fetchPopularPostsByCategory(cat.id, 0, 1);
+              const post = postRes.content?.[0];
               return post
                 ? { category: cat.name, title: post.title, likes: post.likeCount, id: post.id }
                 : { category: cat.name, title: '', likes: 0, id: null };

@@ -15,6 +15,30 @@ export const fetchUserProfile = async (userId: number): Promise<ProfileUser> => 
 };
 
 /**
+ * 사용자 프로필 정보를 업데이트합니다.
+ * @param userId - 사용자 ID
+ * @param formData - 업데이트할 프로필 데이터 (FormData)
+ */
+export const updateUserProfile = async (userId: number, formData: FormData): Promise<ProfileUser> => {
+  try {
+    const response = await axiosInstance.put(`/users/${userId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
+    });
+    return response.data;
+  } catch (error: any) {
+    // 파일 크기 초과 에러 체크
+    if (error.response?.status === 413 || 
+        error.response?.statusText?.includes('MaxUploadSizeExceededException') ||
+        error.response?.statusText?.includes('Maximum upload size exceeded')) {
+      throw new Error('업로드 파일 크기가 너무 큽니다. 5MB 이하의 이미지를 선택해주세요.');
+    }
+    throw new Error('프로필 수정에 실패했습니다.');
+  }
+};
+
+/**
  * 특정 사용자의 모든 루틴 목록을 가져옵니다.
  * @param userId - 사용자 ID
  */
