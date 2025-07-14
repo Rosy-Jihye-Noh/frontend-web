@@ -11,6 +11,7 @@ import LikedExerciseSection from '../components/mypage/LikedExerciseSection';
 import PostsCommentsTabsSection from '../components/mypage/PostsCommentsTabsSection';
 import ExerciseRecordsSection from '../components/mypage/ExerciseRecordsSection';
 import NotificationsSection from '../components/mypage/NotificationsSection';
+import EmotionDiarySection from '@/components/mypage/EmotionDiarySection';
 import { deleteRoutineById } from '@/services/api/routineApi';
 import {
   fetchUserProfile,
@@ -138,6 +139,7 @@ const MyPage: React.FC = () => {
                         <TabButton id="routines" activeTab={activeTab} setActiveTab={setActiveTab}>내 루틴 관리</TabButton>
                         <TabButton id="history" activeTab={activeTab} setActiveTab={setActiveTab}>사진 분석 기록</TabButton>
                         <TabButton id="exercise-records" activeTab={activeTab} setActiveTab={setActiveTab}>운동 기록</TabButton>
+                        <TabButton id="emotion-diary" activeTab={activeTab} setActiveTab={setActiveTab}>감정 기록</TabButton>
                         <TabButton id="liked" activeTab={activeTab} setActiveTab={setActiveTab}>좋아요한 운동</TabButton>
                         <TabButton id="posts-comments" activeTab={activeTab} setActiveTab={setActiveTab}>내 글/댓글</TabButton>
                         <TabButton id="notifications" activeTab={activeTab} setActiveTab={setActiveTab}>알림</TabButton>
@@ -150,6 +152,7 @@ const MyPage: React.FC = () => {
                     {activeTab === 'liked' && <LikedExerciseSection likedExercises={likedExercises} />}
                     {activeTab === 'posts-comments' && <PostsCommentsTabsSection userId={user!.id} />}
                     {activeTab === 'exercise-records' && <ExerciseRecordsSection />}
+                    {activeTab === 'emotion-diary' && <EmotionDiarySection/>}
                     {activeTab === 'notifications' && <NotificationsSection userId={user!.id} />}
                 </div>
             </main>

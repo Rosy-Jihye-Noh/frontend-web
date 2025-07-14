@@ -120,3 +120,20 @@ export interface Notification {
   postId?: number;
   isRead?: boolean;
 }
+
+
+/** 감성의 종류 */
+export type EmotionType = 'JOY' | 'SAD' | 'ANGER' | 'ANXIETY' | 'HATRED' | 'NEUTRAL';
+
+/** * 감성 기록 데이터 전송 객체 (DTO) 인터페이스.
+ * 백엔드의 EmotionLogDTO와 형식을 맞춥니다.
+ */
+export interface EmotionLogDTO {
+  id: number;
+  userId: number;
+  exerciseDate: Date | string;
+  emotion: EmotionType;
+  memo: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}

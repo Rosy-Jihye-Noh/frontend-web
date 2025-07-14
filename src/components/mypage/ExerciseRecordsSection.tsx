@@ -40,9 +40,6 @@ const ExerciseRecordsSection: React.FC<ExerciseRecordsSectionProps> = () => {
       const parsedData = JSON.parse(logData);
       const sessions = parsedData?.state?.sessions || {};
 
-      // [디버깅용] 현재 함수가 어떤 데이터를 기반으로 계산하는지 확인
-      console.log("calculateRoutineStats's source data:", JSON.stringify(sessions, null, 2));
-
       // 현재 날짜 기준 계산
       const now = new Date();
 

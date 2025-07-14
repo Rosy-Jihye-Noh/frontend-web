@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '@/types/index';
 import { useDashboardStore } from './dashboardStore';
+import { useEmotionLogStore } from './emotionLogStore';
 
 export type Role = 'MEMBER' | 'ADMIN';
 
@@ -39,10 +40,12 @@ export const useUserStore = create<UserStore>()(
         try {
           // dashboard store 데이터 정리
           useDashboardStore.getState().clearUserData();
+          useEmotionLogStore.getState().clearEmotionData();
           
           // localStorage에서 관련 데이터 정리
           localStorage.removeItem('dashboard-storage');
           localStorage.removeItem('log-storage');
+          localStorage.removeItem('emotion-log-storage');
         } catch (error) {
           console.warn('스토어 정리 중 오류:', error);
         }
