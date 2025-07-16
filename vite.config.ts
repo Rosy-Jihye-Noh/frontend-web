@@ -10,5 +10,9 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     }
+  },
+  server: {
+    host: '0.0.0.0', // 🔥 외부 IP 접근 허용
+    port: 5173,       // 원래 포트 유지 (원하면 바꿔도 됨)
   }
 })
