@@ -228,19 +228,19 @@ const SignupPage = () => {
                 <div className="grid grid-cols-3 gap-4">
                     <Button className="flex items-center justify-center gap-2 bg-gray-200 text-gray-800 hover:bg-gray-300">
                         {/* <a href="http://localhost:8081/oauth2/authorization/google" className="flex items-center gap-2"> */}
-                        <a href="192.168.2.6:8081/oauth2/authorization/google" className="flex items-center gap-2">
+                        <a href="http://192.168.2.6:8081/oauth2/authorization/google" className="flex items-center gap-2">
                             <FcGoogle /> Google
                         </a>
                     </Button>
                     <Button className="flex items-center justify-center gap-2 bg-green-500 text-white hover:bg-green-600">
                         {/* <a href="http://localhost:8081/oauth2/authorization/naver" className="flex items-center gap-2"> */}
-                        <a href="192.168.2.6:8081/oauth2/authorization/naver" className="flex items-center gap-2">
+                        <a href="http://192.168.2.6:8081/oauth2/authorization/naver" className="flex items-center gap-2">
                             <SiNaver /> Naver
                         </a>
                     </Button>
                     <Button className="flex items-center justify-center gap-2 bg-yellow-400 text-brown hover:bg-yellow-500">
                         {/* <a href="http://localhost:8081/oauth2/authorization/kakao" className="flex items-center gap-2"> */}
-                        <a href="192.168.2.6:8081/oauth2/authorization/kakao" className="flex items-center gap-2">
+                        <a href="http://192.168.2.6:8081/oauth2/authorization/kakao" className="flex items-center gap-2">
                             <RiKakaoTalkFill /> Kakao
                         </a>
                     </Button>
