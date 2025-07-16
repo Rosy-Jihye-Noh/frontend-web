@@ -16,7 +16,7 @@ const LoginPage = () => {
   const { loginUser } = useUserStore();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // 로그인 후 돌아갈 페이지 (기본값: dashboard)
   const from = location.state?.from || '/dashboard';
 
@@ -50,9 +50,9 @@ const LoginPage = () => {
           message: responseData.message,
           isSocialLogin: false
         };
-        
+
         loginUser(loginResponse);
-        
+
         // role이 ADMIN이면 admin 페이지로, 아니면 원래 목적지로 이동
         const targetPath = responseData.user.role === 'ADMIN' ? '/admin' : from;
         navigate(targetPath, { replace: true });
@@ -78,7 +78,7 @@ const LoginPage = () => {
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
-      <h1 
+      <h1
         className="text-3xl font-extrabold text-blue-600 mb-8 cursor-pointer hover:text-blue-700 transition-colors"
         onClick={() => navigate("/")}
       >
@@ -125,34 +125,37 @@ const LoginPage = () => {
           </Button>
 
           <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-blue-300" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-blue-600 dark:bg-gray-800">
-                      Or continue with
-                  </span>
-              </div>
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-blue-300" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-blue-600 dark:bg-gray-800">
+                Or continue with
+              </span>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-              <Button className="flex items-center justify-center gap-2 bg-gray-200 text-gray-800 hover:bg-gray-300" asChild>
-                  <a href="http://localhost:8081/oauth2/authorization/google" className="flex items-center gap-2">
-                  <FcGoogle /> Google
-                  </a>
-              </Button>
-              <Button className="flex items-center justify-center gap-2 bg-green-500 text-white hover:bg-green-600" asChild>
-                  <a href="http://localhost:8081/oauth2/authorization/naver">
-                  <SiNaver /> Naver
-                  </a>
-              </Button>
-              <Button className="flex items-center justify-center gap-2 bg-yellow-400 text-brown hover:bg-yellow-500" asChild>
-                  <a href="http://localhost:8081/oauth2/authorization/kakao">
-                  <RiKakaoTalkFill /> Kakao
-                  </a>
-              </Button>
+            <Button className="flex items-center justify-center gap-2 bg-gray-200 text-gray-800 hover:bg-gray-300" asChild>
+              {/* <a href="http://localhost:8081/oauth2/authorization/google" className="flex items-center gap-2"> */}
+              <a href="192.168.2.6:8081/oauth2/authorization/google" className="flex items-center gap-2">
+                <FcGoogle /> Google
+              </a>
+            </Button>
+            <Button className="flex items-center justify-center gap-2 bg-green-500 text-white hover:bg-green-600" asChild>
+              {/* <a href="http://localhost:8081/oauth2/authorization/naver"> */}
+              <a href="192.168.2.6:8081/oauth2/authorization/naver">
+                <SiNaver /> Naver
+              </a>
+            </Button>
+            <Button className="flex items-center justify-center gap-2 bg-yellow-400 text-brown hover:bg-yellow-500" asChild>
+              {/* <a href="http://localhost:8081/oauth2/authorization/kakao"> */}
+              <a href="192.168.2.6:8081/oauth2/authorization/kakao">
+                <RiKakaoTalkFill /> Kakao
+              </a>
+            </Button>
           </div>
-          
-          
+
+
           <div className="text-sm text-center text-gray-600 dark:text-gray-400 flex justify-center items-center space-x-2 pt-2">
             <span
               onClick={() => goToFindCredentials('find-email')}
