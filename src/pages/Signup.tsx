@@ -67,7 +67,7 @@ const SignupPage = () => {
             setProfileImage(e.target.files[0]);
         }
     };
-    
+
     /**
      * 이메일 중복 확인 버튼 클릭 시 호출되는 비동기 핸들러입니다.
      * 입력된 이메일이 이미 사용 중인지 확인합니다.
@@ -126,7 +126,7 @@ const SignupPage = () => {
             setUiState('sent');
         }
     };
-    
+
     /**
      * 회원가입 폼 제출 시 호출되는 최종 핸들러입니다.
      * 모든 회원 정보를 취합하여 서버에 회원가입 요청을 보냅니다.
@@ -137,7 +137,7 @@ const SignupPage = () => {
         if (!formData.password || !formData.name || !formData.birthday) {
             return alert('모든 필수 정보를 입력해주세요.');
         }
-        
+
         try {
             await signup(formData, profileImage || undefined);
             alert('회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.');
@@ -156,7 +156,7 @@ const SignupPage = () => {
                     회원가입
                 </h2>
                 <form onSubmit={handleSignup} className="space-y-4">
-                     <div>
+                    <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="email">이메일</label>
                         <div className="flex gap-2">
                             <Input type="email" id="email" value={formData.email} onChange={handleChange} disabled={uiState === 'verified'} placeholder="email@example.com" className="bg-white dark:bg-transparent dark:text-white" />
@@ -176,7 +176,7 @@ const SignupPage = () => {
                             </div>
                         </div>
                     )}
-                    
+
                     {uiState === 'verified' && (
                         <>
                             <div>
@@ -187,7 +187,7 @@ const SignupPage = () => {
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="name">이름 (닉네임)</label>
                                 <Input type="text" id="name" value={formData.name} onChange={handleChange} placeholder="사용자 이름을 입력하세요" className="bg-white dark:bg-transparent dark:text-white" />
                             </div>
-                             <div>
+                            <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="birthday">생년월일</label>
                                 <Input type="date" id="birthday" value={formData.birthday} onChange={handleChange} className="bg-white dark:bg-transparent dark:text-white" />
                             </div>
@@ -207,7 +207,7 @@ const SignupPage = () => {
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="profileImage">프로필 이미지 (선택)</label>
                                 <Input type="file" id="profileImage" onChange={handleImageChange} accept="image/*" className="bg-white dark:bg-transparent dark:text-white file:text-gray-500" />
                             </div>
-                            
+
                             <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium py-3 rounded-md">
                                 회원가입 완료
                             </Button>
@@ -227,17 +227,20 @@ const SignupPage = () => {
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                     <Button className="flex items-center justify-center gap-2 bg-gray-200 text-gray-800 hover:bg-gray-300">
-                        <a href="http://localhost:8081/oauth2/authorization/google" className="flex items-center gap-2">
+                        {/* <a href="http://localhost:8081/oauth2/authorization/google" className="flex items-center gap-2"> */}
+                        <a href="192.168.2.6:8081/oauth2/authorization/google" className="flex items-center gap-2">
                             <FcGoogle /> Google
                         </a>
                     </Button>
                     <Button className="flex items-center justify-center gap-2 bg-green-500 text-white hover:bg-green-600">
-                        <a href="http://localhost:8081/oauth2/authorization/naver" className="flex items-center gap-2">
+                        {/* <a href="http://localhost:8081/oauth2/authorization/naver" className="flex items-center gap-2"> */}
+                        <a href="192.168.2.6:8081/oauth2/authorization/naver" className="flex items-center gap-2">
                             <SiNaver /> Naver
                         </a>
                     </Button>
                     <Button className="flex items-center justify-center gap-2 bg-yellow-400 text-brown hover:bg-yellow-500">
-                        <a href="http://localhost:8081/oauth2/authorization/kakao" className="flex items-center gap-2">
+                        {/* <a href="http://localhost:8081/oauth2/authorization/kakao" className="flex items-center gap-2"> */}
+                        <a href="192.168.2.6:8081/oauth2/authorization/kakao" className="flex items-center gap-2">
                             <RiKakaoTalkFill /> Kakao
                         </a>
                     </Button>
