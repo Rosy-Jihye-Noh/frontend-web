@@ -1,4 +1,4 @@
-import type { ProfileUser, Routine, Exercise, AnalysisHistoryItem } from '@/types/index';
+import type { ProfileUser, Routine, Exercise, AnalysisHistoryItem, Badge } from '@/types/index';
 import axiosInstance from '../../api/axiosInstance';
 
 /**
@@ -87,5 +87,25 @@ export const fetchFullLikedExercises = async (userId: number): Promise<Exercise[
     return Promise.all(exerciseDetailsPromises);
   } catch (error) {
     throw new Error('좋아요한 운동 목록을 불러오는 데 실패했습니다.');
+  }
+};
+
+/**
+ * 특정 사용자의 획득한 뱃지 목록을 가져옵니다.
+ * @param userId - 사용자 ID
+ * @returns 사용자의 뱃지 목록
+ */
+export const fetchUserBadges = async (userId: number): Promise<Badge[]> => {
+  try {
+    // 실제 백엔드 API 엔드포인트를 호출합니다.
+    const response = await axiosInstance.get(`/users/${userId}/badges`);
+    
+    // 서버로부터 받은 뱃지 목록 데이터를 반환합니다.
+    return response.data;
+
+  } catch (error) {
+    console.error('뱃지 목록을 불러오는 데 실패했습니다:', error);
+    // 에러를 다시 throw하여 호출한 쪽(예: React Query)에서 처리할 수 있도록 합니다.
+    throw new Error('뱃지 목록을 불러오는 데 실패했습니다.');
   }
 };

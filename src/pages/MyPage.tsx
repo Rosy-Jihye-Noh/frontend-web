@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '@/store/userStore';
-import type { ProfileUser, Routine, Exercise, AnalysisHistoryItem } from '../types/index';
+import type { ProfileUser, Routine, Exercise, AnalysisHistoryItem, Badge } from '../types/index';
 import Header from '@/components/common/Header';
-import { HiChatAlt2 } from 'react-icons/hi';
 import ProfileHeader from '../components/mypage/ProfileHeader';
 import AnalysisHistorySection from '../components/mypage/AnalysisHistorySection';
 import MyRoutineSection from '../components/mypage/MyRoutineSection';
@@ -11,13 +10,15 @@ import LikedExerciseSection from '../components/mypage/LikedExerciseSection';
 import PostsCommentsTabsSection from '../components/mypage/PostsCommentsTabsSection';
 import ExerciseRecordsSection from '../components/mypage/ExerciseRecordsSection';
 import NotificationsSection from '../components/mypage/NotificationsSection';
+import BadgeCollectionSection from '@/components/mypage/BadgeCollectionSection';
 import EmotionDiarySection from '@/components/mypage/EmotionDiarySection';
 import { deleteRoutineById } from '@/services/api/routineApi';
 import {
   fetchUserProfile,
   fetchUserRoutines,
   fetchUserAnalysisHistory,
-  fetchFullLikedExercises
+  fetchFullLikedExercises,
+  fetchUserBadges,
 } from '@/services/api/myPageApi'; // 분리된 API 함수들을 import
 
 const TabButton = ({ id, activeTab, setActiveTab, children }: { id: string, activeTab: string, setActiveTab: (id: string) => void, children: React.ReactNode }) => (
@@ -38,6 +39,7 @@ const MyPage: React.FC = () => {
     const [routines, setRoutines] = useState<Routine[]>([]);
     const [history, setHistory] = useState<AnalysisHistoryItem[]>([]);
     const [likedExercises, setLikedExercises] = useState<Exercise[]>([]);
+    const [badges, setBadges] = useState<Badge[]>([]);
     
     const [isPageLoading, setIsPageLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -53,26 +55,26 @@ const MyPage: React.FC = () => {
             return;
         }
 
-        /**
-         * 특정 사용자 ID에 대한 모든 마이페이지 관련 데이터를 비동기적으로 불러오는 함수입니다.
-         * @param userId - 데이터를 불러올 사용자의 ID
-         */
-        const fetchDataForUser = async (userId: number) => {
+            const fetchDataForUser = async (userId: number) => {
             setIsPageLoading(true);
             setError(null);
             try {
-                // 분리된 API 서비스 함수를 사용하여 데이터를 병렬로 요청합니다.
-                const [profileData, routinesData, historyData, likedData] = await Promise.all([
+                // Fetch all data in parallel, including badges
+                const [profileData, routinesData, historyData, likedData, badgesData] = await Promise.all([
                     fetchUserProfile(userId),
                     fetchUserRoutines(userId),
                     fetchUserAnalysisHistory(userId),
                     fetchFullLikedExercises(userId),
+                    // Add the call to fetch badges
+                    fetchUserBadges(userId),
                 ]);
 
                 setProfile(profileData);
                 setRoutines(routinesData);
                 setHistory(historyData);
                 setLikedExercises(likedData);
+                // Set badge state, sorting by newest first
+                setBadges(badgesData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
 
             } catch (err) {
                 setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
@@ -143,6 +145,7 @@ const MyPage: React.FC = () => {
                         <TabButton id="liked" activeTab={activeTab} setActiveTab={setActiveTab}>좋아요한 운동</TabButton>
                         <TabButton id="posts-comments" activeTab={activeTab} setActiveTab={setActiveTab}>내 글/댓글</TabButton>
                         <TabButton id="notifications" activeTab={activeTab} setActiveTab={setActiveTab}>알림</TabButton>
+                        <TabButton id="badges" activeTab={activeTab} setActiveTab={setActiveTab}>내 뱃지</TabButton>
                     </div>
                 </div>
 
@@ -151,8 +154,9 @@ const MyPage: React.FC = () => {
                     {activeTab === 'history' && <AnalysisHistorySection history={history} />}
                     {activeTab === 'liked' && <LikedExerciseSection likedExercises={likedExercises} />}
                     {activeTab === 'posts-comments' && <PostsCommentsTabsSection userId={user!.id} />}
-                    {activeTab === 'exercise-records' && <ExerciseRecordsSection />}
+                    {activeTab === 'exercise-records' && <ExerciseRecordsSection userProfile={profile} />}
                     {activeTab === 'emotion-diary' && <EmotionDiarySection/>}
+                    {activeTab === 'badges' && <BadgeCollectionSection badges={badges} />}
                     {activeTab === 'notifications' && <NotificationsSection userId={user!.id} />}
                 </div>
             </main>

@@ -17,6 +17,10 @@ export interface ProfileUser {
   weight: number | null;
   height: number | null;
   profileImageUrl: string | null;
+
+  // AI가 생성한 목표 (JSON 문자열 형태)
+  weeklyGoal: string | null;
+  monthlyGoal: string | null;
 }
 
 export interface RoutineExercise {
@@ -136,4 +140,19 @@ export interface EmotionLogDTO {
   memo: string;
   createdAt: Date | string;
   updatedAt: Date | string;
+}
+
+/** 획득한 뱃지 정보 */
+export interface Badge {
+  id: number;
+  name: string;
+  description: string;
+  imageUrl: string | null;
+  createdAt: string;
+}
+
+// AI가 설정한 목표의 구조를 정의합니다.
+export interface Goal {
+  workouts: number; // 목표 운동 횟수
+  completion_rate: number; // AI가 예측한 달성률
 }
