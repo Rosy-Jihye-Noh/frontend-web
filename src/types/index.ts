@@ -59,8 +59,14 @@ export interface AnalysisHistoryItem {
   pelvicScore: number;
   neckScore: number;
   shoulderScore: number;
+  // 추가: 진단, 차트, 이미지 등
+  diagnosis?: string;
+  radarChartUrl?: string;
+  frontImageUrl?: string;
+  sideImageUrl?: string;
+  feedback?: Record<string, any>;
+  measurements?: Record<string, any>;
 }
-
 export interface ExerciseLog {
   // Response용 필드
   id?: number;

@@ -19,17 +19,19 @@ interface AnalysisResultPageProps {
   isReadOnly?: boolean;
 }
 
-// 점수별 진단 결과와 등급을 반환하는 헬퍼 함수
+// 점수별 진단 결과와 등급을 반환하는 헬퍼 함수 (4등급 체계)
 const getDiagnosis = (score: number) => {
-  if (score >= 80) return { label: '양호', color: 'text-green-600' };
-  if (score >= 60) return { label: '경고', color: 'text-yellow-600' };
-  return { label: '주의', color: 'text-red-600' };
+  if (score >= 85) return { label: '우수', color: 'text-green-700' };
+  if (score >= 70) return { label: '보통', color: 'text-yellow-600' };
+  if (score >= 60) return { label: '주의', color: 'text-orange-500' };
+  return { label: '위험', color: 'text-red-600' };
 };
 
 const getOverallGrade = (score: number) => {
-  if (score >= 80) return '우수 등급';
-  if (score >= 60) return '보통 등급';
-  return '개선 필요';
+  if (score >= 85) return '우수';
+  if (score >= 70) return '보통';
+  if (score >= 60) return '주의';
+  return '위험';
 };
 
 const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = false }) => {
@@ -168,12 +170,45 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
     const scores = [analysis.spineCurvScore, analysis.spineScolScore, analysis.pelvicScore, analysis.neckScore, analysis.shoulderScore];
     const averageScore = Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
 
+    const feedback = analysis.feedback || {};
+    const measurements = analysis.measurements || {};
+
     const diagnoses = [
-      { part: "거북목", score: analysis.neckScore },
-      { part: "어깨 불균형", score: analysis.shoulderScore },
-      { part: "척추 측만", score: analysis.spineScolScore },
-      { part: "척추 만곡", score: analysis.spineCurvScore },
-      { part: "골반 불균형", score: analysis.pelvicScore }
+      {
+        part: "목목",
+        score: analysis.neckScore,
+        feedback: feedback.head_forward || feedback.neck_error,
+        measurement: measurements.neck_forward_angle,
+        unit: "°"
+      },
+      {
+        part: "어깨",
+        score: analysis.shoulderScore,
+        feedback: feedback.shoulder_tilt,
+        measurement: measurements.shoulder_tilt_angle,
+        unit: "°"
+      },
+      {
+        part: "척추(정면)",
+        score: analysis.spineScolScore,
+        feedback: feedback.torso_tilt,
+        measurement: measurements.torso_tilt_angle,
+        unit: "°"
+      },
+      {
+        part: "척추(측면)",
+        score: analysis.spineCurvScore,
+        feedback: feedback.back_bend,
+        measurement: measurements.back_angle,
+        unit: "°"
+      },
+      {
+        part: "골반",
+        score: analysis.pelvicScore,
+        feedback: feedback.hip_tilt,
+        measurement: measurements.hip_tilt_angle,
+        unit: "°"
+      }
     ];
 
     return (
@@ -201,41 +236,58 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
           )}
         </header>
 
-        {/* 전체 점수 카드 */}
-        <Card className="text-center p-8 mb-6">
-          <p className="text-gray-500 mb-2">자세 점수</p>
-          <p className="text-6xl font-bold text-blue-600 mb-4">{averageScore}점</p>
-          <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-            {getOverallGrade(averageScore)}
-          </span>
-        </Card>
+        {/* 자세 점수 + 부위별 진단 2-column */}
+        <div className="flex flex-col md:flex-row gap-6 max-w-5xl mx-auto mb-6">
+          {/* 자세 점수 카드 */}
+          <Card className="text-center p-8 flex-1 mb-0">
+            <p className="text-gray-500 mb-2">자세 점수</p>
+            <p className="text-6xl font-bold text-blue-600 mb-4">{averageScore}점</p>
+            <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+              {getOverallGrade(averageScore)}
+            </span>
+          </Card>
+          {/* 부위별 진단 카드 */}
+          <Card className="p-6 flex-1 mb-0">
+            <h2 className="font-bold text-lg mb-4">부위별 진단</h2>
+            <ul className="space-y-3">
+              {diagnoses
+                .filter(({ score }) => score !== 0)
+                .map(({ part, score, measurement, unit }) => {
+                  const { label, color } = getDiagnosis(score);
+                  return (
+                    <li key={part} className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-bold ${color}`} style={{ minWidth: '90px', display: 'inline-block' }}>{part}</span>
+                        <span className={`font-bold ${color}`}>{label}({score}점)</span>
+                      </div>
+                      <div>
+                        {measurement !== undefined && measurement !== null ? (
+                          <span className="text-gray-700">{`${Number(measurement).toFixed(1)}${unit} 기울어짐`}</span>
+                        ) : (
+                          <span className="text-gray-700">증상 있음</span>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+            </ul>
+          </Card>
+        </div>
 
-        {/* Keypoint 분석 카드 */}
+        {/* Keypoint 분석 카드는 별도로 아래에 둠 */}
         <Card className="p-6 mb-6">
           <h2 className="font-bold text-lg mb-4">Keypoint 분석</h2>
-          <div className="h-64 bg-muted rounded-md flex items-center justify-center">
-            {/* 여기에 분석 이미지가 들어갑니다 */}
-            <p className="text-gray-500">분석 이미지 표시 영역</p>
+          <div className="h-[32rem] bg-muted rounded-md flex items-center justify-center">
+            {analysis?.radarChartUrl ? (
+              <img
+                src={analysis.radarChartUrl}
+                alt="자세 분석 레이더 차트"
+                className="max-h-[32rem] max-w-full object-contain"
+              />
+            ) : (
+              <p className="text-gray-500">분석 이미지 표시 영역</p>
+            )}
           </div>
-        </Card>
-
-        {/* 부위별 진단 카드 */}
-        <Card className="p-6 mb-6">
-          <h2 className="font-bold text-lg mb-4">부위별 진단</h2>
-          <ul className="space-y-3">
-            {diagnoses.map(({ part, score }) => {
-              const { label, color } = getDiagnosis(score);
-              return (
-                <li key={part} className="flex justify-between items-center">
-                  <div>
-                    <span className={`font-bold ${color} mr-2`}>{label}</span>
-                    <span className="text-gray-700">{part} 증상이 보입니다.</span>
-                  </div>
-                  <span className="font-semibold text-gray-800 dark:text-gray-200">{score}점</span>
-                </li>
-              );
-            })}
-          </ul>
         </Card>
         
         {/* AI 코치 소견 카드 */}

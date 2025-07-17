@@ -71,7 +71,15 @@ const AnalysisSharePage: React.FC = () => {
         <Card className="p-6 mb-6">
           <h2 className="font-bold text-lg mb-4">Keypoint 분석</h2>
           <div className="h-64 bg-muted rounded-md flex items-center justify-center">
-            <p className="text-gray-500">분석 이미지 표시 영역</p>
+            {analysis.radarChartUrl ? (
+              <img
+                src={analysis.radarChartUrl}
+                alt="자세 분석 레이더 차트"
+                className="max-h-60 max-w-full object-contain"
+              />
+            ) : (
+              <p className="text-gray-500">분석 이미지 표시 영역</p>
+            )}
           </div>
         </Card>
         {/* 부위별 진단 카드 */}
