@@ -2,7 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HiBell, HiChat, HiHeart, HiReply, HiCheck, HiX } from 'react-icons/hi';
 import type { Notification } from '@/types/index';
-import axiosInstance from '@/api/axiosInstance';
+import {
+  fetchNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteNotification,
+} from '@/services/api/notificationApi';
 
 interface NotificationsSectionProps {
   userId: number;
@@ -13,37 +18,18 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- API 호출 및 상태 관리 함수 ---
-
-  const fetchNotifications = async () => {
+  const loadNotifications = async () => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.get(`/users/${userId}/notifications`);
-      if (response.status === 200) {
-        const data = response.data;
-        console.log('Notifications API Response:', data); // 디버깅용
-        
-        if (data && Array.isArray(data.content)) {
-          // 서버 응답을 클라이언트 형식으로 변환
-          const transformedNotifications = data.content.map((notif: any) => ({
-            ...notif,
-            postId: notif.referenceId, // referenceId를 postId로 매핑
-            isRead: notif.read, // read를 isRead로 매핑
-          }));
-          setNotifications(transformedNotifications);
-        } else if (data && Array.isArray(data)) {
-          // content가 없고 직접 배열인 경우
-          const transformedNotifications = data.map((notif: any) => ({
-            ...notif,
-            postId: notif.referenceId,
-            isRead: notif.read,
-          }));
-          setNotifications(transformedNotifications);
-        } else {
-          setNotifications([]);
-        }
+      const data = await fetchNotifications(userId);
+      if (data && Array.isArray(data.content)) {
+        const transformedNotifications = data.content.map((notif: any) => ({
+          ...notif,
+          postId: notif.referenceId,
+          isRead: notif.read,
+        }));
+        setNotifications(transformedNotifications);
       } else {
-        console.error('Failed to fetch notifications:', response.status);
         setNotifications([]);
       }
     } catch (error) {
@@ -54,18 +40,10 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
     }
   };
 
-  useEffect(() => {
-    if (userId && userId > 0) {
-      fetchNotifications();
-    }
-  }, [userId]);
-
-  const markAsRead = async (notificationId: number) => {
-    // 이미 읽은 상태이면 함수를 실행하지 않음
+  const handleMarkAsRead = async (notificationId: number) => {
     const targetNotif = notifications.find(n => n.id === notificationId);
     if (targetNotif?.isRead) return;
 
-    // 낙관적 UI 업데이트: API 호출을 기다리지 않고 화면을 먼저 변경
     setNotifications(prev =>
       prev.map(notif =>
         notif.id === notificationId ? { ...notif, isRead: true } : notif
@@ -73,16 +51,9 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
     );
 
     try {
-      const response = await axiosInstance.put(`/users/${userId}/notifications/${notificationId}/read`);
-
-      if (response.status === 200) {
-        console.log(`알림 ${notificationId} 읽음 처리 완료`);
-      } else {
-        throw new Error(`Failed to mark as read: ${response.status}`);
-      }
+      await markNotificationAsRead(userId, notificationId);
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
-      // 에러 발생 시 원래 상태로 롤백
       setNotifications(prev =>
         prev.map(notif =>
           notif.id === notificationId ? { ...notif, isRead: false } : notif
@@ -91,69 +62,37 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
     }
   };
 
-  const markAllAsRead = async () => {
-    // 읽지 않은 알림이 없으면 실행하지 않음
+  const handleMarkAllAsRead = async () => {
     const unreadNotifications = notifications.filter(notif => !notif.isRead);
     if (unreadNotifications.length === 0) return;
 
-    // 낙관적 UI 업데이트
     setNotifications(prev => prev.map(notif => ({ ...notif, isRead: true })));
-    
-    try {
-      const response = await axiosInstance.put(`/users/${userId}/notifications/read-all`);
 
-      if (response.status === 200) {
-        console.log('모든 알림 읽음 처리 완료');
-      } else {
-        throw new Error(`Failed to mark all as read: ${response.status}`);
-      }
+    try {
+      await markAllNotificationsAsRead(userId);
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
-      fetchNotifications(); // 실패 시 서버 데이터로 다시 동기화
+      loadNotifications();
     }
   };
 
-  const deleteNotification = async (notificationId: number) => {
+  const handleDeleteNotification = async (notificationId: number) => {
     const originalNotifications = notifications;
-    // 낙관적 UI 업데이트
     setNotifications(prev => prev.filter(notif => notif.id !== notificationId));
 
     try {
-      const response = await axiosInstance.delete(`/users/${userId}/notifications/${notificationId}`);
-
-      if (response.status === 200) {
-        console.log(`알림 ${notificationId} 삭제 완료`);
-      } else {
-        throw new Error(`Failed to delete notification: ${response.status}`);
-      }
+      await deleteNotification(userId, notificationId);
     } catch (error) {
       console.error('Failed to delete notification:', error);
-      setNotifications(originalNotifications); // 실패 시 롤백
+      setNotifications(originalNotifications);
     }
   };
 
-  // 클릭 이벤트 핸들러
-  const handleNotificationClick = async (notification: Notification) => {
-    console.log('알림 클릭됨:', notification); // 디버깅용
-    
-    try {
-      // 클릭 시 먼저 읽음 처리 (비동기로 처리하지만 페이지 이동은 즉시)
-      if (!notification.isRead) {
-        markAsRead(notification.id);
-      }
-
-      // postId가 있는 경우에만 페이지 이동
-      if (notification.postId && notification.postId > 0) {
-        console.log(`페이지 이동: /community/${notification.postId}`); // 디버깅용
-        navigate(`/community/${notification.postId}`);
-      } else {
-        console.warn('이 알림에는 연결된 게시글(postId)이 없습니다:', notification);
-        // postId가 없어도 알림은 읽음 처리됨
-      }
-    } catch (error) {
-      console.error('알림 클릭 처리 중 오류:', error);
+  useEffect(() => {
+    if (userId && userId > 0) {
+      loadNotifications();
     }
-  };
+  }, [userId]);
 
   // --- 헬퍼 및 렌더링 변수 ---
   const getIcon = (type: Notification['type']) => {
@@ -190,6 +129,21 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
 
   const unreadCount = notifications.filter(notif => !notif.isRead).length;
 
+  function handleNotificationClick(notification: Notification): void {
+    // 알림 타입에 따라 이동할 경로 결정
+    if (notification.postId) {
+      // 게시글 관련 알림이면 해당 게시글 상세로 이동
+      navigate(`/posts/${notification.postId}`);
+    } else {
+      // 기타 알림은 마이페이지로 이동 (혹은 아무 동작 없음)
+      // navigate('/mypage');
+    }
+    // 클릭 시 읽음 처리
+    if (!notification.isRead) {
+      handleMarkAsRead(notification.id);
+    }
+  }
+
   return (
     <div className="bg-card rounded-xl shadow-lg p-6">
       {/* 헤더 부분 */}
@@ -202,7 +156,7 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
         </div>
         {unreadCount > 0 && (
           <button 
-            onClick={markAllAsRead} 
+            onClick={handleMarkAllAsRead} 
             className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors duration-200"
           >
             <HiCheck className="w-4 h-4" />
@@ -271,7 +225,7 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          markAsRead(notification.id);
+                          handleMarkAsRead(notification.id);
                         }}
                         className="p-1.5 rounded-full hover:bg-gray-200 text-gray-500 hover:text-green-600 transition-colors"
                         title="읽음 처리"
@@ -283,7 +237,7 @@ const NotificationsSection: React.FC<NotificationsSectionProps> = ({ userId }) =
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteNotification(notification.id);
+                        handleDeleteNotification(notification.id);
                       }}
                       className="p-1.5 rounded-full hover:bg-gray-200 text-gray-500 hover:text-red-600 transition-colors"
                       title="삭제"
