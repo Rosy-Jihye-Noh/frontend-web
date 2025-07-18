@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import { HiUpload } from 'react-icons/hi';
 import { useUserStore } from '@/store/userStore';
 import { useRequireAuth } from "../hooks/useRequireAuth";
+import { uploadToCloudinary } from '@/services/api/cloudinaryApi';
+import { requestAnalysis } from '@/services/api/analysisApi';
 
 const PhotoUpload: React.FC = () => {
   useRequireAuth("/photoupload"); // 페이지 최상단에서 인증 체크
@@ -38,20 +40,54 @@ const PhotoUpload: React.FC = () => {
   // 분석 시작 가능 여부 확인
   const canStartAnalysis = frontPhoto && (includeSidePhoto ? sidePhoto : true);
 
-  const dummyAnalysis = {
-    id: 10,
-    createdAt: new Date().toISOString(),
-    spineCurvScore: 75,
-    spineScolScore: 82,
-    pelvicScore: 78,
-    neckScore: 65,
-    shoulderScore: 70
-  };
+  // const dummyAnalysis = {
+  //   id: 10,
+  //   createdAt: new Date().toISOString(),
+  //   spineCurvScore: 75,
+  //   spineScolScore: 82,
+  //   pelvicScore: 78,
+  //   neckScore: 65,
+  //   shoulderScore: 70
+  // };
 
-  const getAnalysisIdForUser = (userId?: number) => {
-    if (userId === 204) return 7;
-    if (userId === 215) return 9;
-    return 10;
+  // const getAnalysisIdForUser = (userId?: number) => {
+  //   if (userId === 204) return 7;
+  //   if (userId === 215) return 9;
+  //   return 10;
+  // };
+
+  const handleStartAnalysis = async () => {
+    console.log('분석 시작하기 클릭됨');
+    if (!frontPhoto) return;
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+    try {
+      const frontUrl = await uploadToCloudinary(frontPhoto);
+      console.log('Cloudinary 업로드 결과 frontUrl:', frontUrl); // ← 여기 추가
+      
+      // (선택) 측면 사진도 업로드
+      let sideUrl = null;
+      if (includeSidePhoto && sidePhoto) {
+        sideUrl = await uploadToCloudinary(sidePhoto);
+        console.log('Cloudinary 업로드 결과 sideUrl:', sideUrl); // ← 여기 추가
+      }
+
+      // API 함수로 분석 요청
+      const analysisResult = await requestAnalysis(
+        user.id,
+        frontUrl,
+        includeSidePhoto ? 'side' : 'front'
+      );
+      console.log('분석 요청 결과:', analysisResult);
+
+      // 결과 페이지로 이동
+      navigate(`/analysis-result/${analysisResult.id}`, { state: { analysis: analysisResult } });
+    } catch (error) {
+      alert('업로드 또는 분석 요청 실패');
+      console.error(error);
+    }
   };
 
   return (
@@ -86,14 +122,9 @@ const PhotoUpload: React.FC = () => {
           </div>
 
           <Button
-            onClick={() => {
-              if (canStartAnalysis) {
-                const analysisId = getAnalysisIdForUser(user?.id);
-                navigate(`/analysis-result/${analysisId}`, { state: { analysis: dummyAnalysis } });
-              }
-            }}
-            disabled={!canStartAnalysis}
-            className="w-full text-lg bg-blue-600 text-white hover:bg-blue-700"
+            onClick={handleStartAnalysis}
+            disabled={!canStartAnalysis || !user}
+            className="w-full text-lg bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
           >
             분석 시작하기
           </Button>
