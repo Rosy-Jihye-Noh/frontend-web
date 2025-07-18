@@ -9,6 +9,7 @@ import type { AnalysisHistoryItem } from '@/types/index';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { fetchAnalysisDetail as fetchAnalysisDetailApi } from '../services/api/analysisApi';
+import ChatModal from '@/components/chat/ChatModal';
 
 interface LocationState {
   frontPhoto: File;
@@ -43,10 +44,18 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
   const [status, setStatus] = useState<'loading' | 'completed' | 'result' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatInitType, setChatInitType] = useState<'video' | 'consult' | null>(null);
+  const [chatInitPayload, setChatInitPayload] = useState<any>(null);
+  const [initialUserMessage, setInitialUserMessage] = useState<string | undefined>(undefined);
+  const [initialVideoUrl, setInitialVideoUrl] = useState<string | undefined>(undefined);
 
   // 사진 데이터 확인 (필요시 활용)
   const { frontPhoto, sidePhoto } = (location.state as LocationState) || {};
 
+  console.log('AnalysisResultPage user:', user);
+  console.log('AnalysisResultPage analysis:', analysis);
+  
   useEffect(() => {
     if (!historyId) {
       setErrorMessage('분석 결과 ID가 없습니다.');
@@ -75,34 +84,26 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
   }, [historyId, frontPhoto, sidePhoto, user]);
 
   // 챗봇 오픈 트리거 - ChatModal에서 관리하는 전역 함수 사용
-  const openChatbot = (type: 'video' | 'consult', payload?: any) => {
-    console.log('[AnalysisResultPage] openChatbot called. type:', type, 'payload:', payload);
-    console.log('[AnalysisResultPage] current user:', user);
-    
-    // 현재 사용자가 없으면 실행하지 않음
-    if (!user?.id) {
-      console.warn('[AnalysisResultPage] No user found, cannot open chatbot');
-      return;
-    }
-    
-    if (typeof window !== 'undefined' && typeof (window as any).openChatbot === 'function') {
-      // 현재 사용자 ID를 window에 설정 (혹시 모를 동기화 문제 방지)
-      (window as any).currentUserId = user.id;
-      
-      (window as any).openChatbot(type, payload);
-      // 버튼 클릭 시 안내 메시지 강제 추가
-      if ((window as any).forceAddChatbotMessage) {
-        (window as any).forceAddChatbotMessage(type, payload);
-      }
-    } else {
-      alert('챗봇 오픈! (실제 구현 필요)\n타입: ' + type);
-    }
+  const handleChatOpen = (type: 'video' | 'consult', payload?: any) => {
+    setChatInitType(type);
+    setChatInitPayload(payload);
+    setIsChatOpen(true);
     setIsModalOpen(false);
+    setInitialUserMessage(payload?.message);
+    setInitialVideoUrl(payload?.videoUrl);
   };
 
   // 모달 닫기 핸들러
   const handleModalClose = () => {
     setIsModalOpen(false);
+  };
+
+  const handleChatClose = () => {
+    setIsChatOpen(false);
+    setChatInitType(null);
+    setChatInitPayload(null);
+    setInitialUserMessage(undefined);
+    setInitialVideoUrl(undefined);
   };
 
 
@@ -168,7 +169,10 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
 
     // 전체 평균 점수 계산
     const scores = [analysis.spineCurvScore, analysis.spineScolScore, analysis.pelvicScore, analysis.neckScore, analysis.shoulderScore];
-    const averageScore = Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+    const validScores = scores.filter(score => score !== 0);
+    const averageScore = validScores.length > 0
+      ? Math.round(validScores.reduce((sum, score) => sum + score, 0) / validScores.length)
+      : 0;
 
     const feedback = analysis.feedback || {};
     const measurements = analysis.measurements || {};
@@ -294,7 +298,23 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
         <Card className="p-6 mb-6">
           <h2 className="font-bold text-lg mb-4">AI 코치 소견</h2>
           <p className="text-gray-600 leading-relaxed">
-            전반적으로 양호한 자세이지만, 장시간 앉아있는 습관으로 인해 거북목이 진행될 수 있습니다. 어깨 불균형 개선을 위한 스트레칭을 꾸준히 하는 것을 추천합니다.
+            {(() => {
+              try {
+                if (!analysis.diagnosis) return 'AI 진단 정보가 없습니다.';
+                
+                // Try to parse as JSON first (in case it's a JSON string)
+                const parsed = JSON.parse(analysis.diagnosis);
+                if (parsed && typeof parsed === 'object' && parsed.korean) {
+                  return parsed.korean;
+                }
+                
+                // If not a JSON object or doesn't have korean key, return as is
+                return analysis.diagnosis;
+              } catch (e) {
+                // If parsing fails, return as plain string
+                return analysis.diagnosis || 'AI 진단 정보가 없습니다.';
+              }
+            })()}
           </p>
         </Card>
 
@@ -320,7 +340,15 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
             <div className="flex flex-col gap-6 items-center p-4">
               <Button
                 className="w-full py-3 text-lg bg-blue-500 hover:bg-blue-600 text-white"
-                onClick={() => openChatbot('video', {
+                onClick={() => handleChatOpen('consult', {
+                  message: 'OOO 운동을 추천드립니다. 루틴에 추가하시겠습니까?'
+                })}
+              >
+                AI 운동 코치와 맞춤 운동 상담하기
+              </Button>
+              <Button
+                className="w-full py-3 text-lg bg-blue-500 hover:bg-blue-600 text-white"
+                onClick={() => handleChatOpen('video', {
                   videoUrl: 'https://www.youtube.com/watch?v=fFIL0rlRH78',
                   thumbnail: 'https://img.youtube.com/vi/fFIL0rlRH78/0.jpg',
                   message: '스크립트 요약과 댓글의 분석이 필요할 경우 요청주세요.'
@@ -328,17 +356,21 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
               >
                 추천 운동 영상 바로 시청
               </Button>
-              <Button
-                className="w-full py-3 text-lg bg-blue-500 hover:bg-blue-600 text-white"
-                onClick={() => openChatbot('consult', {
-                  message: 'OOO 운동을 추천드립니다. 루틴에 추가하시겠습니까?'
-                })}
-              >
-                AI 운동 코치와 맞춤 운동 상담하기
-              </Button>
             </div>
           </DialogContent>
         </Dialog>
+        {isChatOpen && user && analysis && (
+          <ChatModal
+            isOpen={isChatOpen}
+            onClose={handleChatClose}
+            userId={user.id}
+            historyId={analysis.id}
+            initType={chatInitType}
+            initPayload={chatInitPayload}
+            initialUserMessage={initialUserMessage}
+            initialVideoUrl={initialVideoUrl}
+          />
+        )}
       </div>
     );
   };
