@@ -1,16 +1,37 @@
 import axiosInstance from '@/api/axiosInstance';
 import type { AnalysisHistoryItem } from '@/types/index';
 
+/**
+ * ID로 특정 분석 기록의 상세 정보를 가져옵니다.
+ * @param analysisId - 분석 기록 ID
+ */
 export const fetchAnalysisDetail = async (analysisId: number): Promise<AnalysisHistoryItem> => {
   const res = await axiosInstance.get(`/analysis-histories/${analysisId}`);
   return res.data;
-}; 
+};
+
+/**
+ * 특정 사용자의 전체 체형 분석 기록 목록을 가져옵니다.
+ * @param userId - 기록을 조회할 사용자의 ID
+ * @returns {Promise<AnalysisHistoryItem[]>} 사용자의 모든 분석 기록 배열을 포함하는 Promise
+ */
+export const getPostureAnalysisHistory = async (userId: number): Promise<AnalysisHistoryItem[]> => {
+  try {
+    const response = await axiosInstance.get(`/analysis-histories/user/${userId}`);
+    // 데이터가 배열 형태가 아닐 경우를 대비하여 방어 코드 추가
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error(`사용자(ID: ${userId})의 분석 기록을 불러오는 데 실패했습니다.`, error);
+    // 에러 발생 시 빈 배열을 반환하여 앱의 비정상적인 종료를 방지
+    return [];
+  }
+};
 
 /**
  * Cloudinary URL을 이용해 분석을 요청합니다.
- * @param userId 사용자 ID
- * @param imageUrl Cloudinary 이미지 URL
- * @param mode 분석 모드 (예: 'front', 'side')
+ * @param userId - 사용자 ID
+ * @param imageUrl - Cloudinary 이미지 URL
+ * @param mode - 분석 모드 (예: 'front', 'side')
  * @returns 분석 결과 DTO
  */
 export const requestAnalysis = async (
@@ -24,4 +45,4 @@ export const requestAnalysis = async (
     mode
   });
   return res.data;
-}; 
+};

@@ -1,4 +1,5 @@
 import type { Exercise } from '../../types/index';
+import type { RecommendationPayload, RecommendationResponse } from '@/types/recommendation';
 import axiosInstance from '../../api/axiosInstance';
 
 /**
@@ -143,5 +144,23 @@ export const fetchPopularExercisesByRoutineAdditions = async (limit: number = 5)
     console.error('fetchPopularExercisesByRoutineAdditions 실패:', error);
     // 에러 시 빈 배열 반환
     return [];
+  }
+};
+
+// AI 운동 추천을 요청하는 API 함수
+export const fetchExerciseRecommendations = async (
+  payload: RecommendationPayload
+): Promise<RecommendationResponse> => {
+  try {
+    const response = await axiosInstance.post('/exercises/recommend-exercises', payload);
+    return response.data;
+  } catch (error) {
+    console.error("AI 운동 추천 API 호출 실패:", error);
+    // 에러 발생 시 기본 응답 형태를 반환하여 앱의 비정상 종료를 방지
+    return {
+      message: "AI 추천을 가져오는 데 실패했습니다.",
+      recommendations: [],
+      reason: "서버와 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+    };
   }
 };
