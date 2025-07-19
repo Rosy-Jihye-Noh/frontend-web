@@ -1,14 +1,15 @@
 // PostActions: 게시글 상세에서 목록/수정/삭제 버튼을 제공하는 액션 컴포넌트
 import React from 'react';
 import { Button } from '../ui/button';
+import { List, Pencil, Trash2 } from 'lucide-react';
 import type { PostDTO } from '../../types/community';
 
 interface PostActionsProps {
-  post: PostDTO;  // 게시글 정보
-  currentUserId?: number; // 현재 로그인한 사용자 ID(작성자 여부 판별용)
-  onBack: () => void; // 목록으로 이동 핸들러
-  onEdit: () => void; // 수정 버튼 클릭 핸들러
-  onDelete: () => void; // 삭제 버튼 클릭 핸들러
+  post: PostDTO;
+  currentUserId?: number;
+  onBack: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
 const PostActions: React.FC<PostActionsProps> = ({
@@ -16,38 +17,41 @@ const PostActions: React.FC<PostActionsProps> = ({
   currentUserId,
   onBack,
   onEdit,
-  onDelete
+  onDelete,
 }) => {
   const isAuthor = currentUserId && post.userId === currentUserId;
+  const buttonBaseStyles = 'font-semibold transition-all duration-200 active:scale-95 rounded-lg';
 
   return (
-    <div className="flex items-center gap-2 w-full sm:w-auto">
-      <Button 
-        variant="outline" 
-        size="sm" 
+    <div className="flex items-center gap-3 w-full px-4 sm:px-6 py-4 mt-6 border-t border-gray-100 dark:border-neutral-800">
+      <Button
+        variant="outline"
         onClick={onBack}
-        className="flex-1 sm:flex-none"
+        className={`${buttonBaseStyles} flex-1 sm:flex-none`}
       >
-        목록으로
+        <List className="mr-2 h-4 w-4" />
+        목록
       </Button>
-      
-      {/* 수정/삭제 버튼: 작성자만 노출 */}
+
+      <div className="flex-grow" />
+
+      {/* Show Edit/Delete buttons only for the author */}
       {isAuthor && (
         <>
-          <Button 
-            size="sm" 
-            variant="outline" 
+          <Button
+            variant="ghost"
             onClick={onEdit}
-            className="flex-1 sm:flex-none"
+            className={`${buttonBaseStyles} bg-gray-500/10 text-gray-600 text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white`}
           >
+            <Pencil className="mr-2 h-4 w-4" />
             수정
           </Button>
-          <Button 
-            size="sm" 
-            variant="destructive" 
+          <Button
+            variant="destructive"
             onClick={onDelete}
-            className="flex-1 sm:flex-none"
+            className={`${buttonBaseStyles} bg-red-500/10 text-red-600 hover:bg-red-500/20`}
           >
+            <Trash2 className="mr-2 h-4 w-4" />
             삭제
           </Button>
         </>
@@ -56,4 +60,4 @@ const PostActions: React.FC<PostActionsProps> = ({
   );
 };
 
-export default PostActions; 
+export default PostActions;

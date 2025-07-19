@@ -3,14 +3,14 @@ import React from 'react';
 import { Heart, Eye, MessageCircle } from 'lucide-react';
 
 interface PostCounterProps {
-  likeCount: number;      // 좋아요 수
-  commentCount: number;   // 댓글 수
-  viewCount: number;      // 조회수
-  isLiked?: boolean;      // 좋아요 여부(선택)
-  onLikeClick?: (e: React.MouseEvent) => void; // 좋아요 클릭 핸들러(선택)
-  likeLoading?: boolean;  // 좋아요 처리 중(선택)
-  showLikeButton?: boolean; // 좋아요 버튼 노출 여부(선택)
-  size?: 'sm' | 'md';     // 아이콘/텍스트 크기(sm|md, 기본 md)
+  likeCount: number;
+  commentCount: number;
+  viewCount: number;
+  isLiked?: boolean;
+  onLikeClick?: (e: React.MouseEvent) => void;
+  likeLoading?: boolean;
+  showLikeButton?: boolean;
+  size?: 'sm' | 'md';
 }
 
 const PostCounter: React.FC<PostCounterProps> = ({
@@ -21,52 +21,56 @@ const PostCounter: React.FC<PostCounterProps> = ({
   onLikeClick,
   likeLoading = false,
   showLikeButton = true,
-  size = 'md'
+  size = 'md',
 }) => {
-  const iconSize = size === 'sm' ? 16 : 18;
+  const iconSize = size === 'sm' ? 14 : 16;
   const textSize = size === 'sm' ? 'text-sm' : 'text-base';
+  const gap = size === 'sm' ? 'gap-3' : 'gap-4';
+
+  const baseClasses = `flex items-center transition-colors ${textSize} text-gray-500 dark:text-neutral-500`;
+  const numberClasses = "ml-1.5 font-semibold tabular-nums";
 
   return (
-    <div className="flex items-center gap-3">
-      {/* 좋아요 버튼/카운트 */}
+    <div className={`flex items-center ${gap}`}>
+      {/* Like Button/Count */}
       {showLikeButton && onLikeClick ? (
         <button
           type="button"
-          className={`flex items-center ${textSize} text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50`}
+          className={`${baseClasses} hover:text-blue-500 disabled:opacity-50`}
           onClick={onLikeClick}
           disabled={likeLoading}
           aria-pressed={isLiked}
           aria-label={isLiked ? '좋아요 취소' : '좋아요'}
         >
-          <Heart 
-            className={`${isLiked ? 'fill-red-500 text-red-500' : 'text-muted-foreground'} ${likeLoading ? 'animate-pulse' : ''}`} 
-            size={iconSize} 
+          <Heart
+            size={iconSize}
+            className={`transition-all ${isLiked ? 'fill-red-500 text-red-500' : ''} ${likeLoading ? 'animate-pulse' : ''}`}
           />
-          <span className="ml-1">{likeCount}</span>
+          <span className={numberClasses}>{likeCount}</span>
         </button>
       ) : (
-        <span className={`flex items-center ${textSize} text-muted-foreground`}>
-          <Heart 
-            className={isLiked ? 'fill-red-500 text-red-500' : 'text-muted-foreground'} 
-            size={iconSize} 
+        <span className={baseClasses}>
+          <Heart
+            size={iconSize}
+            className={isLiked ? 'fill-red-500 text-red-500' : ''}
           />
-          <span className="ml-1">{likeCount}</span>
+          <span className={numberClasses}>{likeCount}</span>
         </span>
       )}
-      
-      {/* 댓글 카운트 */}
-      <span className={`flex items-center ${textSize} text-muted-foreground`}>
-        <MessageCircle size={iconSize} className="mr-1" />
-        {commentCount}
+
+      {/* Comment Count */}
+      <span className={baseClasses}>
+        <MessageCircle size={iconSize} />
+        <span className={numberClasses}>{commentCount}</span>
       </span>
-      
-      {/* 조회수 카운트 */}
-      <span className={`flex items-center ${textSize} text-muted-foreground`}>
-        <Eye size={iconSize} className="mr-1" />
-        {viewCount}
+
+      {/* View Count */}
+      <span className={baseClasses}>
+        <Eye size={iconSize} />
+        <span className={numberClasses}>{viewCount}</span>
       </span>
     </div>
   );
 };
 
-export default PostCounter; 
+export default PostCounter;
