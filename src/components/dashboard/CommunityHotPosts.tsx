@@ -1,6 +1,8 @@
 import React from 'react';
 import { HiHeart } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface CommunityHotPostsProps {
   categories: { key: string; icon: React.ReactNode }[];
@@ -17,30 +19,40 @@ const CommunityHotPosts: React.FC<CommunityHotPostsProps> = ({ categories, topPo
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       {categories.map(({ key, icon }) => {
-        const top = topPosts.find((item) => item.category === key);
+        const topPost = topPosts.find((item) => item.category === key);
         return (
-          <div 
-            key={key} 
-            className="flex items-center bg-muted rounded-lg p-4 shadow hover:bg-muted/80 transition min-h-[64px] cursor-pointer"
-            onClick={() => handlePostClick(top?.id || null)}
+          <Card
+            key={key}
+            className="flex p-4 shadow-md rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
+            onClick={() => handlePostClick(topPost?.id || null)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && handlePostClick(topPost?.id || null)}
           >
-            {icon}
-            <span className="text-base font-bold text-blue-600 dark:text-blue-400 mr-2">[{key}]</span>
-            {top ? (
-              <>
-                <span className="font-semibold text-base truncate max-w-[300px]">{top.title}</span>
-                <span className="flex items-center gap-1 text-sm text-gray-500 ml-auto"><HiHeart className="w-4 h-4 text-red-500" />{top.likes}</span>
-              </>
-            ) : (
-              <span className="text-gray-400 text-sm ml-2">인기글 없음</span>
-            )}
-          </div>
+            <div className="flex-grow flex items-center gap-4 min-w-0">
+              {icon}
+              <Badge variant="outline" className="border-[#007AFF]/50 text-[#007AFF] font-bold">
+                {key}
+              </Badge>
+              {topPost ? (
+                <>
+                  <p className="font-semibold text-sm text-foreground truncate text-left flex-grow">{topPost.title}</p>
+                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground ml-auto whitespace-nowrap">
+                    <HiHeart className="w-4 h-4 text-red-500" />
+                    <span className="font-medium">{topPost.likes}</span>
+                  </div>
+                </>
+              ) : (
+                <p className="text-muted-foreground text-sm text-left flex-grow">아직 인기 게시글이 없습니다.</p>
+              )}
+            </div>
+          </Card>
         );
       })}
     </div>
   );
 };
 
-export default CommunityHotPosts; 
+export default CommunityHotPosts;

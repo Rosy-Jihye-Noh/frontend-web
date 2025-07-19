@@ -201,7 +201,7 @@ const Dashboard: React.FC = () => {
       <main className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8" style={{ paddingTop: '72px' }}>
         
         <Card 
-          className="p-6 shadow-lg bg-gradient-to-r from-black to-blue-500 text-white cursor-pointer hover:shadow-xl transition-all duration-300"
+          className="p-6 shadow-lg bg-gradient-to-r from-[#1A1A1A] to-[#3B5998] text-white cursor-pointer hover:shadow-xl transition-all duration-300"
           onClick={() => navigate('/goal-recommendation')}
         >
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
