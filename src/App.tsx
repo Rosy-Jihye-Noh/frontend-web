@@ -28,6 +28,7 @@ import { MemberManagementPage } from './pages/MemberManagementPage';
 import { ContentManagementPage } from './pages/CommunityManagementPage';
 import MemberStatsPage from './pages/MemberStatsPage';
 import { PopularContentsPage } from './pages/PopularContentsPage';
+import GoalRecommendationPage from './pages/GoalRecommendationPage';
 
 const App = () => {
   const chatbotRef = useRef<any>(null);
@@ -77,6 +78,8 @@ const App = () => {
         <Route path="/admin/post" element={<ContentManagementPage />} />
         <Route path="/admin/member-stats" element={<MemberStatsPage />} />
         <Route path="/admin/popular" element={<PopularContentsPage />} />
+        
+        <Route path="/goal-recommendation" element={<GoalRecommendationPage />} />
       </Routes>
 
       {/* Toast 알림을 위한 Toaster 컴포넌트 */}

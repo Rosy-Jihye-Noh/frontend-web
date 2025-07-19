@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '@/components/common/Header';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { HiCamera, HiUser, HiChatAlt2, HiLightBulb, HiCheckCircle } from 'react-icons/hi';
+import { FaBrain, FaArrowRight } from 'react-icons/fa';
 import { useUserStore } from '@/store/userStore';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { useLogStore } from '@/store/logStore';
-import { useNavigate } from 'react-router-dom';
 import CommunityHotPosts from '@/components/dashboard/CommunityHotPosts';
 import TodayRoutineCard from '@/components/dashboard/TodayRoutineCard';
 import PostureScoreCard from '@/components/dashboard/PostureScoreCard';
@@ -18,12 +20,12 @@ import type { Routine } from '@/types/index';
 
 const Dashboard: React.FC = () => {
   const { user } = useUserStore();
-  const { 
-    todaySelectedRoutines, 
-    setTodaySelectedRoutines, 
-    setCurrentUser, 
-    getTodayRoutines, 
-    clearUserData 
+  const {
+    todaySelectedRoutines,
+    setTodaySelectedRoutines,
+    setCurrentUser,
+    getTodayRoutines,
+    clearUserData,
   } = useDashboardStore();
   const { startOrLoadSession, setSelectedDate } = useLogStore();
   const navigate = useNavigate();
@@ -44,7 +46,7 @@ const Dashboard: React.FC = () => {
 
     // 현재 사용자 설정
     setCurrentUser(user.id);
-    
+
     // 해당 사용자의 선택된 루틴 가져오기
     const userSelectedRoutines = getTodayRoutines(user.id);
     console.log('사용자', user.id, '의 기존 선택 루틴:', userSelectedRoutines.length, '개');
@@ -60,7 +62,7 @@ const Dashboard: React.FC = () => {
       .catch(error => {
         console.error('사용자 루틴 로드 실패:', error);
         // 인증 오류인 경우 로그인 페이지로 이동
-        if (error.response?.status === 401 || error.response?.status === 403) {
+        if ((error as any).response?.status === 401 || (error as any).response?.status === 403) {
           console.log('인증 오류로 인한 로그인 페이지 이동');
           clearUserData();
           navigate('/login');
@@ -90,7 +92,7 @@ const Dashboard: React.FC = () => {
       })
       .catch(console.error);
 
-  }, [user, navigate]);
+  }, [user, navigate, clearUserData, getTodayRoutines, setCurrentUser]);
 
   // 오늘 날짜가 바뀔 때 완료된 루틴 초기화
   useEffect(() => {
@@ -192,12 +194,34 @@ const Dashboard: React.FC = () => {
     icon: CATEGORY_ICONS[cat.name] || <HiCheckCircle className="w-6 h-6 text-blue-500 mr-2" />,
   }));
 
-
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-gray-50 min-h-screen">
       <Header />
       <main className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8" style={{ paddingTop: '72px' }}>
-        {/* 오늘의 운동 + 인기 운동들 */}
+        
+        <Card 
+          className="p-6 shadow-lg bg-gradient-to-r from-primary to-blue-500 text-white cursor-pointer hover:shadow-xl transition-all duration-300"
+          onClick={() => navigate('/goal-recommendation')}
+        >
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center">
+              <FaBrain className="w-10 h-10 mr-4" />
+              <div>
+                <h2 className="text-xl font-bold">AI 코치와 함께 성장하세요!</h2>
+                <p className="text-sm opacity-90 mt-1">
+                  나의 운동 기록을 분석해 최적의 목표를 설정해 드려요.
+                </p>
+              </div>
+            </div>
+            <Button 
+              variant="secondary" 
+              className="mt-4 md:mt-0 bg-white text-primary hover:bg-gray-100"
+            >
+              목표 추천 받기 <FaArrowRight className="ml-2" />
+            </Button>
+          </div>
+        </Card>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <TodayRoutineCard
             selectedRoutines={todaySelectedRoutines}
@@ -209,13 +233,11 @@ const Dashboard: React.FC = () => {
           <PopularRoutineExercisesCarousel />
         </div>
         
-        {/* 자세 변화 그래프 + 주간 운동 리포트 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <PostureScoreCard />
           <WeeklyReportCard />
         </div>
         
-        {/* 커뮤니티 인기글 (카테고리별) */}
         <Card className="p-6 shadow-lg">
           <h2 className="text-xl font-bold mb-6 text-center">커뮤니티 인기글</h2>
           <CommunityHotPosts categories={communityCategories} topPosts={communityHotPosts} />

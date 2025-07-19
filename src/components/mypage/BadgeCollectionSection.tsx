@@ -6,7 +6,13 @@ import { Award } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface BadgeCollectionSectionProps {
-  badges: BadgeType[];
+  badges: {
+    id: number;
+    badge_name: string;
+    badge_description: string;
+    imageUrl: string | null;
+    createdAt: string;
+  }[];
 }
 
 const BadgeCollectionSection: React.FC<BadgeCollectionSectionProps> = ({ badges }) => {
@@ -28,7 +34,7 @@ const BadgeCollectionSection: React.FC<BadgeCollectionSectionProps> = ({ badges 
                       {badge.imageUrl ? (
                         <img
                           src={badge.imageUrl}
-                          alt={badge.name}
+                          alt={badge.badge_name}
                           className="w-full h-full rounded-full object-cover shadow-lg border-4 border-gray-100 dark:border-gray-700 group-hover:border-yellow-400 transition-colors"
                         />
                       ) : (
@@ -37,11 +43,11 @@ const BadgeCollectionSection: React.FC<BadgeCollectionSectionProps> = ({ badges 
                         </div>
                       )}
                     </div>
-                    <h4 className="mt-4 font-semibold text-sm text-foreground w-full truncate">{badge.name}</h4>
+                    <h4 className="mt-4 font-semibold text-sm text-foreground w-full truncate">{badge.badge_name}</h4>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs bg-gray-800 text-white rounded-md p-2 text-center" side="bottom">
-                  <p>{badge.description}</p>
+                  <p>{badge.badge_description}</p>
                 </TooltipContent>
               </Tooltip>
             ))}
