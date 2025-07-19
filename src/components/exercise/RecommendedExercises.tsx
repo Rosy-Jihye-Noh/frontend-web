@@ -41,7 +41,15 @@ const RecommendedExercises: React.FC<RecommendedExercisesProps> = ({ recommended
                 <img
                   src={exercise.thumbnailUrl}
                   alt={exercise.name}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-300"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.innerHTML = '<span class="text-sm text-gray-500">이미지를 불러올 수 없습니다.</span>';
+                    }
+                  }}
                 />
               ) : (
                 <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">

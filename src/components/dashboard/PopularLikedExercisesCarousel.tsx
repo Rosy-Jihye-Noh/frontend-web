@@ -101,13 +101,12 @@ const PopularLikedExercisesCarousel: React.FC = () => {
               onClick={() => navigate(`/exercises/${currentExercise.id}`)}
             >
               <div className="text-center">
-                <div className="w-24 h-24 mx-auto mb-3 relative overflow-hidden rounded-lg bg-blue-200 flex items-center justify-center shadow-sm">
+                <div className="w-24 h-24 mx-auto mb-3 relative overflow-hidden rounded-lg bg-white flex items-center justify-center shadow-sm">
                   {currentExercise.thumbnailUrl ? (
                     <img 
                       src={currentExercise.thumbnailUrl} 
                       alt={currentExercise.name}
-                      className="w-full h-full object-cover"
-                      style={{ objectPosition: 'center' }}
+                      className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-300"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';

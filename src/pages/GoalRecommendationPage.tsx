@@ -105,8 +105,10 @@ const GoalRecommendationPage: React.FC = () => {
         </div>
         <CardTitle className="text-2xl">AI 코치 예측 목표 설정</CardTitle>
         <CardDescription className="pt-2">
-          나의 운동 기록을 기반으로 AI가 개인화된 주간/월간 목표를 설정해줘요.
+          AI 코치가 당신의 운동 기록을 분석하여 뱃지를 수여하고
           <br />
+          개인화된 주간/월간 목표를 설정해줘요.
+          <br /><br />
           원하는 코칭 스타일을 선택하고 시작해보세요!
         </CardDescription>
       </CardHeader>

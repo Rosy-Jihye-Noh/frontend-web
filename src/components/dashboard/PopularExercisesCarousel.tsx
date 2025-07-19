@@ -28,12 +28,12 @@ const ExerciseCard: React.FC<{
       onClick={() => navigate(`/exercises/${exercise.id}`)}
     >
       <CardContent className="p-3">
-        <div className="aspect-square bg-blue-50 rounded-lg mb-2 flex items-center justify-center overflow-hidden">
+        <div className="aspect-square bg-blue-50 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative">
           {exercise.thumbnailUrl ? (
             <img 
               src={exercise.thumbnailUrl} 
               alt={exercise.name}
-              className="w-full h-full object-cover"
+              className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-300"
             />
           ) : (
             <div className="text-2xl text-blue-300">💪</div>
