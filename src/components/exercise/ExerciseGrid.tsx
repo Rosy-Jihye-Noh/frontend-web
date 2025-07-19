@@ -1,41 +1,52 @@
 import React from 'react';
-import { Link } from 'react-router-dom'; // react-router-dom의 Link를 사용합니다.
 import type { Exercise } from '@/types/index';
-import ExerciseCard from './ExerciseCard';
+import ExerciseCard from './ExerciseCard'; // 이전 답변에서 개선된 ExerciseCard를 임포트합니다.
+import { Frown } from 'lucide-react';
 
 interface ExerciseGridProps {
   exercises: Exercise[];
   likedExerciseIds: Set<number>;
-  onLikeToggle: (exerciseId: number) => void; // 운동 '좋아요' 상태를 토글할 때 호출되는 함수
-  onAddToRoutine: (exercise: Exercise) => void; // 운동을 루틴에 추가할 때 호출되는 함수입니다.
+  onLikeToggle: (exerciseId: number) => void;
+  onAddToRoutine: (exercise: Exercise) => void;
 }
 
 const ExerciseGrid: React.FC<ExerciseGridProps> = ({
-  exercises, likedExerciseIds, onLikeToggle, onAddToRoutine,
+  exercises,
+  likedExerciseIds,
+  onLikeToggle,
+  onAddToRoutine,
 }) => {
-  // '루틴에 추가' 버튼 클릭 시 기본 이벤트를 막고 onAddToRoutine 함수를 호출
-  const handleAddToRoutineClick = (e: React.MouseEvent, exercise: Exercise) => {
-    e.preventDefault();
-    onAddToRoutine(exercise);
-  };
-  
-  // '좋아요' 토글 버튼 클릭 시 기본 이벤트를 막고 onLikeToggle 함수를 호출
-  const handleLikeToggleClick = (e: React.MouseEvent, exerciseId: number) => {
-    e.preventDefault();
-    onLikeToggle(exerciseId);
-  };
+  // 운동 목록이 비어있는 경우 "결과 없음" UI를 렌더링합니다.
+  if (exercises.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center text-center py-20 bg-slate-50 dark:bg-toss-navy/20 rounded-2xl">
+        <Frown className="w-16 h-16 text-toss-gray mb-4" />
+        <h3 className="text-xl font-bold text-slate-700 dark:text-white">검색 결과가 없습니다</h3>
+        <p className="text-toss-gray mt-2">다른 검색어나 카테고리를 선택해보세요.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch">
-      {/* 'exercises' 배열을 순회하며 각 운동에 대해 ExerciseCard 컴포넌트를 렌더링합니다. */}
-      {exercises.map((exercise) => (
-        <ExerciseCard
+    // 반응형 그리드 레이아웃. 카드 간의 간격(gap)을 설정합니다.
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {/* 운동 배열(exercises)을 순회하며 각 운동 카드를 렌더링합니다.
+        'animate-in'과 'fade-in-0' 클래스로 애니메이션을 적용하고,
+        'animationDelay'를 이용해 각 카드가 순서대로 나타나도록 합니다.
+      */}
+      {exercises.map((exercise, index) => (
+        <div
           key={exercise.id}
-          exercise={exercise}
-          isLiked={likedExerciseIds.has(exercise.id)}
-          onLikeToggle={(e) => handleLikeToggleClick(e, exercise.id)}
-          onAddToRoutine={(e) => handleAddToRoutineClick(e, exercise)}
-        />
+          className="animate-in fade-in-0"
+          style={{ animationDelay: `${index * 70}ms` }}
+        >
+          <ExerciseCard
+            exercise={exercise}
+            isLiked={likedExerciseIds.has(exercise.id)}
+            onLikeToggle={onLikeToggle} // 함수를 그대로 전달
+            onAddToRoutine={onAddToRoutine} // 함수를 그대로 전달
+          />
+        </div>
       ))}
     </div>
   );

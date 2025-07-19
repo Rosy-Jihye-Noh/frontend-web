@@ -7,7 +7,7 @@ import { Button } from '../components/ui/button';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../components/ui/select';
 import { useUserStore } from '../store/userStore';
 import Header from '../components/common/Header';
-import { UploadCloud, X, ArrowLeft } from 'lucide-react';
+import { UploadCloud, X, ArrowLeft, Loader2 } from 'lucide-react';
 
 const usePostForm = (isEdit: boolean, postId?: number, userId?: number) => {
   // ... (로직은 변경되지 않음)

@@ -1,82 +1,95 @@
 import React from 'react';
-import type { Exercise } from '@/types/index'; // 타입 경로는 실제 프로젝트에 맞게 수정
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { HiOutlineHeart, HiHeart, HiPlus } from 'react-icons/hi';
+import type { Exercise } from '@/types/index';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Heart, PlusCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface ExerciseCardProps {
   exercise: Exercise;
   isLiked: boolean;
-  onLikeToggle: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  onAddToRoutine: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onLikeToggle: (e: React.MouseEvent) => void;
+  onAddToRoutine: (e: React.MouseEvent) => void;
 }
 
 const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, isLiked, onLikeToggle, onAddToRoutine }) => {
+  // 카드 클릭 시 페이지 이동을 위해 Link 컴포넌트로 감쌉니다.
+  // 버튼 클릭 이벤트가 Link의 내비게이션을 방해하지 않도록 각 버튼 핸들러에서 e.stopPropagation()을 호출합니다.
+  const handleLikeClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onLikeToggle(e);
+  };
+
+  const handleAddClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onAddToRoutine(e);
+  };
+
   return (
-    <Link to={`/exercises/${exercise.id}`} className="block h-full group">
-      <Card className="flex flex-col h-full overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 group-hover:scale-105 bg-white dark:bg-gray-800 rounded-xl">
-        {/* 썸네일 이미지 */}
-        <div className="relative w-full h-48 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/30">
+    <Link to={`/exercises/${exercise.id}`} className="block group">
+      <Card className="flex flex-col h-full bg-white dark:bg-toss-navy/40 rounded-2xl overflow-hidden shadow-md border-transparent hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300">
+        {/* 썸네일 이미지 영역 */}
+        <div className="relative w-full h-48 bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
           {exercise.thumbnailUrl ? (
-            <div className="w-full h-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-t-xl overflow-hidden">
-              <img 
-                src={exercise.thumbnailUrl} 
-                alt={`${exercise.name} thumbnail`}
-                className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-300"
-                loading="lazy"
-              />
-            </div>
+            <img
+              src={exercise.thumbnailUrl}
+              alt={`${exercise.name} thumbnail`}
+              className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-300"
+              loading="lazy"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const parent = target.parentElement;
+                if (parent) {
+                  parent.innerHTML = '<h3 class="text-toss-navy dark:text-toss-blue text-xl font-bold px-4 text-center">이미지를 불러올 수 없습니다</h3>';
+                }
+              }}
+            />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-t-xl">
-              <h3 className="text-white text-xl font-bold px-4 text-center drop-shadow-lg">{exercise.name}</h3>
-            </div>
+            <h3 className="text-toss-navy dark:text-toss-blue text-xl font-bold px-4 text-center">
+              {exercise.name}
+            </h3>
           )}
-          {/* 카테고리 배지 */}
-          <div className="absolute top-3 left-3">
-            <span className="inline-block px-3 py-1 text-xs font-semibold text-blue-700 bg-blue-100 dark:bg-blue-900/70 dark:text-blue-200 rounded-full backdrop-blur-sm">
-              {exercise.bodyPart}
-            </span>
-          </div>
-        </div>
-        {/* 운동 정보 */}
-        <div className="p-5 flex-grow">
-          <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
-            {exercise.name}
-          </h3>
-          <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-            <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md text-xs font-medium">
-              {exercise.posture}
-            </span>
-          </div>
-        </div>
-        {/* 버튼 영역 */}
-        <div className="px-5 pb-5 flex justify-between items-center">
-          <div className="flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-400">
-            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-            <span>상세보기</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button 
-              onClick={onLikeToggle} 
-              className="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200 group/like"
+          <div className="absolute top-3 right-3">
+            <button
+              onClick={handleLikeClick}
+              aria-label={isLiked ? 'Unlike' : 'Like'}
+              className="p-2 rounded-full bg-white/70 dark:bg-toss-navy/70 backdrop-blur-sm text-toss-gray hover:text-red-500 transition-all duration-200 active:scale-90"
             >
-              {isLiked ? (
-                <HiHeart className="w-5 h-5 text-red-500 group-hover/like:scale-110 transition-transform duration-200" />
-              ) : (
-                <HiOutlineHeart className="w-5 h-5 text-gray-400 hover:text-red-500 group-hover/like:scale-110 transition-all duration-200" />
-              )}
+              <Heart className={`w-5 h-5 ${isLiked ? 'fill-current text-red-500' : 'fill-transparent'}`} />
             </button>
-            <Button 
-              onClick={onAddToRoutine} 
-              size="sm"
-              className="bg-blue-500 hover:bg-blue-600 text-white border-0 rounded-full px-3 py-1.5 text-xs font-semibold shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
-            >
-              <HiPlus className="w-4 h-4 mr-1" />
-              추가
-            </Button>
           </div>
         </div>
+
+        {/* 운동 정보 영역 */}
+        <CardContent className="p-4 flex-grow flex flex-col justify-between">
+          <div>
+            <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-2 truncate group-hover:text-toss-blue transition-colors">
+              {exercise.name}
+            </h3>
+            <div className="flex items-center space-x-2">
+              <Badge variant="secondary" className="bg-toss-blue/10 text-toss-blue dark:bg-toss-blue/20 dark:text-toss-blue/80 border-0 font-medium">
+                {exercise.bodyPart}
+              </Badge>
+              <Badge variant="outline" className="text-toss-gray border-slate-200 dark:border-slate-600 dark:text-slate-400 font-normal">
+                {exercise.posture}
+              </Badge>
+            </div>
+          </div>
+        </CardContent>
+
+        {/* 카드 푸터 및 루틴 추가 버튼 */}
+        <CardFooter className="p-4 pt-0">
+          <button
+            onClick={handleAddClick}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-slate-100 dark:bg-toss-navy/80 text-sm font-bold text-toss-blue dark:text-white hover:bg-toss-blue hover:text-white dark:hover:bg-toss-blue transition-all duration-300 group/add"
+          >
+            <PlusCircle className="w-5 h-5 transition-transform duration-300 group-hover/add:rotate-90" />
+            <span>루틴에 추가</span>
+          </button>
+        </CardFooter>
       </Card>
     </Link>
   );

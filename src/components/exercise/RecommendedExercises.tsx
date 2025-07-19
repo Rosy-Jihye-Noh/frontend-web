@@ -2,6 +2,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link } from 'react-router-dom';
 import type { Exercise } from '@/types/index';
+import { Card } from '@/components/ui/card';
 
 interface RecommendedExercisesProps {
   recommendedData: {
@@ -15,58 +16,46 @@ const RecommendedExercises: React.FC<RecommendedExercisesProps> = ({ recommended
     return null;
   }
 
-
   return (
-    <section className="mb-12 p-6 bg-blue-50 dark:bg-gray-800 rounded-2xl shadow-sm border border-blue-100 dark:border-gray-700">
-      <h2 className="text-xl font-bold mb-4 text-blue-800 dark:text-blue-300">
-        ✨ AI 맞춤 추천
+    <section className="mb-12 p-6 bg-toss-blue/10 dark:bg-toss-navy/30 rounded-2xl">
+      <h2 className="text-2xl font-bold mb-3 text-toss-navy dark:text-toss-blue">
+        ✨ AI-Powered Recommendations
       </h2>
-
-      {/* AI의 추천 이유를 Markdown 형식으로 렌더링 */}
-      <div className="prose prose-sm dark:prose-invert max-w-none mb-8">
+      <div className="prose prose-sm dark:prose-invert max-w-none mb-8 text-slate-600 dark:text-slate-300">
         <ReactMarkdown>{recommendedData.reason}</ReactMarkdown>
       </div>
-
-      {/* 추천 운동을 넓적한 카드 형태로 렌더링 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {recommendedData.exercises.map((exercise) => (
+        {recommendedData.exercises.map((exercise, index) => (
           <Link
             to={`/exercises/${exercise.id}`}
             key={exercise.id}
-            className="group block bg-white dark:bg-gray-700 rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+            className="group block animate-fade-in"
+            style={{ animationDelay: `${index * 100}ms` }}
           >
-            {/* 카드 썸네일 이미지 영역 */}
-            <div className="relative w-full h-0 pb-[56.25%]"> {/* 16:9 비율 컨테이너 */}
-              {exercise.thumbnailUrl ? (
-                <img
-                  src={exercise.thumbnailUrl}
-                  alt={exercise.name}
-                  className="absolute inset-0 max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-300"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const parent = target.parentElement;
-                    if (parent) {
-                      parent.innerHTML = '<span class="text-sm text-gray-500">이미지를 불러올 수 없습니다.</span>';
-                    }
-                  }}
-                />
-              ) : (
-                <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
-                  <span className="text-sm text-center text-gray-500 p-2">{exercise.name}</span>
-                </div>
-              )}
-            </div>
-
-            {/* 카드 텍스트 정보 영역 */}
-            <div className="p-4">
-              <h4 className="font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-blue-600">
-                {exercise.name}
-              </h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 h-10 overflow-hidden">
-                {exercise.description || '이 운동에 대한 설명이 아직 없습니다.'}
-              </p>
-            </div>
+            <Card className="h-full bg-white/80 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+              <div className="relative w-full h-40 bg-slate-100 dark:bg-slate-700/50 flex items-center justify-center">
+                {exercise.thumbnailUrl ? (
+                  <img
+                    src={exercise.thumbnailUrl}
+                    alt={exercise.name}
+                    className="max-w-full max-h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span className="text-sm text-center font-semibold text-toss-navy dark:text-toss-gray p-2">
+                    {exercise.name}
+                  </span>
+                )}
+              </div>
+              <div className="p-4">
+                <h4 className="font-bold text-base text-slate-800 dark:text-white truncate group-hover:text-toss-blue transition-colors">
+                  {exercise.name}
+                </h4>
+                <p className="text-sm text-toss-gray mt-1 h-10 overflow-hidden">
+                  {exercise.description || 'No description available for this exercise.'}
+                </p>
+              </div>
+            </Card>
           </Link>
         ))}
       </div>
