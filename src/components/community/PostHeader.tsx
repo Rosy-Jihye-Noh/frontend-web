@@ -1,38 +1,44 @@
 // PostHeader: 게시글 상세 상단에 제목, 작성자, 카테고리, 작성일을 보여주는 컴포넌트
 import React from 'react';
 import { CardHeader, CardTitle } from '../ui/card';
+import { Tag, User, Calendar } from 'lucide-react';
 import type { PostDTO } from '../../types/community';
 
 interface PostHeaderProps {
-  post: PostDTO; // 게시글 정보
+  post: PostDTO;
 }
 
 const PostHeader: React.FC<PostHeaderProps> = ({ post }) => {
   return (
-    <CardHeader>
-      {/* 게시글 제목 */}
-      <CardTitle className="text-xl mb-2">{post.title}</CardTitle>
-      <div className="flex flex-col gap-1 sm:flex-row sm:gap-2 text-sm text-muted-foreground">
-        {/* 작성자/카테고리 정보 */}
-        <div className="flex items-center justify-between sm:justify-start sm:gap-2">
-          <span className="font-medium">{post.userName}</span>
-          <span className="hidden sm:inline">|</span>
-          <span className="text-blue-600 font-medium">{post.categoryName}</span>
-          <span className="hidden sm:inline">|</span>
+    <CardHeader className="p-4 sm:p-6 space-y-4">
+      {/* Post Title */}
+      <CardTitle className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-50 leading-tight">
+        {post.title}
+      </CardTitle>
+
+      {/* Meta Information with Icons */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-base text-gray-500 dark:text-neutral-400 pt-2">
+        <div className="flex items-center gap-2 font-semibold">
+          <Tag className="h-4 w-4 text-blue-500" />
+          <span className="text-blue-600 dark:text-blue-400">{post.categoryName}</span>
         </div>
-        {/* 작성일 */}
-        <div className="text-xs sm:text-sm">
-          {new Date(post.createdAt).toLocaleString('ko-KR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
+        <div className="flex items-center gap-2">
+          <User className="h-4 w-4" />
+          <span className="font-medium text-gray-700 dark:text-neutral-300">{post.userName}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4" />
+          <span>
+            {new Date(post.createdAt).toLocaleDateString('ko-KR', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
+          </span>
         </div>
       </div>
     </CardHeader>
   );
 };
 
-export default PostHeader; 
+export default PostHeader;

@@ -4,19 +4,20 @@ import Header from '@/components/common/Header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { HiCamera, HiUser, HiChatAlt2, HiLightBulb, HiCheckCircle } from 'react-icons/hi';
-import { FaBrain, FaArrowRight } from 'react-icons/fa';
+import { FaArrowRight } from 'react-icons/fa';
 import { useUserStore } from '@/store/userStore';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { useLogStore } from '@/store/logStore';
 import CommunityHotPosts from '@/components/dashboard/CommunityHotPosts';
 import TodayRoutineCard from '@/components/dashboard/TodayRoutineCard';
-import PostureScoreCard from '@/components/dashboard/PostureScoreCard';
+import PostureScoreChart from '@/components/dashboard/PostureScoreChart';
 import WeeklyReportCard from '@/components/dashboard/WeeklyReportCard';
 import PopularLikedExercisesCarousel from '@/components/dashboard/PopularLikedExercisesCarousel';
 import PopularRoutineExercisesCarousel from '@/components/dashboard/PopularRoutineExercisesCarousel';
 import { fetchCategories, fetchPopularPostsByCategory } from '@/services/api/communityApi';
 import { getRoutinesByUser } from '@/services/api/routineApi';
 import type { Routine } from '@/types/index';
+import Favicon from '../../public/favicon.png';
 
 const Dashboard: React.FC = () => {
   const { user } = useUserStore();
@@ -195,17 +196,17 @@ const Dashboard: React.FC = () => {
   }));
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="min-h-screen">
       <Header />
       <main className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8" style={{ paddingTop: '72px' }}>
         
         <Card 
-          className="p-6 shadow-lg bg-gradient-to-r from-primary to-blue-500 text-white cursor-pointer hover:shadow-xl transition-all duration-300"
+          className="p-6 shadow-lg bg-gradient-to-r from-[#1A1A1A] to-[#3B5998] text-white cursor-pointer hover:shadow-xl transition-all duration-300"
           onClick={() => navigate('/goal-recommendation')}
         >
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center">
-              <FaBrain className="w-10 h-10 mr-4" />
+              <img src={Favicon} alt="Favicon" className="w-10 h-10 mr-4" /> 
               <div>
                 <h2 className="text-xl font-bold">AI 코치와 함께 성장하세요!</h2>
                 <p className="text-sm opacity-90 mt-1">
@@ -215,7 +216,7 @@ const Dashboard: React.FC = () => {
             </div>
             <Button 
               variant="secondary" 
-              className="mt-4 md:mt-0 bg-white text-primary hover:bg-gray-100"
+              className="mt-4 md:mt-0 text-primary hover:bg-gray-100"
             >
               목표 추천 받기 <FaArrowRight className="ml-2" />
             </Button>
@@ -234,7 +235,7 @@ const Dashboard: React.FC = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <PostureScoreCard />
+          <PostureScoreChart />
           <WeeklyReportCard />
         </div>
         

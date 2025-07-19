@@ -2,18 +2,20 @@
 import React from 'react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
+import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
+import { Search, PenSquare } from 'lucide-react';
 import type { CategoryDTO } from '../../types/community';
 
 interface CommunityFiltersProps {
-  categories: CategoryDTO[]; // 카테고리 목록
-  currentCategory: string; // 현재 선택된 카테고리
-  currentSort: 'latest' | 'popular'; // 정렬 기준
-  searchValue: string; // 검색어
-  onCategoryChange: (category: string) => void; // 카테고리 변경 핸들러
-  onSortChange: (sort: 'latest' | 'popular') => void; // 정렬 변경 핸들러
-  onSearchChange: (value: string) => void; // 검색어 입력 핸들러
-  onSearchSubmit: (e: React.FormEvent) => void; // 검색 폼 제출 핸들러
-  onWriteClick: () => void; // 글쓰기 버튼 클릭 핸들러
+  categories: CategoryDTO[];
+  currentCategory: string;
+  currentSort: 'latest' | 'popular';
+  searchValue: string;
+  onCategoryChange: (category: string) => void;
+  onSortChange: (sort: 'latest' | 'popular') => void;
+  onSearchChange: (value: string) => void;
+  onSearchSubmit: (e: React.FormEvent) => void;
+  onWriteClick: () => void;
 }
 
 const CommunityFilters: React.FC<CommunityFiltersProps> = ({
@@ -25,129 +27,69 @@ const CommunityFilters: React.FC<CommunityFiltersProps> = ({
   onSortChange,
   onSearchChange,
   onSearchSubmit,
-  onWriteClick
+  onWriteClick,
 }) => {
   return (
-    <>
-      {/* 카테고리 탭: 전체/카테고리별 필터 */}
-      <div className="border-b border-border mb-6">
-        <nav className="-mb-px flex space-x-6 overflow-x-auto">
-          <button
-            key="all"
-            onClick={() => onCategoryChange('전체')}
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-              currentCategory === '전체'
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-            }`}
-          >
-            전체
-          </button>
-          {categories.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => onCategoryChange(cat.name)}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                currentCategory === cat.name
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-              }`}
-            >
+    <div className="space-y-6">
+      {/* Category Tabs */}
+      <Tabs value={currentCategory} onValueChange={onCategoryChange}>
+        <TabsList className="grid w-full grid-cols-1 h-auto sm:w-auto sm:inline-flex bg-gray-100 dark:bg-neutral-800/60 p-1 rounded-xl">
+          <TabsTrigger value="전체" className="rounded-lg">전체</TabsTrigger>
+          {categories.map((cat) => (
+            <TabsTrigger key={cat.id} value={cat.name} className="rounded-lg">
               {cat.name}
-            </button>
+            </TabsTrigger>
           ))}
-        </nav>
-      </div>
+        </TabsList>
+      </Tabs>
 
-      {/* 정렬/검색/글쓰기 영역: 데스크톱/모바일 반응형 */}
-      <div className="mb-4">
-        {/* 데스크톱 레이아웃: 정렬, 검색, 글쓰기 버튼 */}
-        <div className="hidden md:flex flex-row items-center gap-2 overflow-x-auto whitespace-nowrap">
-          <button
-            className={`px-3 py-1 rounded shrink-0 transition-colors ${
-              currentSort === 'latest' 
-                ? 'bg-blue-100 text-blue-600' 
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            }`}
+      {/* Action Bar: Sort, Search, Write */}
+      <div className="flex flex-col md:flex-row items-center gap-4">
+        {/* Sort Buttons in a rounded container */}
+        <div className="flex items-center gap-1 p-1 rounded-full bg-gray-100 dark:bg-neutral-800/60 self-start md:self-center">
+          <Button
+            variant={currentSort === 'latest' ? 'default' : 'ghost'}
+            size="sm"
+            className="rounded-full px-4 transition-all duration-300"
             onClick={() => onSortChange('latest')}
           >
             최신순
-          </button>
-          <button
-            className={`px-3 py-1 rounded shrink-0 transition-colors ${
-              currentSort === 'popular' 
-                ? 'bg-blue-100 text-blue-600' 
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            }`}
+          </Button>
+          <Button
+            variant={currentSort === 'popular' ? 'default' : 'ghost'}
+            size="sm"
+            className="rounded-full px-4 transition-all duration-300"
             onClick={() => onSortChange('popular')}
           >
             인기순
-          </button>
-          <form className="flex gap-2 flex-1 min-w-[120px]" onSubmit={onSearchSubmit}>
-            <Input
-              className="w-full max-w-xs"
-              value={searchValue}
-              onChange={e => onSearchChange(e.target.value)}
-              placeholder="제목/내용 검색"
-              aria-label="검색어 입력"
-            />
-            <Button type="submit" className="shrink-0">검색</Button>
-          </form>
-          <Button className="ml-auto bg-blue-600 shrink-0" onClick={onWriteClick}>
-            글쓰기
           </Button>
         </div>
 
-        {/* 모바일 레이아웃: 정렬, 글쓰기, 검색 */}
-        <div className="md:hidden space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <button
-                className={`px-3 py-1.5 text-sm rounded-md font-medium transition-colors ${
-                  currentSort === 'latest' 
-                    ? 'bg-blue-50 text-blue-600 border border-blue-200' 
-                    : 'bg-muted text-muted-foreground border border-border hover:bg-muted/80'
-                }`}
-                onClick={() => onSortChange('latest')}
-              >
-                최신순
-              </button>
-              <button
-                className={`px-3 py-1.5 text-sm rounded-md font-medium transition-colors ${
-                  currentSort === 'popular' 
-                    ? 'bg-blue-50 text-blue-600 border border-blue-200' 
-                    : 'bg-muted text-muted-foreground border border-border hover:bg-muted/80'
-                }`}
-                onClick={() => onSortChange('popular')}
-              >
-                인기순
-              </button>
-            </div>
-            
-            <Button 
-              className="px-3 py-1.5 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-              onClick={onWriteClick}
-            >
-              <span className="text-sm font-medium">글쓰기</span>
-            </Button>
-          </div>
+        {/* Search Form */}
+        <form
+          className="relative flex-1 w-full md:max-w-sm"
+          onSubmit={onSearchSubmit}
+        >
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-neutral-500" />
+          <Input
+            className="pl-10 text-base border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-0"
+            value={searchValue}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="제목, 내용으로 검색해보세요"
+          />
+        </form>
 
-          <form className="flex gap-2" onSubmit={onSearchSubmit}>
-            <Input
-              className="flex-1 text-sm"
-              value={searchValue}
-              onChange={e => onSearchChange(e.target.value)}
-              placeholder="제목/내용 검색"
-              aria-label="검색어 입력"
-            />
-            <Button type="submit" className="px-4 py-2 text-sm">
-              검색
-            </Button>
-          </form>
-        </div>
+        {/* Write Button with Icon */}
+        <Button
+          onClick={onWriteClick}
+          className="w-full md:w-auto bg-gradient-to-br from-blue-400 to-blue-800 hover:from-blue-600 hover:to-blue-600 text-white font-bold rounded-lg transition-all duration-300 active:scale-95 shadow-sm hover:shadow-md text-base px-5 py-5"
+        >
+          <PenSquare className="mr-2 h-4 w-4" />
+          글쓰기
+        </Button>
       </div>
-    </>
+    </div>
   );
 };
 
-export default CommunityFilters; 
+export default CommunityFilters;

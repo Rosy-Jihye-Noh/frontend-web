@@ -1,17 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '@/store/userStore';
 import type { ProfileUser, Routine, Exercise, AnalysisHistoryItem, Badge } from '../types/index';
 import Header from '@/components/common/Header';
 import ProfileHeader from '../components/mypage/ProfileHeader';
-import AnalysisHistorySection from '../components/mypage/AnalysisHistorySection';
-import MyRoutineSection from '../components/mypage/MyRoutineSection';
-import LikedExerciseSection from '../components/mypage/LikedExerciseSection';
-import PostsCommentsTabsSection from '../components/mypage/PostsCommentsTabsSection';
-import ExerciseRecordsSection from '../components/mypage/ExerciseRecordsSection';
-import NotificationsSection from '../components/mypage/NotificationsSection';
-import BadgeCollectionSection from '@/components/mypage/BadgeCollectionSection';
-import EmotionDiarySection from '@/components/mypage/EmotionDiarySection';
 import { deleteRoutineById } from '@/services/api/routineApi';
 import {
   fetchUserProfile,
@@ -19,16 +11,19 @@ import {
   fetchUserAnalysisHistory,
   fetchFullLikedExercises,
   fetchUserBadges,
-} from '@/services/api/myPageApi'; // 분리된 API 함수들을 import
+} from '@/services/api/myPageApi';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from '@/components/ui/skeleton';
 
-const TabButton = ({ id, activeTab, setActiveTab, children }: { id: string, activeTab: string, setActiveTab: (id: string) => void, children: React.ReactNode }) => (
-    <button
-        onClick={() => setActiveTab(id)}
-        className={`py-2.5 text-sm font-semibold transition-all duration-200 ${activeTab === id ? 'text-blue-600 border-b-2 border-blue-600' : 'text-muted-foreground hover:text-foreground'}`}
-    >
-        {children}
-    </button>
-);
+// Lazy load components for better initial page load performance
+const MyRoutineSection = lazy(() => import('../components/mypage/MyRoutineSection'));
+const AnalysisHistorySection = lazy(() => import('../components/mypage/AnalysisHistorySection'));
+const LikedExerciseSection = lazy(() => import('../components/mypage/LikedExerciseSection'));
+const PostsCommentsTabsSection = lazy(() => import('../components/mypage/PostsCommentsTabsSection'));
+const ExerciseRecordsSection = lazy(() => import('../components/mypage/ExerciseRecordsSection'));
+const NotificationsSection = lazy(() => import('../components/mypage/NotificationsSection'));
+const BadgeCollectionSection = lazy(() => import('@/components/mypage/BadgeCollectionSection'));
+const EmotionDiarySection = lazy(() => import('@/components/mypage/EmotionDiarySection'));
 
 const MyPage: React.FC = () => {
     const navigate = useNavigate();
@@ -43,29 +38,24 @@ const MyPage: React.FC = () => {
     
     const [isPageLoading, setIsPageLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState('routines');
 
     useEffect(() => {
-        if (!hasHydrated) {
-            return;
-        }
+        if (!hasHydrated) return;
         if (!user) {
             alert('로그인이 필요합니다.');
             navigate('/login');
             return;
         }
 
-            const fetchDataForUser = async (userId: number) => {
+        const fetchDataForUser = async (userId: number) => {
             setIsPageLoading(true);
             setError(null);
             try {
-                // Fetch all data in parallel, including badges
                 const [profileData, routinesData, historyData, likedData, badgesData] = await Promise.all([
                     fetchUserProfile(userId),
                     fetchUserRoutines(userId),
                     fetchUserAnalysisHistory(userId),
                     fetchFullLikedExercises(userId),
-                    // Add the call to fetch badges
                     fetchUserBadges(userId),
                 ]);
 
@@ -73,9 +63,7 @@ const MyPage: React.FC = () => {
                 setRoutines(routinesData);
                 setHistory(historyData);
                 setLikedExercises(likedData);
-                // Set badge state, sorting by newest first
                 setBadges(badgesData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-
             } catch (err) {
                 setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
             } finally {
@@ -86,14 +74,9 @@ const MyPage: React.FC = () => {
         fetchDataForUser(user.id);
     }, [hasHydrated, user, navigate]);
 
-    /**
-     * 루틴을 삭제하는 비동기 핸들러입니다.
-     * @param routineId - 삭제할 루틴의 ID
-     */
     const handleDeleteRoutine = async (routineId: number) => {
       try {
         await deleteRoutineById(routineId);
-        // 상태 업데이트: 삭제된 루틴을 목록에서 제거
         setRoutines(prevRoutines => prevRoutines.filter(r => r.id !== routineId));
         alert('루틴이 삭제되었습니다.');
       } catch (error) {
@@ -102,63 +85,69 @@ const MyPage: React.FC = () => {
       }
     };
 
-    if (isPageLoading) {
-        return (
-            <div className="bg-background min-h-screen">
-                <Header />
-                <div 
-                    className="flex justify-center items-center" 
-                    style={{ height: 'calc(100vh - var(--header-height, 90px))', paddingTop: 'var(--header-height, 90px)' }}
-                >
-                    <div className="text-center text-gray-500">
-                        <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-2"></div>
-                        <p>마이페이지 정보를 불러오는 중...</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    const renderLoadingState = () => (
+      <div className="bg-background min-h-screen">
+          <Header />
+          <div className="flex justify-center items-center h-[calc(100vh-90px)]">
+              <div className="text-center text-neutral-500">
+                  <div className="animate-spin w-10 h-10 border-4 border-muted border-t-blue-500 rounded-full mx-auto mb-4"></div>
+                  <p>마이페이지 정보를 불러오는 중...</p>
+              </div>
+          </div>
+      </div>
+    );
     
-    if (error) {
-        return <div className="flex justify-center items-center h-screen">에러: {error}</div>;
-    }
+    if (isPageLoading) return renderLoadingState();
+    if (error) return <div className="flex justify-center items-center h-screen">에러: {error}</div>;
+    if (!profile) return <div className="flex justify-center items-center h-screen">사용자 정보를 찾을 수 없습니다.</div>;
+
+    const tabList = [
+      { id: 'exercise-records', label: '운동 기록' },
+      { id: 'emotion-diary', label: '감정 기록' },
+      { id: 'routines', label: '내 루틴' },
+      { id: 'history', label: '분석 기록' },
+      { id: 'posts-comments', label: '내 활동' },
+      { id: 'liked', label: '좋아요' },
+      { id: 'badges', label: '뱃지' },
+      { id: 'notifications', label: '알림' },
+    ];
     
-    if (!profile) {
-        return <div className="flex justify-center items-center h-screen">사용자 정보를 찾을 수 없습니다.</div>;
-    }
+    const contentMap: { [key: string]: React.ReactNode } = {
+      'routines': <MyRoutineSection routines={routines} onDeleteRoutine={handleDeleteRoutine} />,
+      'history': <AnalysisHistorySection history={history} />,
+      'liked': <LikedExerciseSection likedExercises={likedExercises} />,
+      'posts-comments': <PostsCommentsTabsSection userId={user!.id} />,
+      'exercise-records': <ExerciseRecordsSection userProfile={profile} />,
+      'emotion-diary': <EmotionDiarySection />,
+      'badges': <BadgeCollectionSection badges={badges} />,
+      'notifications': <NotificationsSection userId={user!.id} />,
+    };
 
     return (
-        <div className="bg-background min-h-screen">
+        <div className="bg-muted/30 min-h-screen">
             <Header />
-            <main
-             className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8"
-             style={{ paddingTop: 'var(--header-height, 90px)' }}
-            >
+            <main className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8" style={{ paddingTop: 'calc(var(--header-height, 60px) + 1.5rem)' }}>
                 <ProfileHeader user={profile} onEdit={() => navigate('/mypage/edit')} />
                 
-                <div className="border-b border-border mb-6">
-                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                        <TabButton id="routines" activeTab={activeTab} setActiveTab={setActiveTab}>내 루틴 관리</TabButton>
-                        <TabButton id="history" activeTab={activeTab} setActiveTab={setActiveTab}>사진 분석 기록</TabButton>
-                        <TabButton id="exercise-records" activeTab={activeTab} setActiveTab={setActiveTab}>운동 기록</TabButton>
-                        <TabButton id="emotion-diary" activeTab={activeTab} setActiveTab={setActiveTab}>감정 기록</TabButton>
-                        <TabButton id="liked" activeTab={activeTab} setActiveTab={setActiveTab}>좋아요한 운동</TabButton>
-                        <TabButton id="posts-comments" activeTab={activeTab} setActiveTab={setActiveTab}>내 글/댓글</TabButton>
-                        <TabButton id="notifications" activeTab={activeTab} setActiveTab={setActiveTab}>알림</TabButton>
-                        <TabButton id="badges" activeTab={activeTab} setActiveTab={setActiveTab}>내 뱃지</TabButton>
+                <Tabs defaultValue="exercise-records" className="w-full">
+                    <TabsList className="grid w-full grid-cols-4 md:grid-cols-8 p-1 h-auto bg-muted rounded-xl">
+                        {tabList.map(tab => (
+                            <TabsTrigger key={tab.id} value={tab.id} className="text-xs sm:text-sm rounded-lg data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md">
+                                {tab.label}
+                            </TabsTrigger>
+                        ))}
+                    </TabsList>
+                    
+                    <div className="mt-6">
+                      <Suspense fallback={<Skeleton className="w-full h-96 rounded-2xl" />}>
+                        {Object.entries(contentMap).map(([tabId, content]) => (
+                          <TabsContent key={tabId} value={tabId} className="bg-background rounded-2xl shadow-sm">
+                            {content}
+                          </TabsContent>
+                        ))}
+                      </Suspense>
                     </div>
-                </div>
-
-                <div>
-                    {activeTab === 'routines' && <MyRoutineSection routines={routines} onDeleteRoutine={handleDeleteRoutine} />}
-                    {activeTab === 'history' && <AnalysisHistorySection history={history} />}
-                    {activeTab === 'liked' && <LikedExerciseSection likedExercises={likedExercises} />}
-                    {activeTab === 'posts-comments' && <PostsCommentsTabsSection userId={user!.id} />}
-                    {activeTab === 'exercise-records' && <ExerciseRecordsSection userProfile={profile} />}
-                    {activeTab === 'emotion-diary' && <EmotionDiarySection/>}
-                    {activeTab === 'badges' && <BadgeCollectionSection badges={badges} />}
-                    {activeTab === 'notifications' && <NotificationsSection userId={user!.id} />}
-                </div>
+                </Tabs>
             </main>
         </div>
     );

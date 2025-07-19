@@ -1,236 +1,180 @@
 import React, { useState, useEffect } from 'react';
-import { HiCalendar, HiTrendingUp, HiCheckCircle } from 'react-icons/hi';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from "@/components/ui/badge";
+import { Progress } from '@/components/ui/progress';
+import { HiOutlineCalendar, HiOutlineTrendingUp, HiOutlineCheckCircle, HiOutlineFlag } from 'react-icons/hi';
 import { useUserStore } from '@/store/userStore';
 import axiosInstance from '@/api/axiosInstance';
+import type { Goal, ProfileUser } from '@/types/index';
 
-interface WeeklyStats {
-  thisWeek: {
-    totalWorkouts: number;
-    completedWorkouts: number;
-    completionRate: number;
-  };
-  thisMonth: {
-    totalWorkouts: number;
-    completedWorkouts: number;
-    completionRate: number;
-  };
+interface ReportStats {
+  thisWeekCompleted: number;
+  thisMonthCompleted: number;
+  thisMonthTotalDays: number;
+  thisMonthCompletionRate: number;
 }
 
 const WeeklyReportCard: React.FC = () => {
   const { user } = useUserStore();
-  const [stats, setStats] = useState<WeeklyStats | null>(null);
+  const [stats, setStats] = useState<ReportStats | null>(null);
+  const [aiGoal, setAiGoal] = useState<Goal | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setIsLoading(false);
+      return;
+    }
 
-    const fetchWeeklyStats = async () => {
+    const fetchReportData = async () => {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        
-        let weekData: any[] = [];
-        let monthData: any[] = [];
-        
-        // API 호출 - 실제 백엔드 엔드포인트에 맞춰 수정
-        try {
-          // 사용자의 모든 로그를 가져와서 클라이언트에서 필터링
-          const allLogsResponse = await axiosInstance.get(`/logs/user/${user.id}`);
-          const allLogs = allLogsResponse.data || [];
-          
-          // 현재 날짜 기준으로 이번주와 이번달 계산
-          const now = new Date();
-          const today = new Date(now);
-          
-          // 이번주 시작: 금주 월요일 (0=일요일, 1=월요일)
-          const dayOfWeek = now.getDay();
-          const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 일요일인 경우 6일 전이 월요일
-          const startOfWeek = new Date(now);
-          startOfWeek.setDate(now.getDate() - daysFromMonday);
-          startOfWeek.setHours(0, 0, 0, 0);
-          
-          // 이번주 끝: 현재 날짜까지 (오늘 포함)
-          const endOfWeek = new Date(today);
-          endOfWeek.setHours(23, 59, 59, 999);
-          
-          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-          const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-          
-          // 이번주 데이터 필터링
-          weekData = allLogs.filter((log: any) => {
-            const logDate = new Date(log.exerciseDate);
-            return logDate >= startOfWeek && logDate <= endOfWeek;
-          });
-          
-          // 이번달 데이터 필터링
-          monthData = allLogs.filter((log: any) => {
-            const logDate = new Date(log.exerciseDate);
-            return logDate >= startOfMonth && logDate <= endOfMonth;
-          });
+        const [profileResponse, logsResponse] = await Promise.all([
+          axiosInstance.get<ProfileUser>(`/users/${user.id}`),
+          axiosInstance.get(`/logs/user/${user.id}`)
+        ]);
 
-          console.log('주간 리포트 데이터:', { weekData: weekData.length, monthData: monthData.length });
-        } catch (apiError) {
-          console.warn('API 호출 실패, 빈 데이터로 설정:', apiError);
-          weekData = [];
-          monthData = [];
+        const userProfile = profileResponse.data;
+        if (userProfile?.weeklyGoal) {
+          try {
+            setAiGoal(JSON.parse(userProfile.weeklyGoal));
+          } catch (e) {
+            console.error("AI 주간 목표 파싱 실패:", e);
+            setAiGoal(null);
+          }
         }
 
-        // 이번주 통계 계산
-        // 월요일부터 현재 요일까지의 총 날짜 수 계산
-        const currentDayOfWeek = new Date().getDay();
-        const thisWeekTotal = currentDayOfWeek === 0 ? 7 : currentDayOfWeek; // 일요일이면 7일, 아니면 현재 요일 번호
-        
-        // 날짜별로 그룹화하여 완료 여부 확인
-        const weekLogsByDate = weekData.reduce((acc: Record<string, any[]>, log: any) => {
-          if (!acc[log.exerciseDate]) {
-            acc[log.exerciseDate] = [];
-          }
-          acc[log.exerciseDate].push(log);
-          return acc;
-        }, {});
-        
-        // 모든 로그가 100% 완료인 날짜만 카운트
-        const thisWeekCompleted = Object.values(weekLogsByDate).filter((logsForDate: any[]) => 
-          logsForDate.every(log => log.completionRate === 100)
-        ).length;
-        
-        const thisWeekCompletionRate = thisWeekTotal > 0 ? Math.round((thisWeekCompleted / thisWeekTotal) * 100) : 0;
+        const allLogs = logsResponse.data || [];
+        const now = new Date();
 
-        // 이번달 통계 계산
-        // 이번달 1일부터 오늘까지의 총 날짜 수
-        const today = new Date();
-        const thisMonthTotalDays = today.getDate(); // 1일부터 오늘까지의 날짜 수
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const weekData = allLogs.filter((log: any) => new Date(log.exerciseDate) >= startOfWeek);
         
-        const monthLogsByDate = monthData.reduce((acc: Record<string, any[]>, log: any) => {
-          if (!acc[log.exerciseDate]) {
-            acc[log.exerciseDate] = [];
-          }
+        const weekLogsByDate = weekData.reduce((acc: Record<string, any[]>, log: any) => {
+          acc[log.exerciseDate] = acc[log.exerciseDate] || [];
           acc[log.exerciseDate].push(log);
           return acc;
         }, {});
-        
-        // 운동 기록이 있는 날짜 중에서 모든 로그가 100% 완료인 날짜만 카운트
-        const thisMonthCompleted = Object.values(monthLogsByDate).filter((logsForDate: any[]) => 
-          logsForDate.every(log => log.completionRate === 100)
-        ).length;
-        
+
+        const thisWeekCompleted = Object.keys(weekLogsByDate).length;
+
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthData = allLogs.filter((log: any) => new Date(log.exerciseDate) >= startOfMonth);
+        const monthLogsByDate = monthData.reduce((acc: Record<string, any[]>, log: any) => {
+            acc[log.exerciseDate] = acc[log.exerciseDate] || [];
+            acc[log.exerciseDate].push(log);
+            return acc;
+        }, {});
+        const thisMonthCompleted = Object.keys(monthLogsByDate).length;
+        const thisMonthTotalDays = now.getDate();
         const thisMonthCompletionRate = thisMonthTotalDays > 0 ? Math.round((thisMonthCompleted / thisMonthTotalDays) * 100) : 0;
 
-        setStats({
-          thisWeek: {
-            totalWorkouts: thisWeekTotal,
-            completedWorkouts: thisWeekCompleted,
-            completionRate: thisWeekCompletionRate
-          },
-          thisMonth: {
-            totalWorkouts: thisMonthTotalDays,
-            completedWorkouts: thisMonthCompleted,
-            completionRate: thisMonthCompletionRate
-          }
-        });
+        setStats({ thisWeekCompleted, thisMonthCompleted, thisMonthTotalDays, thisMonthCompletionRate });
+
       } catch (error) {
-        console.error('주간 통계 로드 실패:', error);
-        // 에러 시 기본값 설정
-        setStats({
-          thisWeek: { totalWorkouts: 0, completedWorkouts: 0, completionRate: 0 },
-          thisMonth: { totalWorkouts: 0, completedWorkouts: 0, completionRate: 0 }
-        });
+        console.error('리포트 데이터 로드 실패:', error);
+        setStats({ thisWeekCompleted: 0, thisMonthCompleted: 0, thisMonthTotalDays: new Date().getDate(), thisMonthCompletionRate: 0 });
+        setAiGoal(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchWeeklyStats();
+    fetchReportData();
   }, [user]);
 
-  const getCompletionColor = (rate: number) => {
-    if (rate >= 80) return 'text-green-600 bg-green-100';
-    if (rate >= 60) return 'text-yellow-600 bg-yellow-100';
-    if (rate >= 40) return 'text-orange-600 bg-orange-100';
-    return 'text-red-600 bg-red-100';
-  };
+  const weeklyProgress = aiGoal && aiGoal.workouts > 0 ? ((stats?.thisWeekCompleted || 0) / aiGoal.workouts) * 100 : 0;
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center p-6 shadow-lg rounded-lg">
-        <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full mb-2"></div>
-        <p className="text-gray-500">통계를 불러오는 중...</p>
-      </div>
+      <Card className="flex items-center justify-center p-6 shadow-md rounded-2xl bg-card min-h-[300px]">
+        <div className="flex flex-col items-center text-muted-foreground">
+          <div className="animate-spin w-8 h-8 border-2 border-current border-t-transparent rounded-full mb-3"></div>
+          <p>리포트 로딩 중...</p>
+        </div>
+      </Card>
     );
   }
 
   return (
-            <div className="flex flex-col p-6 shadow-lg rounded-lg bg-card">
-      <div className="flex items-center mb-4">
-        <HiCalendar className="text-blue-500 w-8 h-8 mr-2" />
-        <h2 className="text-xl font-bold text-foreground">운동 리포트</h2>
-      </div>
-
-      <div className="space-y-6">
-        {/* 이번주 통계 */}
-        <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-blue-800 dark:text-blue-300 flex items-center">
-              <HiCalendar className="w-5 h-5 mr-2" />
-              이번주
-            </h3>
-            <span className={`px-3 py-1 rounded-full text-sm font-bold ${getCompletionColor(stats?.thisWeek.completionRate || 0)}`}>
-              {stats?.thisWeek.completionRate || 0}%
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-gray-600 dark:text-gray-300">{stats?.thisWeek.totalWorkouts || 0}</div>
-              <div className="text-gray-600 dark:text-gray-300">이번주 총 일수</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">(월~오늘)</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats?.thisWeek.completedWorkouts || 0}</div>
-              <div className="text-blue-600 dark:text-blue-400">완료한 날짜</div>
-            </div>
+    <Card className="p-6 shadow-md rounded-2xl bg-card">
+      <CardHeader className="p-0 mb-6">
+        <div className="flex items-center gap-3">
+          <HiOutlineCalendar className="w-7 h-7 text-[#007AFF]" />
+          <div>
+            <CardTitle className="text-lg font-bold text-foreground">운동 리포트</CardTitle>
+            <CardDescription>주간 및 월간 진행 상황입니다.</CardDescription>
           </div>
         </div>
+      </CardHeader>
 
-        {/* 이번달 통계 */}
-        <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-lg">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-green-800 dark:text-green-300 flex items-center">
-              <HiTrendingUp className="w-5 h-5 mr-2" />
-              이번달
+      <CardContent className="p-0 space-y-6">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <h3 className="font-semibold text-md text-foreground flex items-center gap-2">
+              <HiOutlineTrendingUp className="w-5 h-5 text-[#007AFF]" />
+              주간 목표
             </h3>
-            <span className={`px-3 py-1 rounded-full text-sm font-bold ${getCompletionColor(stats?.thisMonth.completionRate || 0)}`}>
-              {stats?.thisMonth.completionRate || 0}%
-            </span>
+            {aiGoal && (
+              <Badge variant="outline" className="border-[#007AFF]/50 text-[#007AFF]">
+                AI 목표: {aiGoal.completion_rate}%
+              </Badge>
+            )}
           </div>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-gray-600 dark:text-gray-300">{stats?.thisMonth.totalWorkouts || 0}</div>
-              <div className="text-gray-600 dark:text-gray-300">이번달 총 일수</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">(1일~오늘)</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats?.thisMonth.completedWorkouts || 0}</div>
-              <div className="text-green-600 dark:text-green-400">완료한 날짜</div>
-            </div>
-          </div>
-        </div>
-
-        {/* 격려 메시지 */}
-        <div className="text-center p-3 bg-muted rounded-lg">
-          {(stats?.thisWeek.completionRate || 0) >= 80 ? (
-            <div className="flex items-center justify-center text-green-600">
-              <HiCheckCircle className="w-5 h-5 mr-2" />
-              <span className="text-sm font-medium">훌륭해요! 계속 이어가세요!</span>
+          {aiGoal ? (
+            <div className="p-4 rounded-lg bg-muted/50">
+              <p className="text-sm text-muted-foreground mb-3">
+                이번 주 목표는 <strong className="text-foreground">{aiGoal.workouts}회</strong> 운동입니다.
+              </p>
+              <Progress value={weeklyProgress} className="h-2 [&>*]:bg-[#007AFF]" />
+              <div className="flex justify-between items-center mt-2 text-sm">
+                <span className="text-muted-foreground">{stats?.thisWeekCompleted || 0} / {aiGoal.workouts}일</span>
+                <span className="font-bold text-[#007AFF]">{weeklyProgress.toFixed(0)}%</span>
+              </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center text-blue-600 dark:text-blue-400">
-              <HiTrendingUp className="w-5 h-5 mr-2" />
-              <span className="text-sm font-medium">조금만 더 노력하면 목표 달성!</span>
+            <div className="text-center text-sm text-muted-foreground py-4 rounded-lg bg-muted/50">
+              AI 주간 목표가 설정되지 않았습니다.
             </div>
           )}
         </div>
-      </div>
-    </div>
+
+        <div className="space-y-2">
+           <h3 className="font-semibold text-md text-foreground flex items-center gap-2">
+              <HiOutlineFlag className="w-5 h-5 text-green-500" />
+              월간 출석률
+            </h3>
+           <div className="p-4 rounded-lg bg-muted/50 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">완료일</p>
+                <p className="text-2xl font-bold text-foreground">{stats?.thisMonthCompleted || 0} <span className="text-lg font-medium text-muted-foreground">/ {stats?.thisMonthTotalDays || 0}일</span></p>
+              </div>
+              <div className="text-right">
+                 <p className="text-sm text-muted-foreground">달성률</p>
+                 <p className="text-2xl font-bold text-green-500">{stats?.thisMonthCompletionRate ?? 0}%</p>
+              </div>
+           </div>
+        </div>
+
+        <div className="text-center p-3 bg-muted rounded-lg text-sm font-medium text-muted-foreground">
+          {weeklyProgress >= 100 ? (
+            <p className="flex items-center justify-center text-green-500">
+              <HiOutlineCheckCircle className="w-5 h-5 mr-2" />
+              주간 목표 달성! 정말 대단해요!
+            </p>
+          ) : (
+            <p className="flex items-center justify-center text-[#007AFF]">
+               <HiOutlineTrendingUp className="w-5 h-5 mr-2" />
+               목표를 향해 꾸준히 나아가고 있어요!
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
-export default WeeklyReportCard; 
+export default WeeklyReportCard;

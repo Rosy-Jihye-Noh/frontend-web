@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { Exercise, Routine, ProfileUser } from '@/types/index';
-import type { RecommendationPayload, RecommendationResponse } from '@/types/recommendation';
+import type { RecommendationPayload } from '@/types/recommendation';
 import { useUserStore } from '@/store/userStore';
 import Header from '@/components/common/Header';
-import ExerciseFilter from '@/components/exercise/ExerciseFilter';
-import ExerciseGrid from '@/components/exercise/ExerciseGrid';
-import AddToRoutineModal from '@/components/exercise/AddToRoutineModal';
-import RecommendedExercises from '@/components/exercise/RecommendedExercises';
-import RecommendedExercisesLoader from '@/components/exercise/RecommendedExercisesLoader';
+import ExerciseFilter from '@/components/exercise/ExerciseFilter'; // Redesigned Component
+import ExerciseGrid from '@/components/exercise/ExerciseGrid'; // Redesigned Component
+import AddToRoutineModal from '@/components/exercise/AddToRoutineModal'; // Redesigned Component
+import RecommendedExercises from '@/components/exercise/RecommendedExercises'; // Redesigned Component
+import RecommendedExercisesLoader from '@/components/exercise/RecommendedExercisesLoader'; // Redesigned Component
 import {
   Pagination,
   PaginationContent,
@@ -15,7 +15,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
+} from "@/components/ui/pagination"; // Will be restyled via className
 import {
   fetchAllExercises,
   fetchUserLikes,
@@ -28,10 +28,10 @@ import {
 import { useRequireAuth } from "../hooks/useRequireAuth";
 import { getLogsByUser } from '@/services/api/exerciseLogApi';
 import { getPostureAnalysisHistory } from '@/services/api/analysisApi';
+import { Bot } from 'lucide-react';
 
 const CATEGORIES = ["전체", "전신", "다리", "옆구리", "허리", "허벅지", "엉덩이", "종아리", "팔", "가슴", "등", "어깨", "복부"] as const;
 const EXERCISES_PER_PAGE = 12;
-const MAX_VISIBLE_PAGES = 8;
 
 const ExerciseListPage: React.FC = () => {
   useRequireAuth("/exercises");
@@ -52,23 +52,21 @@ const ExerciseListPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [exercisePage, setExercisePage] = useState(0);
 
-  // 데이터 로딩이 이미 실행되었는지 추적하기 위한 ref
   const hasFetched = useRef<Record<number, boolean>>({});
 
   useEffect(() => {
+    // ... (Data fetching logic is preserved)
     if (!user?.id) {
       setIsLoading(false);
       setIsRecLoading(false);
       return;
     }
 
-    // 현재 사용자에 대한 데이터 로딩이 이미 실행되었다면, 다시 실행하지 않음
     if (hasFetched.current[user.id]) {
       return;
     }
 
     const loadAllData = async () => {
-      // 로딩이 실행됨을 기록하여 중복 실행 방지
       hasFetched.current[user.id] = true;
       setIsLoading(true);
       setIsRecLoading(true);
@@ -81,7 +79,7 @@ const ExerciseListPage: React.FC = () => {
         ]);
         
         setAllExercises(exercisesData);
-        setLikedExerciseIds(new Set(likesData.map((like) => like.exerciseId)));
+        setLikedExerciseIds(new Set<number>((likesData as { exerciseId: number }[]).map((like: { exerciseId: number }) => like.exerciseId)));
         setUserRoutines(routinesData);
         setIsLoading(false);
 
@@ -136,9 +134,9 @@ const ExerciseListPage: React.FC = () => {
     };
 
     loadAllData();
-  }, [user]); // 의존성 배열은 user만 유지
+  }, [user]);
 
-  // ... (나머지 핸들러 및 렌더링 로직은 동일)
+  // ... (Handler logic is preserved)
   const handleLikeToggle = async (exerciseId: number) => {
     if (!user?.id) return;
     const isLiked = likedExerciseIds.has(exerciseId);
@@ -173,6 +171,7 @@ const ExerciseListPage: React.FC = () => {
     }
   };
 
+
   const filteredExercises = useMemo(() => {
     return allExercises.filter((ex) => {
       const matchesCategory = selectedCategory === '전체' || ex.bodyPart === selectedCategory;
@@ -191,83 +190,69 @@ const ExerciseListPage: React.FC = () => {
     return filteredExercises.slice(startIndex, startIndex + EXERCISES_PER_PAGE);
   }, [filteredExercises, exercisePage]);
 
-  const pageNumbers = useMemo(() => {
-    if (totalExercisePages <= MAX_VISIBLE_PAGES) {
-      return Array.from({ length: totalExercisePages }, (_, i) => i);
-    }
 
-    let startPage = Math.max(0, exercisePage - Math.floor((MAX_VISIBLE_PAGES - 1) / 2));
-    let endPage = startPage + MAX_VISIBLE_PAGES - 1;
-
-    if (endPage >= totalExercisePages) {
-      endPage = totalExercisePages - 1;
-      startPage = endPage - MAX_VISIBLE_PAGES + 1;
-    }
-
-    const pages = [];
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-    return pages;
-  }, [exercisePage, totalExercisePages]);
-
-  if (isLoading) return <div>페이지 로딩 중...</div>;
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen bg-background text-foreground">페이지 로딩 중...</div>;
+  }
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-slate-50 dark:bg-toss-navy/20 min-h-screen">
       <Header />
-      <main
-        className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8"
-        style={{ paddingTop: 'var(--header-height, 90px)' }}
-      >
-        <h1 className="text-3xl font-bold mb-6">운동 목록</h1>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ paddingTop: 'var(--header-height, 100px)' }}>
+        <div className="mb-10">
+            <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">운동 둘러보기</h1>
+            <p className="mt-2 text-lg text-toss-gray">나에게 맞는 운동을 찾아보고 루틴에 추가해 보세요.</p>
+        </div>
 
         {isRecLoading ? (
           <RecommendedExercisesLoader />
         ) : recommendationData && recommendationData.exercises.length > 0 ? (
           <RecommendedExercises recommendedData={recommendationData} />
         ) : (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <p className="text-xl">🤔</p>
-            <p className="mt-2">AI가 새로운 추천 운동을 찾지 못했어요.</p>
+          <div className="text-center py-12 px-6 bg-white dark:bg-toss-navy/30 rounded-2xl mb-12">
+            <Bot className="mx-auto h-12 w-12 text-toss-gray" />
+            <p className="mt-4 font-semibold text-slate-700 dark:text-white">AI 추천을 준비 중입니다</p>
+            <p className="mt-1 text-sm text-toss-gray">운동 기록이 쌓이면 더 정확한 추천을 받을 수 있어요.</p>
           </div>
         )}
 
-        <ExerciseFilter
-          searchTerm={searchTerm}
-          onSearchTermChange={setSearchTerm}
-          selectedCategory={selectedCategory}
-          onCategorySelect={(category) => setSelectedCategory(category as (typeof CATEGORIES)[number])}
-          categories={CATEGORIES}
-        />
+        <div className="mt-12">
+            <ExerciseFilter
+                searchTerm={searchTerm}
+                onSearchTermChange={setSearchTerm}
+                selectedCategory={selectedCategory}
+                onCategorySelect={(category) => setSelectedCategory(category as (typeof CATEGORIES)[number])}
+                categories={CATEGORIES}
+            />
 
-        <ExerciseGrid
-          exercises={paginatedExercises}
-          likedExerciseIds={likedExerciseIds}
-          onLikeToggle={handleLikeToggle}
-          onAddToRoutine={handleOpenAddToRoutine}
-        />
+            <ExerciseGrid
+                exercises={paginatedExercises}
+                likedExerciseIds={likedExerciseIds}
+                onLikeToggle={handleLikeToggle}
+                onAddToRoutine={handleOpenAddToRoutine}
+            />
+        </div>
 
         {totalExercisePages > 1 && (
-          <div className="mt-8 flex justify-center">
+          <div className="mt-12 flex justify-center">
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
                     href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setExercisePage((prev) => Math.max(0, prev - 1));
-                    }}
-                    className={exercisePage === 0 ? "pointer-events-none opacity-50" : undefined}
+                    onClick={(e) => { e.preventDefault(); setExercisePage((prev) => Math.max(0, prev - 1)); }}
+                    className={exercisePage === 0 ? "pointer-events-none text-slate-400 dark:text-slate-600" : "hover:bg-slate-100 dark:hover:bg-slate-700"}
                   />
                 </PaginationItem>
-                {pageNumbers.map((pageIndex) => (
+                {Array.from({ length: totalExercisePages }, (_, i) => i).map(pageIndex => (
                   <PaginationItem key={pageIndex}>
                     <PaginationLink
                       href="#"
                       onClick={(e) => { e.preventDefault(); setExercisePage(pageIndex); }}
                       isActive={exercisePage === pageIndex}
+                      className={exercisePage === pageIndex 
+                        ? 'bg-toss-blue text-white hover:bg-toss-blue/90' 
+                        : 'hover:bg-slate-100 dark:hover:bg-slate-700'}
                     >
                       {pageIndex + 1}
                     </PaginationLink>
@@ -277,7 +262,7 @@ const ExerciseListPage: React.FC = () => {
                   <PaginationNext
                     href="#"
                     onClick={(e) => { e.preventDefault(); setExercisePage((prev) => Math.min(totalExercisePages - 1, prev + 1)); }}
-                    className={exercisePage === totalExercisePages - 1 ? "pointer-events-none opacity-50" : undefined}
+                    className={exercisePage === totalExercisePages - 1 ? "pointer-events-none text-slate-400 dark:text-slate-600" : "hover:bg-slate-100 dark:hover:bg-slate-700"}
                   />
                 </PaginationItem>
               </PaginationContent>

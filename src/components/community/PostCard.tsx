@@ -2,15 +2,16 @@
 import React from 'react';
 import { Card } from '../ui/card';
 import PostCounter from './PostCounter';
+import { Tag } from 'lucide-react';
 import type { PostDTO } from '../../types/community';
 
 interface PostCardProps {
-  post: PostDTO; // 게시글 정보
-  isLiked: boolean; // 현재 사용자가 좋아요를 눌렀는지 여부
-  likeLoading: boolean; // 좋아요 처리 중 여부(로딩 표시용)
-  onLikeClick: (e: React.MouseEvent) => void; // 좋아요 클릭 핸들러
-  onClick: () => void; // 카드 클릭(상세 이동 등)
-  showLikeButton?: boolean; // 좋아요 버튼 노출 여부(선택)
+  post: PostDTO;
+  isLiked: boolean;
+  likeLoading: boolean;
+  onLikeClick: (e: React.MouseEvent) => void;
+  onClick: () => void;
+  showLikeButton?: boolean;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -19,74 +20,65 @@ const PostCard: React.FC<PostCardProps> = ({
   likeLoading,
   onLikeClick,
   onClick,
-  showLikeButton = true
+  showLikeButton = true,
 }) => {
   return (
     <Card
-      className="!p-6 min-h-[132px] flex flex-col justify-between cursor-pointer hover:shadow-lg transition-shadow"
-      style={{ minHeight: '132px' }}
+      className="p-6 rounded-2xl bg-white dark:bg-neutral-900/80 border border-gray-200/80 dark:border-neutral-800 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 ease-in-out cursor-pointer group"
       tabIndex={0}
       aria-label={`게시글: ${post.title}`}
       onClick={onClick}
-      onKeyDown={e => {
+      onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           onClick();
         }
       }}
     >
-      {/* 게시글 텍스트/이미지 영역 */}
-      <div className="flex justify-between items-start h-full">
-        <div className="flex-1 min-w-0">
-          <span className="text-xs font-bold text-blue-500">
-            {`[${post.categoryName}]`}
-          </span>
-          <h3 className="font-bold mt-1 truncate">{post.title}</h3>
-          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-            {post.content}
-          </p>
-        </div>
-        {/* 게시글 이미지(있을 때만) */}
-        {post.imageUrl && (
-          <div 
-            className="w-16 h-16 ml-2 flex-shrink-0 rounded-md bg-muted flex items-center justify-center overflow-hidden"
-            style={{
-              width: '64px',
-              height: '64px',
-              minWidth: '64px',
-              minHeight: '64px'
-            }}
-          >
-            <img 
-              src={post.imageUrl}
-              alt="게시글 이미지"
-              className="max-w-full max-h-full object-contain"
-              onError={(e) => {
-                e.currentTarget.src = '/assets/logo.png';
-              }}
-            />
+      <div className="flex flex-col justify-between h-full min-h-[150px]">
+        {/* Post content area */}
+        <div className="flex justify-between items-start gap-5">
+          <div className="flex-1 min-w-0">
+            <div className="inline-flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-2.5 py-1 rounded-full text-xs font-bold">
+              <Tag size={14} />
+              <span>{post.categoryName}</span>
+            </div>
+            <h3 className="font-bold text-lg md:text-xl mt-2.5 truncate text-gray-800 dark:text-gray-100">
+              {post.title}
+            </h3>
+            <p className="text-base text-gray-600 dark:text-neutral-400 mt-2 line-clamp-2 leading-relaxed">
+              {post.content}
+            </p>
           </div>
-        )}
-      </div>
-      {/* 게시글 작성자/카운터(좋아요, 댓글, 조회수) 영역 */}
-      <div className="flex justify-between items-center text-xs text-gray-500 mt-3 pt-2 border-t">
-        <div className="flex items-center gap-4">
-          <span>{post.userName}</span>
+          {/* Post Image */}
+          {post.imageUrl && (
+            <div className="w-24 h-24 ml-4 flex-shrink-0 rounded-xl bg-gray-100 dark:bg-neutral-800 overflow-hidden shadow-inner">
+              <img
+                src={post.imageUrl}
+                alt="게시글 썸네일"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            </div>
+          )}
         </div>
-        {/* PostCounter: 좋아요/댓글/조회수 및 좋아요 버튼 */}
-        <PostCounter
-          likeCount={post.likeCount}
-          commentCount={post.commentCount}
-          viewCount={post.viewCount}
-          isLiked={isLiked}
-          onLikeClick={(e) => onLikeClick(e)}
-          likeLoading={likeLoading}
-          showLikeButton={showLikeButton}
-          size="sm"
-        />
+
+        {/* Footer: Author and Counters */}
+        <div className="flex justify-between items-center text-sm text-gray-500 dark:text-neutral-500 mt-6 pt-4 border-t border-gray-100 dark:border-neutral-800/80">
+          <span className="font-semibold text-gray-700 dark:text-neutral-300">{post.userName}</span>
+          <PostCounter
+            likeCount={post.likeCount}
+            commentCount={post.commentCount}
+            viewCount={post.viewCount}
+            isLiked={isLiked}
+            onLikeClick={onLikeClick}
+            likeLoading={likeLoading}
+            showLikeButton={showLikeButton}
+            size="md"
+          />
+        </div>
       </div>
     </Card>
   );
 };
 
-export default PostCard; 
+export default PostCard;
