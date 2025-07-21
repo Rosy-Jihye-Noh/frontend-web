@@ -46,3 +46,23 @@ export const requestAnalysis = async (
   });
   return res.data;
 };
+
+/**
+ * 정면/측면 Cloudinary URL을 이용해 오각형 분석을 요청합니다.
+ * @param userId - 사용자 ID (백엔드 저장용, merge API에는 직접 사용하지 않음)
+ * @param frontImageUrl - 정면 Cloudinary 이미지 URL
+ * @param sideImageUrl - 측면 Cloudinary 이미지 URL
+ * @returns 분석 결과 DTO
+ */
+export const requestMergedAnalysis = async (
+  userId: number,
+  frontImageUrl: string,
+  sideImageUrl: string
+): Promise<any> => {
+  // Spring 백엔드의 merge 분석 엔드포인트로 요청
+  const res = await axiosInstance.post(`/analysis-histories/merge/user/${userId}`, {
+    front_image_url: frontImageUrl,
+    side_image_url: sideImageUrl
+  });
+  return res.data;
+};

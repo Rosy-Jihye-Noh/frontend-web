@@ -4,8 +4,8 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import {
   getActiveSession,
   getChatHistory,
-  sendChatMessage,
-  requestCommentSummary,
+  sendAiCoachMessage,
+  sendYoutubeMessage,
   type ChatMessageDTO,
   type ChatRequestDTO,
   type ChatResponseDTO
@@ -178,22 +178,27 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
 
   // 버튼 클릭만으로 FastAPI 호출: isOpen+userId+historyId+initialUserMessage(또는 initialVideoUrl) 있으면 바로 요청
   useEffect(() => {
+    console.log('[DEBUG] useEffect triggered:', { isOpen, userId, historyId, initialUserMessage, initialVideoUrl, initType, initialRequestSent });
     if (
       isOpen &&
       userId &&
       historyId &&
+      !isNaN(historyId) && // NaN 방지
       !initialRequestSent &&
       (initialUserMessage || initialVideoUrl)
     ) {
       setInitialRequestSent(true);
       const message = initialUserMessage || (initType === 'video' ? '추천 영상 보여줘' : '운동 추천해줘');
       const payload: ChatRequestDTO = {
-        type: initType === 'video' ? 'recommend_video' : 'ai_coach',
+        type: initType === 'video' ? 'recommend' : undefined,
         userId,
         historyId,
         message,
       };
-      sendChatMessage(payload).then(aiRes => {
+      console.log('[DEBUG] ChatModal apiCall payload:', payload);
+      const apiCall = initType === 'video' ? sendYoutubeMessage : sendAiCoachMessage;
+      apiCall(payload).then(aiRes => {
+        console.log('[DEBUG] AI 응답:', aiRes);
         const userMsg: ChatMessage = { type: 'user', content: message };
         
         // AI 응답을 프론트엔드 메시지 형식으로 변환
@@ -273,10 +278,11 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
       userId,
       historyId,
       message: `댓글 요약해주세요: ${videoUrl}`,
+      videoUrl,
     };
     
     try {
-      const aiRes = await requestCommentSummary(payload);
+      const aiRes = await sendYoutubeMessage(payload);
       
       if (aiRes.type === 'error') {
         setMessages(prev => [
@@ -305,14 +311,15 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
     setInput("");
     
     const payload: ChatRequestDTO = {
-      type: initType === 'video' ? 'recommend_video' : 'ai_coach',
+      type: initType === 'video' ? 'recommend' : undefined,
       userId,
       historyId,
       message: input,
     };
     
     try {
-      const aiRes = await sendChatMessage(payload);
+      const apiCall = initType === 'video' ? sendYoutubeMessage : sendAiCoachMessage;
+      const aiRes = await apiCall(payload);
       
       if (aiRes.type === 'error') {
         setMessages(prev => [
