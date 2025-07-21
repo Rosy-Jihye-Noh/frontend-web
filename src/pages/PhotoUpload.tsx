@@ -9,7 +9,7 @@ import { HiUpload } from 'react-icons/hi';
 import { useUserStore } from '@/store/userStore';
 import { useRequireAuth } from "../hooks/useRequireAuth";
 import { uploadToCloudinary } from '@/services/api/cloudinaryApi';
-import { requestAnalysis } from '@/services/api/analysisApi';
+import { requestAnalysis, requestMergedAnalysis } from '@/services/api/analysisApi';
 
 const PhotoUpload: React.FC = () => {
   useRequireAuth("/photoupload"); // 페이지 최상단에서 인증 체크
@@ -40,22 +40,6 @@ const PhotoUpload: React.FC = () => {
   // 분석 시작 가능 여부 확인
   const canStartAnalysis = frontPhoto && (includeSidePhoto ? sidePhoto : true);
 
-  // const dummyAnalysis = {
-  //   id: 10,
-  //   createdAt: new Date().toISOString(),
-  //   spineCurvScore: 75,
-  //   spineScolScore: 82,
-  //   pelvicScore: 78,
-  //   neckScore: 65,
-  //   shoulderScore: 70
-  // };
-
-  // const getAnalysisIdForUser = (userId?: number) => {
-  //   if (userId === 204) return 7;
-  //   if (userId === 215) return 9;
-  //   return 10;
-  // };
-
   const handleStartAnalysis = async () => {
     console.log('분석 시작하기 클릭됨');
     if (!frontPhoto) return;
@@ -65,25 +49,23 @@ const PhotoUpload: React.FC = () => {
     }
     try {
       const frontUrl = await uploadToCloudinary(frontPhoto);
-      console.log('Cloudinary 업로드 결과 frontUrl:', frontUrl); // ← 여기 추가
-      
-      // (선택) 측면 사진도 업로드
+      console.log('Cloudinary 업로드 결과 frontUrl:', frontUrl);
       let sideUrl = null;
       if (includeSidePhoto && sidePhoto) {
         sideUrl = await uploadToCloudinary(sidePhoto);
-        console.log('Cloudinary 업로드 결과 sideUrl:', sideUrl); // ← 여기 추가
+        console.log('Cloudinary 업로드 결과 sideUrl:', sideUrl);
       }
-
-      // API 함수로 분석 요청
-      const analysisResult = await requestAnalysis(
-        user.id,
-        frontUrl,
-        includeSidePhoto ? 'side' : 'front'
-      );
+      let analysisResult;
+      if (includeSidePhoto && sideUrl) {
+        // 정면+측면 모두 있을 때 merge API 호출
+        analysisResult = await requestMergedAnalysis(user.id, frontUrl, sideUrl);
+      } else {
+        // 기존 단일 분석 API 호출
+        analysisResult = await requestAnalysis(user.id, frontUrl, 'front');
+      }
       console.log('분석 요청 결과:', analysisResult);
-
-      // 결과 페이지로 이동
-      navigate(`/analysis-result/${analysisResult.id}`, { state: { analysis: analysisResult } });
+      // 결과 페이지로 이동 (state로 분석 결과 전달)
+      navigate(`/analysis-result/merged`, { state: { analysis: analysisResult } });
     } catch (error) {
       alert('업로드 또는 분석 요청 실패');
       console.error(error);
@@ -97,7 +79,7 @@ const PhotoUpload: React.FC = () => {
         <h1 className="text-3xl font-bold text-center mb-6 text-gray-900 dark:text-white">AI 자세 분석</h1>
         <Card className="p-8">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">사진 업로드</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">정확한 분석을 위해 앉은 자세에서 앞모습 사진을 업로드해주세요.</p>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">정확한 분석을 위해 앞모습 사진을 업로드해주세요.</p>
           
           <div className="flex flex-col gap-6 mb-6">
             <PhotoUploader photo={frontPhoto} setPhoto={setFrontPhoto} title="앞모습 사진 (필수)" exampleUrl="https://placehold.co/300x400/BFDBFE/1E40AF?text=Front+View" />

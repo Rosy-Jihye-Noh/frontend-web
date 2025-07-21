@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/compone
 import { toast } from 'sonner';
 import { fetchAnalysisDetail as fetchAnalysisDetailApi } from '../services/api/analysisApi';
 import ChatModal from '@/components/chat/ChatModal';
+import { sendAiCoachMessage, sendYoutubeMessage } from '../services/api/chatbotApi';
 
 interface LocationState {
   frontPhoto: File;
@@ -51,7 +52,7 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
   const [initialVideoUrl, setInitialVideoUrl] = useState<string | undefined>(undefined);
 
   // 사진 데이터 확인 (필요시 활용)
-  const { frontPhoto, sidePhoto } = (location.state as LocationState) || {};
+  // const { frontPhoto, sidePhoto } = (location.state as LocationState) || {};
 
   console.log('AnalysisResultPage user:', user);
   console.log('AnalysisResultPage analysis:', analysis);
@@ -59,6 +60,12 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
   console.log('Analysis ID:', analysis?.id);
   
   useEffect(() => {
+    // location.state.analysis가 있으면 우선 사용
+    if (location.state && (location.state as any).analysis) {
+      setAnalysis((location.state as any).analysis);
+      setStatus('result');
+      return;
+    }
     if (!historyId) {
       setErrorMessage('분석 결과 ID가 없습니다.');
       setStatus('error');
@@ -83,7 +90,14 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
         setErrorMessage('분석 결과를 불러오는 중 오류가 발생했습니다.');
         setStatus('error');
       });
-  }, [historyId, frontPhoto, sidePhoto, user]);
+  }, [historyId, location.state, user]);
+
+  // measurements 콘솔 출력
+  useEffect(() => {
+    if (analysis) {
+      console.log('analysis.measurements:', analysis.measurements);
+    }
+  }, [analysis]);
 
   // 챗봇 오픈 트리거 - ChatModal에서 관리하는 전역 함수 사용
   const handleChatOpen = (type: 'video' | 'consult', payload?: any) => {
@@ -215,40 +229,39 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
       : 0;
 
     const feedback = analysis.feedback || {};
-    const measurements = analysis.measurements || {};
-
+    const measurements = analysis?.measurements || {};
     const diagnoses = [
       {
-        part: "목목",
-        score: analysis.neckScore,
+        part: "목",
+        score: analysis?.neckScore,
         feedback: feedback.head_forward || feedback.neck_error,
         measurement: measurements.neck_forward_angle,
         unit: "°"
       },
       {
         part: "어깨",
-        score: analysis.shoulderScore,
+        score: analysis?.shoulderScore,
         feedback: feedback.shoulder_tilt,
         measurement: measurements.shoulder_tilt_angle,
         unit: "°"
       },
       {
         part: "척추(정면)",
-        score: analysis.spineScolScore,
+        score: analysis?.spineScolScore,
         feedback: feedback.torso_tilt,
         measurement: measurements.torso_tilt_angle,
         unit: "°"
       },
       {
         part: "척추(측면)",
-        score: analysis.spineCurvScore,
+        score: analysis?.spineCurvScore,
         feedback: feedback.back_bend,
         measurement: measurements.back_angle,
         unit: "°"
       },
       {
         part: "골반",
-        score: analysis.pelvicScore,
+        score: analysis?.pelvicScore,
         feedback: feedback.hip_tilt,
         measurement: measurements.hip_tilt_angle,
         unit: "°"
@@ -305,10 +318,10 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
                         <span className={`font-bold ${color}`}>{label}({score}점)</span>
                       </div>
                       <div>
-                        {measurement !== undefined && measurement !== null ? (
-                          <span className="text-gray-700">{`${Number(measurement).toFixed(1)}${unit} 기울어짐`}</span>
+                        {measurement !== undefined && measurement !== null && !isNaN(Number(measurement)) ? (
+                          <span className="text-gray-700">{`${Number(measurement).toFixed(1)}${unit}`}</span>
                         ) : (
-                          <span className="text-gray-700">증상 있음</span>
+                          <span className="text-gray-700">측정 불가</span>
                         )}
                       </div>
                     </li>
@@ -322,9 +335,9 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
         <Card className="p-6 mb-6">
           <h2 className="font-bold text-lg mb-4">Keypoint 분석</h2>
           <div className="h-[32rem] bg-muted rounded-md flex items-center justify-center">
-            {analysis?.radarChartUrl ? (
+            {(analysis && ((analysis as any).radar_chart_url || analysis.radarChartUrl)) ? (
               <img
-                src={analysis.radarChartUrl}
+                src={(analysis as any).radar_chart_url || analysis.radarChartUrl}
                 alt="자세 분석 레이더 차트"
                 className="max-h-[32rem] max-w-full object-contain"
               />
@@ -404,7 +417,7 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
             isOpen={isChatOpen}
             onClose={handleChatClose}
             userId={user.id}
-            historyId={Number(historyId)}  // analysis.id 대신 URL의 historyId 사용
+            historyId={analysis?.id || (historyId ? Number(historyId) : undefined)}
             initType={chatInitType}
             initPayload={chatInitPayload}
             initialUserMessage={initialUserMessage}

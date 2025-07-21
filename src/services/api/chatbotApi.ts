@@ -1,7 +1,7 @@
 import axiosInstance from '../../api/axiosInstance';
 
 export interface ChatRequestDTO {
-  type?: string; // 'ai_coach' | 'recommend_video'
+  type?: string; // 'recommend' | 'summary' | 'comment_summary' (Youtube에서만)
   userId: number;
   historyId?: number;
   sessionId?: string;
@@ -79,27 +79,27 @@ export const getChatHistoryBySession = async (userId: number, sessionId: string)
 };
 
 /**
- * 챗봇 메시지를 전송합니다. (FastAPI 호출 + Redis 저장)
+ * AI코치/운동추천 메시지를 전송합니다. (FastAPI /ai-coach)
  * @param request - 메시지 전송 요청 데이터
  */
-export const sendChatMessage = async (request: ChatRequestDTO): Promise<ChatResponseDTO> => {
+export const sendAiCoachMessage = async (request: ChatRequestDTO): Promise<ChatResponseDTO> => {
   try {
     const response = await axiosInstance.post('/chatbot/send', request);
     return response.data;
   } catch (error) {
-    throw new Error('메시지 전송에 실패했습니다.');
+    throw new Error('AI코치 메시지 전송에 실패했습니다.');
   }
 };
 
 /**
- * 댓글 요약을 요청합니다.
- * @param request - 댓글 요약 요청 데이터
+ * 유튜브(영상추천/스크립트/댓글요약) 메시지를 전송합니다. (FastAPI /youtube)
+ * @param request - 메시지 전송 요청 데이터 (type 필수)
  */
-export const requestCommentSummary = async (request: ChatRequestDTO): Promise<ChatResponseDTO> => {
+export const sendYoutubeMessage = async (request: ChatRequestDTO): Promise<ChatResponseDTO> => {
   try {
-    const response = await axiosInstance.post('/chatbot/comment-summary', request);
+    const response = await axiosInstance.post('/chatbot/send', request);
     return response.data;
   } catch (error) {
-    throw new Error('댓글 요약 요청에 실패했습니다.');
+    throw new Error('유튜브 메시지 전송에 실패했습니다.');
   }
 }; 
