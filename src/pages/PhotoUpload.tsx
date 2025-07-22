@@ -11,12 +11,15 @@ import { useRequireAuth } from "../hooks/useRequireAuth";
 import { uploadToCloudinary } from '@/services/api/cloudinaryApi';
 import { requestAnalysis, requestMergedAnalysis } from '@/services/api/analysisApi';
 
+const LOADING_MIN_TIME = 1000; // 최소 1초 로딩 보장
+
 const PhotoUpload: React.FC = () => {
   useRequireAuth("/photoupload"); // 페이지 최상단에서 인증 체크
 
   const [frontPhoto, setFrontPhoto] = useState<File | null>(null);
   const [sidePhoto, setSidePhoto] = useState<File | null>(null);
   const [includeSidePhoto, setIncludeSidePhoto] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const navigate = useNavigate();
   const { user } = useUserStore();
 
@@ -47,6 +50,8 @@ const PhotoUpload: React.FC = () => {
       alert('로그인이 필요합니다.');
       return;
     }
+    setIsAnalyzing(true);
+    const start = Date.now();
     try {
       const frontUrl = await uploadToCloudinary(frontPhoto);
       console.log('Cloudinary 업로드 결과 frontUrl:', frontUrl);
@@ -69,6 +74,10 @@ const PhotoUpload: React.FC = () => {
     } catch (error) {
       alert('업로드 또는 분석 요청 실패');
       console.error(error);
+    } finally {
+      const elapsed = Date.now() - start;
+      const remain = Math.max(0, LOADING_MIN_TIME - elapsed);
+      setTimeout(() => setIsAnalyzing(false), remain);
     }
   };
 
@@ -77,40 +86,44 @@ const PhotoUpload: React.FC = () => {
       <Header />
       <main className="max-w-4xl mx-auto pt-32 px-4 sm:px-8 lg:px-16 pb-8">
         <h1 className="text-3xl font-bold text-center mb-6 text-gray-900 dark:text-white">AI 자세 분석</h1>
-        <Card className="p-8">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">사진 업로드</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">정확한 분석을 위해 앞모습 사진을 업로드해주세요.</p>
-          
-          <div className="flex flex-col gap-6 mb-6">
-            <PhotoUploader photo={frontPhoto} setPhoto={setFrontPhoto} title="앞모습 사진 (필수)" exampleUrl="https://placehold.co/300x400/BFDBFE/1E40AF?text=Front+View" />
-            
-            {/* 측면사진 토글 */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-md border dark:border-gray-700">
-              <div>
-                <Label className="text-sm font-medium">측면사진 포함</Label>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                  측면사진을 포함하면 더 정확한 분석 결과를 얻을 수 있습니다.
-                </p>
-              </div>
-              <Switch
-                checked={includeSidePhoto}
-                onCheckedChange={setIncludeSidePhoto}
-              />
-            </div>
-
-            {includeSidePhoto && (
-              <PhotoUploader photo={sidePhoto} setPhoto={setSidePhoto} title="옆모습 사진 (선택)" exampleUrl="https://placehold.co/300x400/BFDBFE/1E40AF?text=Side+View" />
-            )}
+        {isAnalyzing ? (
+          <div className="flex flex-col items-center justify-center h-[60vh] text-center">
+            <div className="w-16 h-16 border-4 border-blue-500 border-dashed rounded-full animate-spin mb-6"></div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">AI가 분석 중입니다...</h2>
+            <p className="text-gray-600 dark:text-gray-400 animate-pulse">사진 업로드 및 분석이 완료될 때까지 잠시만 기다려주세요.</p>
           </div>
-
-          <Button
-            onClick={handleStartAnalysis}
-            disabled={!canStartAnalysis || !user}
-            className="w-full text-lg bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
-          >
-            분석 시작하기
-          </Button>
-        </Card>
+        ) : (
+          <Card className="p-8">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">사진 업로드</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">정확한 분석을 위해 앞모습 사진을 업로드해주세요.</p>
+            <div className="flex flex-col gap-6 mb-6">
+              <PhotoUploader photo={frontPhoto} setPhoto={setFrontPhoto} title="앞모습 사진 (필수)" exampleUrl="https://placehold.co/300x400/BFDBFE/1E40AF?text=Front+View" />
+              {/* 측면사진 토글 */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-md border dark:border-gray-700">
+                <div>
+                  <Label className="text-sm font-medium">측면사진 포함</Label>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                    측면사진을 포함하면 더 정확한 분석 결과를 얻을 수 있습니다.
+                  </p>
+                </div>
+                <Switch
+                  checked={includeSidePhoto}
+                  onCheckedChange={setIncludeSidePhoto}
+                />
+              </div>
+              {includeSidePhoto && (
+                <PhotoUploader photo={sidePhoto} setPhoto={setSidePhoto} title="옆모습 사진 (선택)" exampleUrl="https://placehold.co/300x400/BFDBFE/1E40AF?text=Side+View" />
+              )}
+            </div>
+            <Button
+              onClick={handleStartAnalysis}
+              disabled={!canStartAnalysis || !user}
+              className="w-full text-lg bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+            >
+              분석 시작하기
+            </Button>
+          </Card>
+        )}
       </main>
     </div>
   );

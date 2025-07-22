@@ -42,7 +42,7 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
   const { historyId } = useParams<{ historyId: string }>();
   const { user } = useUserStore();
   const [analysis, setAnalysis] = useState<AnalysisHistoryItem | null>(null);
-  const [status, setStatus] = useState<'loading' | 'completed' | 'result' | 'error'>('loading');
+  const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -63,32 +63,24 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
     // location.state.analysis가 있으면 우선 사용
     if (location.state && (location.state as any).analysis) {
       setAnalysis((location.state as any).analysis);
-      setStatus('result');
+      setLoading(false);
       return;
     }
     if (!historyId) {
       setErrorMessage('분석 결과 ID가 없습니다.');
-      setStatus('error');
+      setLoading(false);
       return;
     }
-    setStatus('loading');
-    const start = Date.now();
+    setLoading(true);
     fetchAnalysisDetailApi(Number(historyId))
       .then((data) => {
         setAnalysis(data);
-        const elapsed = Date.now() - start;
-        const minLoading = 1000; // 최소 1초 로딩
-        setTimeout(() => {
-          setStatus('completed');
-          setTimeout(() => {
-            setStatus('result');
-          }, 2000); // 2초 동안 '분석 완료!' 보여주기
-        }, Math.max(0, minLoading - elapsed));
+        setLoading(false);
       })
       .catch((error) => {
         console.error(error);
         setErrorMessage('분석 결과를 불러오는 중 오류가 발생했습니다.');
-        setStatus('error');
+        setLoading(false);
       });
   }, [historyId, location.state, user]);
 
@@ -198,16 +190,6 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
     </div>
   );
 
-  const renderCompletedContent = () => (
-    <div className="flex flex-col items-center justify-center h-full text-center p-4 min-h-[60vh]">
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">분석 완료!</h2>
-      <div className="flex flex-col items-center justify-center">
-        <HiCheckCircle className="w-16 h-16 text-green-500 mb-4" />
-        <p className="text-gray-600 dark:text-gray-400">결과를 확인해주세요.</p>
-      </div>
-    </div>
-  );
-
   const renderErrorContent = () => (
     <div className="flex flex-col items-center justify-center h-full text-center p-4 min-h-[60vh]">
       <h2 className="text-2xl font-bold text-red-600 mb-4">오류가 발생했습니다</h2>
@@ -297,9 +279,9 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
         <div className="flex flex-col md:flex-row gap-6 max-w-5xl mx-auto mb-6">
           {/* 자세 점수 카드 */}
           <Card className="text-center p-8 flex-1 mb-0">
-            <p className="text-gray-500 mb-2">자세 점수</p>
-            <p className="text-6xl font-bold text-blue-600 mb-4">{averageScore}점</p>
-            <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+            <p className="text-gray-500 dark:text-gray-300 mb-2">자세 점수</p>
+            <p className="text-6xl font-bold text-blue-600 dark:text-blue-300 mb-4">{averageScore}점</p>
+            <span className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-sm font-medium px-3 py-1 rounded-full">
               {getOverallGrade(averageScore)}
             </span>
           </Card>
@@ -319,9 +301,9 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
                       </div>
                       <div>
                         {measurement !== undefined && measurement !== null && !isNaN(Number(measurement)) ? (
-                          <span className="text-gray-700">{`${Number(measurement).toFixed(1)}${unit}`}</span>
+                          <span className="text-gray-700 dark:text-gray-200">{`${Number(measurement).toFixed(1)}${unit}기울어짐`}</span>
                         ) : (
-                          <span className="text-gray-700">측정 불가</span>
+                          <span className="text-gray-700 dark:text-gray-200">측정 불가</span>
                         )}
                       </div>
                     </li>
@@ -350,7 +332,7 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
         {/* AI 코치 소견 카드 */}
         <Card className="p-6 mb-6">
           <h2 className="font-bold text-lg mb-4">AI 코치 소견</h2>
-          <p className="text-gray-600 leading-relaxed">
+          <p className="text-gray-600 dark:text-gray-100 leading-relaxed">
             {(() => {
               try {
                 if (!analysis.diagnosis) return 'AI 진단 정보가 없습니다.';
@@ -432,10 +414,13 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
     <div className="bg-background min-h-screen">
       {!isReadOnly && <Header />}
       <main className={`max-w-4xl mx-auto ${!isReadOnly ? 'pt-32' : 'pt-8'} px-4 sm:px-8 lg:px-16 pb-8`}>
-        {status === 'loading' && renderLoadingContent()}
-        {status === 'completed' && renderCompletedContent()}
-        {status === 'error' && renderErrorContent()}
-        {status === 'result' && renderResultContent()}
+        {loading ? (
+          renderLoadingContent()
+        ) : errorMessage ? (
+          renderErrorContent()
+        ) : (
+          renderResultContent()
+        )}
       </main>
     </div>
   );

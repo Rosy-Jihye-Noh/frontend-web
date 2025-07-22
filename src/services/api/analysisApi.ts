@@ -66,3 +66,11 @@ export const requestMergedAnalysis = async (
   });
   return res.data;
 };
+
+/**
+ * 분석 기록을 삭제합니다.
+ * @param analysisId - 삭제할 분석 기록 ID
+ */
+export const deleteAnalysisHistory = async (analysisId: number): Promise<void> => {
+  await axiosInstance.delete(`/analysis-histories/${analysisId}`);
+};
