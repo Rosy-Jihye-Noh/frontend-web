@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '../ui/card';
 import type { AnalysisHistoryItem } from '@/types/index';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { deleteAnalysisHistory } from '@/services/api/analysisApi';
+import { useState } from 'react';
 
 interface AnalysisHistorySectionProps {
     history: AnalysisHistoryItem[];
@@ -10,9 +12,10 @@ interface AnalysisHistorySectionProps {
 
 const AnalysisHistorySection: React.FC<AnalysisHistorySectionProps> = ({ history }) => {
   const navigate = useNavigate();
+  const [localHistory, setLocalHistory] = useState(history);
 
   // 점수들의 평균을 계산하고 날짜와 함께 매핑하는 함수
-  const chartData = history.map(item => {
+  const chartData = localHistory.map(item => {
     const scores = [item.spineCurvScore, item.spineScolScore, item.pelvicScore, item.neckScore, item.shoulderScore];
     const average = Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
     return {
@@ -20,6 +23,16 @@ const AnalysisHistorySection: React.FC<AnalysisHistorySectionProps> = ({ history
       averageScore: average
     };
   }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // 날짜순으로 정렬
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('정말 삭제하시겠습니까?')) return;
+    try {
+      await deleteAnalysisHistory(id);
+      setLocalHistory(prev => prev.filter(item => item.id !== id));
+    } catch (e) {
+      alert('삭제에 실패했습니다.');
+    }
+  };
 
   return (
     <Card className="p-6">
@@ -58,7 +71,7 @@ const AnalysisHistorySection: React.FC<AnalysisHistorySectionProps> = ({ history
         </div>
 
         <ul className="space-y-1 mt-4">
-            {history.map((item) => {
+            {localHistory.map((item) => {
                 const averageScore = Math.round(
                     [item.spineCurvScore, item.spineScolScore, item.pelvicScore, item.neckScore, item.shoulderScore]
                     .reduce((sum, score) => sum + score, 0) / 5
@@ -67,12 +80,20 @@ const AnalysisHistorySection: React.FC<AnalysisHistorySectionProps> = ({ history
                     <li key={item.id} className="flex justify-between items-center text-sm p-3 hover:bg-muted rounded-md">
                         <span className="text-gray-600 dark:text-gray-300">{new Date(item.createdAt).toLocaleDateString()}</span>
                         <span className="font-bold text-gray-800 dark:text-gray-100">{averageScore}점</span>
-                        <button 
-                          onClick={() => navigate(`/analysis-result/${item.id}`)}
-                          className="text-blue-600 dark:text-blue-400 font-semibold text-xs hover:underline"
-                        >
-                          보기
-                        </button>
+                        <div>
+                          <button 
+                            onClick={() => navigate(`/analysis-result/${item.id}`)}
+                            className="text-blue-600 dark:text-blue-400 font-semibold text-xs hover:underline"
+                          >
+                            보기
+                          </button>
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="text-red-500 font-semibold text-xs hover:underline ml-2"
+                          >
+                            삭제
+                          </button>
+                        </div>
                     </li>
                 );
             })}

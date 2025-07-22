@@ -55,7 +55,7 @@ const AnalysisSharePage: React.FC = () => {
   const measurements = analysis.measurements || {};
 
   const diagnoses = [
-    { part: "목목", score: analysis.neckScore, feedback: feedback.head_forward || feedback.neck_error, measurement: measurements.neck_forward_angle, unit: "°" },
+    { part: "목", score: analysis.neckScore, feedback: feedback.head_forward || feedback.neck_error, measurement: measurements.neck_forward_angle, unit: "°" },
     { part: "어깨", score: analysis.shoulderScore, feedback: feedback.shoulder_tilt, measurement: measurements.shoulder_tilt_angle, unit: "°" },
     { part: "척추(정면)", score: analysis.spineScolScore, feedback: feedback.torso_tilt, measurement: measurements.torso_tilt_angle, unit: "°" },
     { part: "척추(측면)", score: analysis.spineCurvScore, feedback: feedback.back_bend, measurement: measurements.back_angle, unit: "°" },
