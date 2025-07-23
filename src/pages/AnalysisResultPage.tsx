@@ -93,9 +93,9 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
 
   // 챗봇 오픈 트리거 - ChatModal에서 관리하는 전역 함수 사용
   const handleChatOpen = (type: 'video' | 'consult', payload?: any) => {
+    console.log('[DEBUG] handleChatOpen called', type, payload, new Date().toISOString());
     setChatInitType(type);
     setChatInitPayload(payload);
-    setIsChatOpen(true);
     setIsModalOpen(false);
     
     // 분석 결과를 바탕으로 더 구체적인 메시지 생성
@@ -132,17 +132,26 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
       console.log('Cleaned diagnosis:', cleanDiagnosis);
       
       if (type === 'consult') {
-        setInitialUserMessage(`자세 분석 결과: ${cleanDiagnosis}. 이에 맞는 운동을 추천해주세요.`);
+        setInitialUserMessage(`자세 분석 결과에 맞는 운동을 추천해주세요.`);
       } else if (type === 'video') {
-        setInitialUserMessage(`자세 분석 결과: ${cleanDiagnosis}. 이에 맞는 운동 영상을 추천해주세요.`);
+        setInitialUserMessage(`자세 분석 결과에 맞는 운동 영상을 추천해주세요.`);
       }
     }
   };
+
+  // initialUserMessage가 세팅된 후에만 모달을 오픈
+  useEffect(() => {
+    if (initialUserMessage) {
+      console.log('[DEBUG] useEffect (initialUserMessage) triggered, setIsChatOpen(true)', new Date().toISOString());
+      setIsChatOpen(true);
+    }
+  }, [initialUserMessage]);
 
   // 모달 닫기 핸들러
   const handleModalClose = () => {
     setIsModalOpen(false);
   };
+
 
   const handleChatClose = () => {
     setIsChatOpen(false);
@@ -357,7 +366,10 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
         {!isReadOnly && (
           <Button
             className="w-full !py-4 !text-base !font-bold bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              console.log('[DEBUG] 맞춤운동 추천보기 버튼 클릭', new Date().toISOString());
+              setIsModalOpen(true);
+            }}
           >
             맞춤 운동 추천 보기
           </Button>
@@ -375,19 +387,25 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
             <div className="flex flex-col gap-6 items-center p-4">
               <Button
                 className="w-full py-3 text-lg bg-blue-500 hover:bg-blue-600 text-white"
-                onClick={() => handleChatOpen('consult', {
-                  message: 'OOO 운동을 추천드립니다. 루틴에 추가하시겠습니까?'
-                })}
+                onClick={() => {
+                  console.log('[DEBUG] AI 운동 코치와 맞춤 운동 상담하기 버튼 클릭', new Date().toISOString());
+                  handleChatOpen('consult', {
+                    message: 'OOO 운동을 추천드립니다. 루틴에 추가하시겠습니까?'
+                  });
+                }}
               >
                 AI 운동 코치와 맞춤 운동 상담하기
               </Button>
               <Button
                 className="w-full py-3 text-lg bg-blue-500 hover:bg-blue-600 text-white"
-                onClick={() => handleChatOpen('video', {
-                  videoUrl: 'https://www.youtube.com/watch?v=fFIL0rlRH78',
-                  thumbnail: 'https://img.youtube.com/vi/fFIL0rlRH78/0.jpg',
-                  message: '스크립트 요약과 댓글의 분석이 필요할 경우 요청주세요.'
-                })}
+                onClick={() => {
+                  console.log('[DEBUG] 추천 운동 영상 바로 시청 버튼 클릭', new Date().toISOString());
+                  handleChatOpen('video', {
+                    videoUrl: 'https://www.youtube.com/watch?v=fFIL0rlRH78',
+                    thumbnail: 'https://img.youtube.com/vi/fFIL0rlRH78/0.jpg',
+                    message: '스크립트 요약과 댓글의 분석이 필요할 경우 요청주세요.'
+                  });
+                }}
               >
                 추천 운동 영상 바로 시청
               </Button>
