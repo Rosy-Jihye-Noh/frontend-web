@@ -1,7 +1,25 @@
 import axios from 'axios';
 
+function baseURL() {
+  const hostname = window.location.hostname;
+
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:8081/api';
+  } else if (hostname === '10.0.2.2') {
+    // 안드로이드 에뮬레이터에서 호스트 PC 접근용 IP
+    return 'http://10.0.2.2:8081/api';
+  } else if (hostname === '192.168.2.6') {
+    // 네트워크 내 서버 IP
+    return 'http://192.168.2.6:8081/api';
+  } else {
+    // 그 외 호스트명이나 도메인
+    return `http://${hostname}:8081/api`;
+  }
+  
+}
+
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8081/api',
+  baseURL: baseURL(),
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
