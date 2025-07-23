@@ -61,9 +61,7 @@ export interface AnalysisHistoryItem {
   shoulderScore: number;
   // 추가: 진단, 차트, 이미지 등
   diagnosis?: string;
-  recommendedExercise?: Record<string, any>; // 추천운동 객체
-  searchQuery?: string; // 추천운동 검색어
-  radarChartUrl?: string ;
+  radarChartUrl?: string;
   frontImageUrl?: string;
   sideImageUrl?: string;
   feedback?: Record<string, any>;
