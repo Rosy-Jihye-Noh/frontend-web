@@ -62,6 +62,8 @@ const LoginPage = () => {
       }
     } catch (err: any) {
       console.error("로그인 실패:", err);
+      console.error("로그인 실패:", JSON.stringify(err, null, 2));
+      console.error("에러 응답 전체:", err.response);
       const errorMessage = err.response?.data?.message || "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
       alert(`🚨 ${errorMessage}`);
     }
