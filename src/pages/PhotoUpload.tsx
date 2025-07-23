@@ -34,7 +34,15 @@ const PhotoUpload: React.FC = () => {
       <Button asChild variant="secondary" className="w-full cursor-pointer">
         <label>
           <HiUpload className="w-5 h-5 inline-block mr-1" /> {photo ? "사진 변경" : "사진 선택"}
-          <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files && setPhoto(e.target.files[0])} />
+          <input 
+            type="file" 
+            accept="image/*" 
+            className="hidden" 
+            capture="environment" 
+            onChange={e => {
+              e.target.files && setPhoto(e.target.files[0]);
+            }} 
+          />
         </label>
       </Button>
     </div>
