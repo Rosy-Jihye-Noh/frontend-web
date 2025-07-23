@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import { HiUser } from "react-icons/hi";
-import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
 import {
   getActiveSession,
   getChatHistory,
@@ -11,6 +11,8 @@ import {
   type ChatResponseDTO
 } from "../../services/api/chatbotApi";
 import { useUserStore } from "../../store/userStore";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Props {
   isOpen: boolean;
@@ -42,44 +44,48 @@ function getYoutubeId(url: string) {
   return match ? match[1] : '';
 }
 
-// convertBackendMessageToFrontend 함수는 컴포넌트 내부로 이동
-
-function createInitialMessage(type: 'video' | 'consult', payload: any, response: string): ChatMessage | null {
-  if (type === "video") {
-    const videoId = getYoutubeId(payload.videoUrl);
-    return {
-      type: "bot",
-      content: (
-        <div>
-          <iframe
-            width="320"
-            height="180"
-            src={`https://www.youtube.com/embed/${videoId}`}
-            title="YouTube video player"
-            style={{ border: "none" }}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="rounded mb-2"
-          ></iframe>
-          <div>{response}</div>
-        </div>
-      ),
-    };
-  } else if (type === "consult") {
-    return { type: "bot", content: response };
-  }
-  return null;
-}
-
 const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPayload, onInputFocus, userId, historyId, initialUserMessage, initialVideoUrl }, ref) => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessionId, setSessionId] = useState<string>("");
   const { user } = useUserStore();
   const [isMinimized, setIsMinimized] = useState(true);
-  const [initialRequestSent, setInitialRequestSent] = useState(false);
+  const initialRequestSentRef = useRef(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // convertBackendMessageToFrontend 함수를 컴포넌트 내부로 이동
+  // handleCommentSummary를 ChatModal 함수 내부에 선언
+  const handleCommentSummary = async (videoUrl: string) => {
+    if (!userId || !historyId) return;
+    const userMessage: ChatMessage = { type: "user", content: `댓글 요약해주세요: ${videoUrl}` };
+    setMessages(prev => [...prev, userMessage]);
+    const payload: ChatRequestDTO = {
+      type: 'comment_summary',
+      userId,
+      historyId,
+      message: `댓글 요약해주세요: ${videoUrl}`,
+      videoUrl,
+    };
+    try {
+      const aiRes = await sendYoutubeMessage(payload);
+      if (aiRes.type === 'error') {
+        setMessages(prev => [
+          ...prev,
+          { type: "bot", content: aiRes.response }
+        ]);
+        return;
+      }
+      const botMessage: ChatMessage = { type: "bot", content: aiRes.response };
+      setMessages(prev => [...prev, botMessage]);
+    } catch (e) {
+      setMessages(prev => [
+        ...prev,
+        { type: "bot", content: "댓글 요약 중 오류가 발생했습니다. 다시 시도해 주세요." }
+      ]);
+    }
+  };
+
+  // convertBackendMessageToFrontend 함수는 마크다운 변환 포함
   const convertBackendMessageToFrontend = (msg: ChatMessageDTO): ChatMessage => {
     if (msg.type === 'bot' && msg.videoUrl) {
       const videoId = getYoutubeId(msg.videoUrl);
@@ -97,7 +103,7 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
               allowFullScreen
               className="rounded mb-2"
             ></iframe>
-            <div>{msg.content}</div>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
             <button
               onClick={() => handleCommentSummary(msg.videoUrl!)}
               className="mt-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
@@ -111,18 +117,20 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
     }
     return {
       type: msg.type as "user" | "bot",
-      content: msg.content,
+      content: msg.type === 'bot'
+        ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+        : msg.content,
       timestamp: msg.timestamp
     };
   };
 
-  // userId가 바뀌면 상태 초기화
+  // userId, sessionId가 바뀔 때만 상태 초기화
   useEffect(() => {
     setSessionId("");
     setMessages([]);
     setInput("");
     setIsMinimized(true);
-    setInitialRequestSent(false);
+    initialRequestSentRef.current = false;
   }, [userId]);
 
   // ESC 키 누르면 minimized로 전환
@@ -135,14 +143,23 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen]);
 
+  // 모달이 닫힐 때 중복 호출 ref 초기화
+  useEffect(() => {
+    if (!isOpen) {
+      initialRequestSentRef.current = false;
+    }
+  }, [isOpen]);
+
   // 세션 조회 및 대화 내역 로드
   const loadSessionAndHistory = async (): Promise<string | null> => {
     if (!userId) return null;
     try {
       let sid = sessionId;
       if (!sid || sid.trim() === '') {
+        console.log('[DEBUG] getActiveSession 호출: userId=', userId);
         const res = await getActiveSession(userId);
         sid = res;
+        console.log('[DEBUG] getActiveSession 반환값:', sid);
         if (!sid || sid.trim() === '') {
           setSessionId('');
           setMessages([]);
@@ -151,8 +168,10 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
         setSessionId(sid);
       }
       if (sid) {
+        console.log('[DEBUG] getChatHistory 호출: userId=', userId, 'sessionId=', sid);
         const historyRes = await getChatHistory(userId);
         const historyData = historyRes || [];
+        console.log('[DEBUG] getChatHistory 반환값:', historyData);
         setMessages(historyData.map(convertBackendMessageToFrontend));
       } else {
         setMessages([]);
@@ -164,13 +183,14 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
     }
   };
 
-  // 챗봇 오픈 시 세션/대화 내역 로드
+  // ChatModal이 열릴 때마다 항상 Redis에서 대화 내역 불러오기
   useEffect(() => {
     if (!isOpen || !userId) return;
     let isMounted = true;
     loadSessionAndHistory().then((sid) => {
       if (isMounted && sid) {
-        // 세션 로드 완료 후 초기 메시지 추가는 별도 useEffect에서 처리
+        // 대화 내역을 불러온 후, messages 상태에 변환해서 저장
+        // 이미 loadSessionAndHistory에서 처리됨
       }
     });
     return () => { isMounted = false; };
@@ -178,16 +198,17 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
 
   // 버튼 클릭만으로 FastAPI 호출: isOpen+userId+historyId+initialUserMessage(또는 initialVideoUrl) 있으면 바로 요청
   useEffect(() => {
-    console.log('[DEBUG] useEffect triggered:', { isOpen, userId, historyId, initialUserMessage, initialVideoUrl, initType, initialRequestSent });
+    console.log('[DEBUG] useEffect triggered:', { isOpen, userId, historyId, initialUserMessage, initialVideoUrl, initType, initialRequestSent: initialRequestSentRef.current });
     if (
       isOpen &&
       userId &&
       historyId &&
-      !isNaN(historyId) && // NaN 방지
-      !initialRequestSent &&
+      !isNaN(historyId) &&
+      !initialRequestSentRef.current &&
       (initialUserMessage || initialVideoUrl)
     ) {
-      setInitialRequestSent(true);
+      initialRequestSentRef.current = true;
+      setIsLoading(true);
       const message = initialUserMessage || (initType === 'video' ? '추천 영상 보여줘' : '운동 추천해줘');
       const payload: ChatRequestDTO = {
         type: initType === 'video' ? 'recommend' : undefined,
@@ -198,6 +219,7 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
       console.log('[DEBUG] ChatModal apiCall payload:', payload);
       const apiCall = initType === 'video' ? sendYoutubeMessage : sendAiCoachMessage;
       apiCall(payload).then(aiRes => {
+        setIsLoading(false);
         console.log('[DEBUG] AI 응답:', aiRes);
         const userMsg: ChatMessage = { type: 'user', content: message };
         
@@ -233,7 +255,7 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
                     allowFullScreen
                     className="rounded mb-2"
                   ></iframe>
-                  <div>{aiRes.response}</div>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{aiRes.response}</ReactMarkdown>
                   <button
                     onClick={() => handleCommentSummary(videoUrl)}
                     className="mt-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
@@ -244,17 +266,20 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
               )
             };
           } else {
-            botMessage = { type: "bot", content: aiRes.response };
+            botMessage = {
+              type: "bot",
+              content: <ReactMarkdown remarkPlugins={[remarkGfm]}>{aiRes.response}</ReactMarkdown>
+            };
           }
           
           return botMessage;
         };
 
         const botMsg = convertBackendMessageToFrontend(aiRes);
-        setMessages([userMsg, botMsg]);
-      });
+        setMessages(prev => [...prev, userMsg, botMsg]); // 이전 대화내역에 추가
+      }).catch(() => setIsLoading(false));
     }
-  }, [isOpen, userId, historyId, initialUserMessage, initialVideoUrl, initType, initialRequestSent]);
+  }, [isOpen, userId, historyId, initialUserMessage, initialVideoUrl, initType]);
 
   // 초기 메시지 추가 (기존 Spring용, FastAPI 즉시 호출 시에는 생략)
   const addInitialMessage = async (currentMessages: ChatMessage[]) => {
@@ -266,42 +291,6 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
     // 더 이상 사용하지 않음
   }, []);
 
-  // 댓글 요약 핸들러
-  const handleCommentSummary = async (videoUrl: string) => {
-    if (!userId || !historyId) return;
-    
-    const userMessage: ChatMessage = { type: "user", content: `댓글 요약해주세요: ${videoUrl}` };
-    setMessages(prev => [...prev, userMessage]);
-    
-    const payload: ChatRequestDTO = {
-      type: 'comment_summary',
-      userId,
-      historyId,
-      message: `댓글 요약해주세요: ${videoUrl}`,
-      videoUrl,
-    };
-    
-    try {
-      const aiRes = await sendYoutubeMessage(payload);
-      
-      if (aiRes.type === 'error') {
-        setMessages(prev => [
-          ...prev,
-          { type: "bot", content: aiRes.response }
-        ]);
-        return;
-      }
-      
-      const botMessage: ChatMessage = { type: "bot", content: aiRes.response };
-      setMessages(prev => [...prev, botMessage]);
-    } catch (e) {
-      setMessages(prev => [
-        ...prev,
-        { type: "bot", content: "댓글 요약 중 오류가 발생했습니다. 다시 시도해 주세요." }
-      ]);
-    }
-  };
-
   // 메시지 전송 핸들러
   const handleSend = async () => {
     if (!input.trim() || !userId || !historyId) return;
@@ -309,6 +298,7 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
     const userMessage: ChatMessage = { type: "user", content: input };
     setMessages(prev => [...prev, userMessage]);
     setInput("");
+    setIsLoading(true);
     
     const payload: ChatRequestDTO = {
       type: initType === 'video' ? 'recommend' : undefined,
@@ -320,6 +310,7 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
     try {
       const apiCall = initType === 'video' ? sendYoutubeMessage : sendAiCoachMessage;
       const aiRes = await apiCall(payload);
+      setIsLoading(false);
       
       if (aiRes.type === 'error') {
         setMessages(prev => [
@@ -361,7 +352,7 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
                   allowFullScreen
                   className="rounded mb-2"
                 ></iframe>
-                <div>{aiRes.response}</div>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{aiRes.response}</ReactMarkdown>
                 <button
                   onClick={() => handleCommentSummary(videoUrl)}
                   className="mt-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
@@ -372,7 +363,10 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
             )
           };
         } else {
-          botMessage = { type: "bot", content: aiRes.response };
+          botMessage = {
+            type: "bot",
+            content: <ReactMarkdown remarkPlugins={[remarkGfm]}>{aiRes.response}</ReactMarkdown>
+          };
         }
         
         return botMessage;
@@ -382,6 +376,7 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
       
       setMessages(prev => [...prev, botMessage]);
     } catch (e) {
+      setIsLoading(false);
       setMessages(prev => [
         ...prev,
         { type: "bot", content: "AI 챗봇 응답에 실패했습니다. 다시 시도해 주세요." }
@@ -407,6 +402,13 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
     setIsMinimized((prev) => !prev);
   };
 
+  // messages가 바뀔 때마다 스크롤을 맨 아래로 이동
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   return (
     <div
       className={`
@@ -428,7 +430,10 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
         </button>
       </div>
       {/* 메시지 영역 */}
-      <div className="p-4 flex-1 overflow-y-auto text-sm text-gray-700 flex flex-col">
+      <div
+        ref={messagesEndRef}
+        className="p-4 flex-1 overflow-y-auto text-sm text-gray-700 flex flex-col"
+      >
         {messages.map((msg, idx) => {
           if (msg.type === "bot" && typeof msg.content === "string" && msg.content.startsWith("[운동영상]")) {
             const videoId = "fFIL0rlRH78";
@@ -482,6 +487,15 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
             </div>
           );
         })}
+        {isLoading && (
+  <div className="flex items-center gap-2 text-blue-500 py-2">
+    <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+    </svg>
+    AI 코치가 답변을 생성 중입니다...
+  </div>
+)}
       </div>
       {/* 입력창/전송 폼 */}
       <form
