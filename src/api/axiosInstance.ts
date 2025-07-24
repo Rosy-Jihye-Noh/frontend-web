@@ -11,6 +11,9 @@ function baseURL() {
   } else if (hostname === '192.168.2.6') {
     // 네트워크 내 서버 IP
     return 'http://192.168.2.6:8081/api';
+  } else if (hostname === '192.168.2.168') {
+    // mac 서버 ip(2강의실)
+    return 'http://192.168.2.168:8081/api'
   } else {
     // 그 외 호스트명이나 도메인
     return `http://${hostname}:8081/api`;
