@@ -147,6 +147,23 @@ export const fetchPopularExercisesByRoutineAdditions = async (limit: number = 5)
   }
 };
 
+/**
+ * 정확히 일치하는 운동명으로 운동을 조회합니다.
+ * @param name - 운동명
+ * @returns {Promise<Exercise|null>} 운동 객체 또는 null(없을 때)
+ */
+export const fetchExerciseByExactName = async (name: string): Promise<Exercise | null> => {
+  try {
+    const response = await axiosInstance.get(`/exercises/search/exact`, { params: { name } });
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.status === 404) {
+      return null;
+    }
+    throw new Error('정확히 일치하는 운동명을 조회하는 데 실패했습니다.');
+  }
+};
+
 // AI 운동 추천을 요청하는 API 함수
 export const fetchExerciseRecommendations = async (
   payload: RecommendationPayload

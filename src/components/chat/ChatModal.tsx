@@ -13,6 +13,10 @@ import {
 import { useUserStore } from "../../store/userStore";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { fetchExerciseByExactName } from '@/services/api/exerciseApi';
+import { createRoutineWithExercise, addExerciseToRoutineApi, getRoutinesByUser, fetchExercisesInRoutine } from '@/services/api/routineApi';
+import type { AnalysisHistoryItem } from '@/types/index';
+import { useNavigate } from 'react-router-dom';
 
 interface Props {
   isOpen: boolean;
@@ -24,6 +28,7 @@ interface Props {
   historyId?: number;
   initialUserMessage?: string;
   initialVideoUrl?: string;
+  analysis?: AnalysisHistoryItem; // 추가
 }
 
 interface ChatMessage {
@@ -44,7 +49,7 @@ function getYoutubeId(url: string) {
   return match ? match[1] : '';
 }
 
-const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPayload, onInputFocus, userId, historyId, initialUserMessage, initialVideoUrl }, ref) => {
+const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPayload, onInputFocus, userId, historyId, initialUserMessage, initialVideoUrl, analysis }, ref) => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessionId, setSessionId] = useState<string>("");
@@ -53,6 +58,12 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
   const initialRequestSentRef = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  // analysis에서 직접 추천운동명 가져오기
+  const recommendedExerciseName = analysis?.recommendedExercise?.name || null;
+  const [showRoutineSelect, setShowRoutineSelect] = useState(false);
+  const [userRoutines, setUserRoutines] = useState<any[]>([]); // Routine 타입으로 교체 가능
 
   // handleCommentSummary를 ChatModal 함수 내부에 선언
   const handleCommentSummary = async (videoUrl: string) => {
@@ -82,6 +93,65 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
         ...prev,
         { type: "bot", content: "댓글 요약 중 오류가 발생했습니다. 다시 시도해 주세요." }
       ]);
+    }
+  };
+
+  // 신규 루틴에 추가
+  const handleAddToNewRoutine = async () => {
+    if (!userId || !recommendedExerciseName) return;
+    const exercise = await fetchExerciseByExactName(recommendedExerciseName);
+    if (!exercise) {
+      alert('해당 이름의 운동이 존재하지 않습니다.');
+      return;
+    }
+    const routineName = "AI 추천 루틴";
+    const routineDescription = "AI가 추천한 맞춤 루틴입니다.";
+    const order = 1;
+    try {
+      const createdRoutine = await createRoutineWithExercise(userId, {
+        routineDTO: { name: routineName, description: routineDescription },
+        exerciseId: exercise.id,
+        order
+      });
+      alert('신규 루틴에 운동이 추가되었습니다!');
+      navigate(`/routines/${createdRoutine.id}`); // 상세페이지로 이동
+    } catch (e) {
+      alert('신규 루틴 추가에 실패했습니다.');
+    }
+  };
+
+  // 기존 루틴에 추가 버튼 클릭 시 루틴 목록 로드 및 모달 노출
+  const handleShowRoutineSelect = async () => {
+    if (!userId) return;
+    const routines = await getRoutinesByUser(userId);
+    setUserRoutines(routines);
+    setShowRoutineSelect(true);
+  };
+
+  // 기존 루틴에 운동 추가
+  const handleAddToExistingRoutine = async (routineId: number) => {
+    if (!recommendedExerciseName) return;
+    const exercise = await fetchExerciseByExactName(recommendedExerciseName);
+    if (!exercise) {
+      alert('해당 이름의 운동이 존재하지 않습니다.');
+      return;
+    }
+    try {
+      // 1. 해당 루틴의 운동 목록 조회
+      const exercisesInRoutine = await fetchExercisesInRoutine(routineId);
+      // 2. 이미 포함되어 있는지 확인
+      const isDuplicate = exercisesInRoutine.some((ex: any) => ex.exerciseId === exercise.id);
+      if (isDuplicate) {
+        alert('이미 해당 루틴에 추가된 운동입니다.');
+        return;
+      }
+      // 3. 중복이 아니면 추가 진행
+      await addExerciseToRoutineApi(routineId, exercise.id); // order 파라미터 제거
+      alert('기존 루틴에 운동이 추가되었습니다!');
+      setShowRoutineSelect(false);
+      navigate(`/routines/${routineId}`); // 상세페이지로 이동
+    } catch (e) {
+      alert('기존 루틴 추가에 실패했습니다.');
     }
   };
 
@@ -293,7 +363,11 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
 
   // 메시지 전송 핸들러
   const handleSend = async () => {
-    if (!input.trim() || !userId || !historyId) return;
+    console.log('handleSend called');
+    if (!input.trim() || !userId || !historyId) {
+      console.log('handleSend: 필수 값 없음, return');
+      return;
+    }
     
     const userMessage: ChatMessage = { type: "user", content: input };
     setMessages(prev => [...prev, userMessage]);
@@ -305,6 +379,7 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
       userId,
       historyId,
       message: input,
+      recommendedExercise: analysis?.recommendedExercise // 추가
     };
     
     try {
@@ -319,7 +394,6 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
         ]);
         return;
       }
-      
       // AI 응답을 프론트엔드 메시지 형식으로 변환
       const convertBackendMessageToFrontend = (aiRes: any) => {
         console.log("[DEBUG] Full AI response:", aiRes);
@@ -473,6 +547,23 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
                 <div className="bg-blue-100 text-gray-800 rounded-2xl px-4 py-3 max-w-[420px] shadow-sm relative">
                   {msg.content}
                 </div>
+                {/* bot 메시지 하단에 루틴 추가 버튼 표시 */}
+                {recommendedExerciseName && (
+                  <div className="flex gap-2 mt-2 ml-2">
+                    <button 
+                      className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-sm" 
+                      onClick={handleAddToNewRoutine}
+                    >
+                      신규 루틴에 추가
+                    </button>
+                    <button 
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-sm" 
+                      onClick={handleShowRoutineSelect}
+                    >
+                      기존 루틴에 추가
+                    </button>
+                  </div>
+                )}
                 <HiUser className="w-7 h-7 text-blue-400 mt-1 ml-2" />
               </div>
             </div>

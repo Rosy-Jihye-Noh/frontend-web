@@ -422,6 +422,7 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
             initPayload={chatInitPayload}
             initialUserMessage={initialUserMessage}
             initialVideoUrl={initialVideoUrl}
+            analysis={analysis} // analysis 객체 전달
           />
         )}
       </div>
