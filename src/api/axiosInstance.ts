@@ -13,10 +13,10 @@ function baseURL() {
     return 'http://192.168.2.6:8081/api';
   } else if (hostname === '192.168.2.168') {
     // mac 서버 ip(2강의실)
-    return 'http://192.168.2.168:8081/api'
+    return 'http://192.168.2.168:8081/api';
   } else {
     // 그 외 호스트명이나 도메인
-    return `http://${hostname}:8081/api`;
+    return 'http://192.168.2.168:8081/api';
   }
   
 }
