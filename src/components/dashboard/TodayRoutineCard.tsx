@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogTrigger,
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger, 
+  DialogFooter, 
+  DialogDescription 
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { HiOutlinePencil, HiCheckCircle, HiArrowRight, HiOutlineDocumentText } from 'react-icons/hi';
+import { HiCheckCircle, HiPlus, HiPencilAlt, HiArrowRight } from 'react-icons/hi';
 import { useUserStore } from '@/store/userStore';
 import { useNavigate } from 'react-router-dom';
 import type { Routine } from '@/types/index';
 
+// TodayWorkoutCard 컴포넌트의 props 인터페이스 (원본 유지)
 interface TodayWorkoutCardProps {
   selectedRoutines: Routine[];
   allUserRoutines: Routine[];
@@ -87,7 +88,6 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
         parsedData.state.sessions[todayDate] = sessionRoutines;
       }
       localStorage.setItem('exercise-log-storage', JSON.stringify(parsedData));
-      console.log('오늘 루틴 선택 저장 완료:', routines.map(r => r.name));
     } catch (error) {
       console.error('루틴 저장 실패:', error);
     }
@@ -95,21 +95,20 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
 
   const getTodayDateString = () => {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    const year = today.getFullYear();
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const day = today.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const getRoutineCompletionFromStorage = () => {
     try {
       const logData = localStorage.getItem('exercise-log-storage');
-      if (!logData) {
-        return { completedRoutines: [], routineCompletionData: {} };
-      }
+      if (!logData) return { completedRoutines: [], routineCompletionData: {} };
       const parsedData = JSON.parse(logData);
       const todayDate = getTodayDateString();
       const todaySessions = parsedData?.state?.sessions?.[todayDate];
-      if (!todaySessions) {
-        return { completedRoutines: [], routineCompletionData: {} };
-      }
+      if (!todaySessions) return { completedRoutines: [], routineCompletionData: {} };
       const routineCompletionData: { [routineName: string]: number } = {};
       const completedRoutines: string[] = [];
       Object.values(todaySessions).forEach((session: any) => {
@@ -141,7 +140,7 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
         onRoutineSelect(todayStorageRoutines);
       }
     }
-  }, [user?.id, allUserRoutines.length]);
+  }, [user?.id, allUserRoutines.length, onRoutineSelect]);
 
   useEffect(() => {
     const updateCompletedRoutines = () => {
@@ -167,7 +166,7 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
     };
-  }, [user?.id, allUserRoutines.length, selectedRoutines.length]);
+  }, [user?.id, allUserRoutines.length, selectedRoutines.length, onRoutineSelect]);
 
   const handleRoutineToggle = (routine: Routine) => {
     setTempSelectedRoutines(prev =>
@@ -210,110 +209,147 @@ const TodayWorkoutCard: React.FC<TodayWorkoutCardProps> = ({
     setIsDialogOpen(true);
   };
 
+  const todayStorageRoutines = getTodaySelectedRoutinesFromStorage();
+
   return (
     <div className="md:col-span-1 flex flex-col bg-gradient-to-br from-[#5A8FD6] to-[#2C4A66] text-white rounded-2xl p-6 shadow-lg transition-all duration-300">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">오늘의 루틴</h2>
-        <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => navigate('/mypage')}>
-          <HiOutlinePencil className="w-6 h-6" />
-        </Button>
+      <div className='flex-shrink-0'>
+        <HiCheckCircle className="text-white w-10 h-10 mb-2" />
+        <h2 className="text-xl font-bold mb-4 text-left">오늘의 루틴</h2>
       </div>
 
-      {selectedRoutines.length > 0 ? (
-        <div className="w-full space-y-3 flex-grow">
-          {selectedRoutines.map(routine => {
-            const completionRate = Math.floor(routineCompletionData[routine.name] || 0);
-            return (
-              <div key={routine.id} className="bg-white/10 rounded-lg p-3 transition-all">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold truncate">{routine.name}</span>
-                  <span className={`text-sm font-bold ${completionRate === 100 ? 'text-green-300' : 'text-yellow-300'}`}>
-                    {completionRate}%
-                  </span>
+      <div className="flex-grow w-full mb-4 space-y-2 overflow-y-auto pr-1">
+        {allUserRoutines.length > 0 ? (
+            allUserRoutines.map(routine => {
+              const completionRate = routineCompletionData[routine.name] || 0;
+              const isCompleted = todayCompletedRoutines.includes(routine.name);
+              // 미리 계산된 todayStorageRoutines를 사용하여 isSelected를 확인합니다.
+              const isSelected = todayStorageRoutines.some(r => r.id === routine.id);
+              
+              return (
+                <div key={routine.id} className={`bg-white/10 rounded-lg p-3 transition-all duration-300 ${
+                  isSelected ? 'opacity-100 ring-2 ring-white/60' : 'opacity-60 hover:opacity-80'
+                }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-semibold text-white truncate">
+                        {routine.name}
+                      </span>
+                      {isSelected && <span className="text-xs bg-white/25 px-2 py-0.5 rounded-full font-semibold">선택됨</span>}
+                    </div>
+                    <span className={`text-xs font-bold ${
+                      isCompleted ? 'text-green-300' : 
+                      completionRate > 0 ? 'text-yellow-300' : 'text-gray-300'
+                    }`}>
+                      {Math.floor(completionRate)}%
+                      {isCompleted && ' ✅'}
+                    </span>
+                  </div>
+                  <div className="w-full bg-white/20 rounded-full h-1.5">
+                    <div 
+                      className={`h-1.5 rounded-full transition-all duration-500 ${
+                        isCompleted ? 'bg-green-400' : 
+                        completionRate > 0 ? 'bg-yellow-400' : 'bg-transparent'
+                      }`}
+                      style={{ width: `${Math.floor(completionRate)}%` }}
+                    ></div>
+                  </div>
                 </div>
-                <div className="w-full bg-white/20 rounded-full h-1.5">
-                  <div
-                    className="h-1.5 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${completionRate}%`,
-                      background: completionRate === 100 ? '#4ade80' : '#facc15'
-                    }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="flex-grow flex flex-col items-center justify-center bg-black/10 rounded-xl p-4 my-4 text-center">
-            {allUserRoutines.length > 0 ? (
-                <>
-                    <HiCheckCircle className="w-10 h-10 text-white/50 mb-2" />
-                    <p className="text-sm text-white/70">오늘 할 루틴을 선택해주세요.</p>
-                </>
-            ) : (
-                <>
-                    <HiOutlineDocumentText className="w-10 h-10 text-white/50 mb-2" />
-                    <p className="text-sm text-white/70">아직 생성된 루틴이 없네요.</p>
-                    <Button onClick={() => navigate('/routines/new')} variant="link" className="text-white/90 h-auto p-0 mt-1">
-                        지금 만들러 가기
-                    </Button>
-                </>
-            )}
-        </div>
-      )}
-
-      <div className="flex flex-col space-y-2 mt-4">
+              );
+            })
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center bg-black/10 rounded-xl p-4 text-center">
+            <span className="text-sm text-white/70">생성된 루틴이 없습니다</span>
+          </div>
+        )}
+      </div>
+      
+      <div className="flex flex-col space-y-2 w-full flex-shrink-0 pt-2">
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button
+            <Button 
               className="bg-white text-[#007AFF] font-bold py-3 rounded-lg shadow-md transition-transform active:scale-95 w-full"
               onClick={handleDialogOpen}
             >
-              오늘의 루틴 선택하기
+              루틴 추가하기 <HiPlus className="w-5 h-5 ml-2" />
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md bg-background text-foreground border-border rounded-2xl shadow-lg">
             <DialogHeader>
-              <DialogTitle className="text-lg font-bold">오늘 운동할 루틴을 선택하세요</DialogTitle>
-              <DialogDescription>수행할 운동 루틴을 선택할 수 있습니다.</DialogDescription>
+              <DialogTitle className="text-lg font-bold">오늘 수행할 루틴을 선택하세요</DialogTitle>
             </DialogHeader>
-            <div className="space-y-3 py-4 max-h-[50vh] overflow-y-auto">
-              {allUserRoutines.map(routine => {
-                const isSelected = tempSelectedRoutines.some(r => r.id === routine.id);
-                return (
-                  <div
-                    key={routine.id}
-                    className={`flex items-center space-x-4 p-3 rounded-lg cursor-pointer transition-colors ${
-                      isSelected ? 'bg-primary/10' : 'hover:bg-muted'
-                    }`}
-                    onClick={() => handleRoutineToggle(routine)}
-                  >
-                    <Checkbox checked={isSelected} id={`routine-${routine.id}`} className="rounded-sm" />
-                    <label htmlFor={`routine-${routine.id}`} className="flex-1 cursor-pointer">
-                      <p className="font-semibold">{routine.name}</p>
-                      <p className="text-sm text-muted-foreground">{routine.exercises?.length || 0}개 운동</p>
-                    </label>
-                  </div>
-                );
-              })}
+            <div className="space-y-2 py-4 max-h-[50vh] overflow-y-auto">
+              {allUserRoutines.length === 0 ? (
+                <div className="text-center py-4 text-muted-foreground">
+                  <p>생성된 루틴이 없습니다.</p>
+                  <p className="text-sm">먼저 루틴을 생성해주세요.</p>
+                </div>
+              ) : (
+                allUserRoutines.map(routine => {
+                  const isCompleted = todayCompletedRoutines.includes(routine.name);
+                  const completionRate = routineCompletionData[routine.name] || 0;
+                  const isSelected = tempSelectedRoutines.some(r => r.id === routine.id);
+                  
+                  return (
+                    <div 
+                      key={routine.id} 
+                      className={`flex items-center space-x-4 p-3 rounded-lg cursor-pointer transition-colors ${
+                        isSelected ? 'bg-primary/10' : 'hover:bg-muted'
+                      }`}
+                      onClick={() => handleRoutineToggle(routine)}
+                    >
+                      <Checkbox checked={isSelected} id={`dialog-item-${routine.id}`} className="data-[state=checked]:bg-[#007AFF] data-[state=checked]:border-[#007AFF]" />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <label htmlFor={`dialog-item-${routine.id}`} className={`font-semibold cursor-pointer ${isCompleted ? 'text-green-600' : ''}`}>
+                            {routine.name}
+                            {isCompleted && ' ✅'}
+                          </label>
+                          <span className={`text-xs font-bold ${
+                            isCompleted ? 'text-green-600' : 
+                            completionRate > 0 ? 'text-yellow-600' : 'text-muted-foreground'
+                          }`}>
+                            {Math.floor(completionRate)}%
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-muted-foreground">
+                            ({routine.exercises?.length || 0}개 운동)
+                          </span>
+                          {completionRate > 0 && (
+                            <div className="flex-1 bg-muted rounded-full h-1.5 ml-2">
+                              <div 
+                                className={`h-1.5 rounded-full transition-all duration-300 ${
+                                  isCompleted ? 'bg-green-500' : 'bg-yellow-500'
+                                }`}
+                                style={{ width: `${Math.floor(completionRate)}%` }}
+                              ></div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
             <DialogFooter>
-              <Button
-                onClick={handleConfirmSelection}
-                className="bg-[#007AFF] hover:bg-[#0056b3] text-white font-bold w-full py-3 rounded-lg transition-transform active:scale-95"
+              <Button 
+                onClick={handleConfirmSelection} 
+                disabled={tempSelectedRoutines.length === 0 && selectedRoutines.length === 0}
+                className="bg-[#007AFF] hover:bg-[#0056b3] text-white font-bold w-full py-3 rounded-lg"
               >
-                선택 완료 ({tempSelectedRoutines.length})
+                선택 완료 ({tempSelectedRoutines.length}개 선택)
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-        <Button
-          className="bg-white/20 text-white font-semibold py-3 rounded-lg shadow-md transition-transform active:scale-95 w-full group"
+        
+        <Button 
+          className="bg-white/20 hover:bg-white/30 text-white font-semibold py-3 rounded-lg w-full group"
           onClick={() => navigate('/mypage')}
         >
-          운동 기록 보러가기 <HiArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
+          운동 기록하기 <HiArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
         </Button>
       </div>
     </div>

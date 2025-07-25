@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { HiCamera, HiUser, HiChatAlt2, HiLightBulb, HiCheckCircle } from 'react-icons/hi';
 import { FaArrowRight } from 'react-icons/fa';
 import { useUserStore } from '@/store/userStore';
-import { useDashboardStore } from '@/store/dashboardStore';
 import { useLogStore } from '@/store/logStore';
 import CommunityHotPosts from '@/components/dashboard/CommunityHotPosts';
 import TodayRoutineCard from '@/components/dashboard/TodayRoutineCard';
@@ -21,168 +20,113 @@ import Favicon from '../../public/favicon.png';
 
 const Dashboard: React.FC = () => {
   const { user } = useUserStore();
-  const {
-    todaySelectedRoutines,
-    setTodaySelectedRoutines,
-    setCurrentUser,
-    getTodayRoutines,
-    clearUserData,
-  } = useDashboardStore();
-  const { startOrLoadSession, setSelectedDate } = useLogStore();
+  const { sessions, startOrLoadSession, setSelectedDate } = useLogStore();
   const navigate = useNavigate();
 
-  // 상태
-  const [routines, setRoutines] = useState<Routine[]>([]);
+  const [allUserRoutines, setAllUserRoutines] = useState<Routine[]>([]);
+  const [displayRoutines, setDisplayRoutines] = useState<Routine[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [communityHotPosts, setCommunityHotPosts] = useState<any[]>([]);
-  const [completedRoutineIds, setCompletedRoutineIds] = useState<number[]>([]);
 
+  // ===== ▼▼▼ 데이터 로딩 및 동기화 로직 (최종 수정) ▼▼▼ =====
   useEffect(() => {
     if (!user || !user.id) {
-      console.log('사용자가 로그인되지 않음, 로그인 페이지로 이동');
-      clearUserData(); // 사용자 데이터 초기화
       navigate('/login');
       return;
     }
 
-    // 현재 사용자 설정
-    setCurrentUser(user.id);
+    // 1. 로컬 스토리지에서 직접 데이터를 읽어오는 함수
+    const getInitialRoutinesFromStorage = (allRoutines: Routine[]): Routine[] => {
+      try {
+        const logData = localStorage.getItem('exercise-log-storage');
+        if (!logData) return [];
 
-    // 해당 사용자의 선택된 루틴 가져오기
-    const userSelectedRoutines = getTodayRoutines(user.id);
-    console.log('사용자', user.id, '의 기존 선택 루틴:', userSelectedRoutines.length, '개');
-
-    // 1. 로그인한 사용자의 루틴만 불러오기 (인증된 사용자만)
-    console.log('로그인한 사용자 ID:', user.id, '의 루틴을 가져오는 중...');
-    getRoutinesByUser(user.id)
-      .then(userRoutines => {
-        // API 함수에서 이미 사용자 검증을 수행하므로 추가 검증 불필요
-        console.log('사용자 루틴 로드 성공:', userRoutines.length, '개의 루틴');
-        setRoutines(userRoutines);
-      })
-      .catch(error => {
-        console.error('사용자 루틴 로드 실패:', error);
-        // 인증 오류인 경우 로그인 페이지로 이동
-        if ((error as any).response?.status === 401 || (error as any).response?.status === 403) {
-          console.log('인증 오류로 인한 로그인 페이지 이동');
-          clearUserData();
-          navigate('/login');
+        const parsedData = JSON.parse(logData);
+        const today = new Date().toISOString().split('T')[0];
+        const todaySessions = parsedData?.state?.sessions?.[today];
+        if (!todaySessions || !Array.isArray(todaySessions) || todaySessions.length === 0) {
+          return [];
         }
-        setRoutines([]);
-      });
+        
+        const routineIds = todaySessions.map((session: any) => session.routineId).filter(Boolean);
+        const selected = allRoutines.filter(routine => routineIds.includes(routine.id));
+        console.log(`[초기 로딩] 로컬 스토리지에서 ${selected.length}개의 루틴을 찾았습니다.`);
+        return selected;
+      } catch (error) {
+        console.error("로컬 스토리지에서 초기 루틴을 가져오는 중 오류 발생:", error);
+        return [];
+      }
+    };
 
-    // 2. 카테고리 불러오기 및 각 카테고리별 인기글 불러오기
+    // 2. API를 통해 사용자의 모든 루틴 목록을 가져온 후, 로컬 스토리지와 동기화
+    getRoutinesByUser(user.id).then(fetchedRoutines => {
+      setAllUserRoutines(fetchedRoutines);
+      
+      // API 호출이 완료된 후, 로컬 스토리지에서 데이터를 읽어 초기 상태를 설정합니다.
+      const initialSelectedRoutines = getInitialRoutinesFromStorage(fetchedRoutines);
+      setDisplayRoutines(initialSelectedRoutines);
+    }).catch(error => {
+        console.error('사용자 루틴 로드 실패:', error);
+    });
+
+    // 커뮤니티 데이터 로딩
     fetchCategories()
       .then(async categories => {
         setCategories(categories);
-        // 각 카테고리별 인기글 1개씩
         const hotPosts = await Promise.all(
           categories.map(async (cat: any) => {
             try {
               const postRes = await fetchPopularPostsByCategory(cat.id, 0, 1);
               const post = postRes.content?.[0];
-              return post
-                ? { category: cat.name, title: post.title, likes: post.likeCount, id: post.id }
-                : { category: cat.name, title: '', likes: 0, id: null };
-            } catch {
-              return { category: cat.name, title: '', likes: 0, id: null };
-            }
+              return post ? { category: cat.name, title: post.title, likes: post.likeCount, id: post.id } : null;
+            } catch { return null; }
           })
         );
-        setCommunityHotPosts(hotPosts);
+        setCommunityHotPosts(hotPosts.filter(Boolean));
       })
       .catch(console.error);
+      
+  }, [user, navigate]);
 
-  }, [user, navigate, clearUserData, getTodayRoutines, setCurrentUser]);
 
-  // 오늘 날짜가 바뀔 때 완료된 루틴 초기화
+  // 3. 사용자가 루틴을 변경하는 등 실시간 상호작용이 있을 때를 위한 동기화
+  //    (초기 로딩 이후의 변경사항을 담당)
   useEffect(() => {
-    const today = new Date().toDateString();
-    const savedDate = localStorage.getItem('lastRoutineDate');
-    
-    if (savedDate !== today) {
-      setCompletedRoutineIds([]);
-      localStorage.setItem('lastRoutineDate', today);
-      console.log('새로운 날짜로 루틴 완료 상태 초기화');
-    } else {
-      // 같은 날짜면 저장된 완료 상태 복원
-      const savedCompleted = localStorage.getItem('completedRoutineIds');
-      if (savedCompleted) {
-        try {
-          setCompletedRoutineIds(JSON.parse(savedCompleted));
-        } catch (error) {
-          console.error('완료된 루틴 데이터 복원 실패:', error);
-        }
-      }
-    }
-  }, []);
+    if (allUserRoutines.length === 0) return;
 
-  // 완료된 루틴 상태를 localStorage에 저장
-  useEffect(() => {
-    localStorage.setItem('completedRoutineIds', JSON.stringify(completedRoutineIds));
-  }, [completedRoutineIds]);
-
-  const handleRoutineSelection = (selectedRoutines: Routine[]) => {
-    // 로그인한 사용자 확인
-    if (!user || !user.id) {
-      alert('로그인이 필요합니다.');
-      navigate('/login');
-      return;
-    }
-
-    // 선택된 루틴이 모두 해당 사용자의 루틴인지 검증
-    const validSelectedRoutines = selectedRoutines.filter(selectedRoutine => 
-      routines.some(userRoutine => userRoutine.id === selectedRoutine.id)
+    const today = new Date().toISOString().split('T')[0];
+    const todaySession = sessions[today] || [];
+    const currentlySelected = allUserRoutines.filter(routine =>
+      todaySession.some(sessionItem => sessionItem.routineId === routine.id)
     );
 
-    if (validSelectedRoutines.length !== selectedRoutines.length) {
-      console.warn('유효하지 않은 루틴 선택 시도');
-      alert('선택할 수 없는 루틴이 포함되어 있습니다.');
-      return;
+    // 데이터 불일치를 방지하기 위해 현재 화면 상태와 스토어 상태가 다를 때만 업데이트
+    if (JSON.stringify(displayRoutines.map(r => r.id).sort()) !== JSON.stringify(currentlySelected.map(r => r.id).sort())) {
+        console.log('[실시간 동기화] 세션 변경을 감지하여 화면을 업데이트합니다.');
+        setDisplayRoutines(currentlySelected);
     }
+  }, [sessions, allUserRoutines]);
 
-    console.log('사용자', user.id, '의 루틴 선택:', validSelectedRoutines.map(r => r.name));
-    setTodaySelectedRoutines(validSelectedRoutines, user.id);
+  const handleRoutineSelection = (selectedRoutines: Routine[]) => {
+    if (!user || !user.id) return;
+    startOrLoadSession(user.id, selectedRoutines);
   };
 
   const handleWorkoutStart = () => {
-    // 사용자 인증 확인
     if (!user || !user.id) {
       alert('로그인이 필요합니다.');
       navigate('/login');
       return;
     }
-
-    if (todaySelectedRoutines.length === 0) {
+    if (displayRoutines.length === 0) {
       alert('먼저 오늘 수행할 루틴을 선택해주세요.');
       return;
     }
-    
-    // 선택된 루틴이 실제로 해당 사용자의 루틴인지 확인
-    const validRoutines = todaySelectedRoutines.filter(routine => 
-      routines.some(userRoutine => userRoutine.id === routine.id)
-    );
-    
-    if (validRoutines.length !== todaySelectedRoutines.length) {
-      console.warn('유효하지 않은 루틴이 포함되어 있습니다.');
-      alert('유효하지 않은 루틴이 포함되어 있습니다. 다시 선택해주세요.');
-      return;
-    }
-
-    console.log('사용자', user.id, '의 운동 세션 시작:', validRoutines.map(r => r.name));
-
-    // 오늘 날짜로 설정하고 운동기록 페이지로 이동
     const today = new Date().toISOString().split('T')[0];
     setSelectedDate(today);
-    
-    // 검증된 루틴으로 세션 시작
-    startOrLoadSession(user.id, validRoutines);
-    
-    // 운동기록 페이지로 이동
     navigate('/exercise-logs');
   };
 
-  // 카테고리 아이콘 매핑
   const CATEGORY_ICONS: Record<string, React.ReactNode> = {
     '오운완': <HiCheckCircle className="w-6 h-6 text-blue-500 mr-2" />,
     '자세인증': <HiCamera className="w-6 h-6 text-purple-500 mr-2" />,
@@ -225,8 +169,8 @@ const Dashboard: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <TodayRoutineCard
-            selectedRoutines={todaySelectedRoutines}
-            allUserRoutines={routines}
+            selectedRoutines={displayRoutines}
+            allUserRoutines={allUserRoutines}
             onRoutineSelect={handleRoutineSelection}
             onStart={handleWorkoutStart}
           />
