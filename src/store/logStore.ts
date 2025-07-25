@@ -50,6 +50,7 @@ export const useLogStore = create<LogSessionState>()(
       /**
        * 특정 사용자의 과거 운동 기록을 서버에서 불러와 상태를 업데이트합니다.
        * @param userId - 과거 기록을 불러올 사용자의 ID
+       * 같은 날짜의 여러 로그를 하나로 병합하여 데이터 유실을 방지합니다.
        */
       fetchPastLogs: async (userId) => {
         if (!userId) {
@@ -59,34 +60,54 @@ export const useLogStore = create<LogSessionState>()(
         
         try {
           const logs = await exerciseLogApi.getLogsByUser(userId);
-          
-          // 사용자 ID로 한번 더 필터링 (보안 강화)
           const filteredLogs = logs?.filter(log => log.userId === userId) || [];
           
-          // 날짜별로 unique한 로그만 유지 (가장 최근 로그 우선)
-          const uniqueLogsByDate = filteredLogs.reduce((acc, log) => {
-            const existingLogIndex = acc.findIndex(existingLog => existingLog.exerciseDate === log.exerciseDate);
-            if (existingLogIndex === -1) {
-              // 해당 날짜의 첫 번째 로그
-              acc.push(log);
-            } else {
-              // 해당 날짜에 이미 로그가 있는 경우, ID가 더 큰(최신) 로그로 대체
-              if (log.id && acc[existingLogIndex].id && log.id > acc[existingLogIndex].id) {
-                acc[existingLogIndex] = log;
-              }
-            }
-            return acc;
-          }, [] as ExerciseLog[]);
+          // 💡 변경점 1: 같은 날짜의 로그들을 그룹으로 묶습니다.
+          const logsByDate = new Map<string, ExerciseLog[]>();
+          filteredLogs.forEach(log => {
+            const date = log.exerciseDate;
+            const existing = logsByDate.get(date) || [];
+            logsByDate.set(date, [...existing, log]);
+          });
+
+          // 💡 변경점 2: 날짜별로 그룹화된 로그들을 정보 유실 없이 하나로 병합합니다.
+          const mergedLogs: ExerciseLog[] = [];
+          for (const dailyLogs of logsByDate.values()) {
+            if (dailyLogs.length === 0) continue;
+
+            // 메모 찾기: 여러 로그 중 메모가 있는 로그를 찾아 그 메모를 사용합니다.
+            const memo = dailyLogs.find(l => l.memo && l.memo.trim() !== '')?.memo || '';
+
+            // 루틴 ID 합치기: 모든 로그의 routineId를 중복 없이 합칩니다.
+            const routineIds = [...new Set(dailyLogs.flatMap(l => l.routineIds || []))];
+
+            // 완료율 계산: 여러 로그 중 가장 높은 완료율을 대표값으로 사용합니다.
+            const completionRate = Math.max(0, ...dailyLogs.map(l => l.completionRate || 0));
+
+            // 기준 로그 설정: 가장 최신 로그(ID가 가장 높은)를 기준으로 삼습니다.
+            const baseLog = dailyLogs.reduce((latest, current) => {
+              const latestId = latest?.id ?? 0;
+              const currentId = current?.id ?? 0;
+              return (latestId > currentId) ? latest : current;
+            });
+
+            // 병합된 최종 로그 객체를 만듭니다.
+            mergedLogs.push({
+                ...baseLog,
+                memo,
+                routineIds,
+                completionRate,
+            });
+          }
           
           const { selectedDate } = get();
           
-          // 선택된 날짜의 메모 로드 (해당 사용자의 것만)
-          const todaysLog = uniqueLogsByDate.find(log => 
-            log.exerciseDate === selectedDate && log.userId === userId
-          );
-          const memo = todaysLog?.memo || '';
+          // 💡 변경점 3: 병합된 로그 리스트에서 현재 선택된 날짜의 메모를 찾습니다.
+          const todaysLog = mergedLogs.find(log => log.exerciseDate === selectedDate);
+          const memoForSelectedDay = todaysLog?.memo || '';
           
-          set({ pastLogs: uniqueLogsByDate, currentDayMemo: memo });
+          // 최종적으로 병합된 로그들과 올바른 메모로 상태를 업데이트합니다.
+          set({ pastLogs: mergedLogs, currentDayMemo: memoForSelectedDay });
         } catch (error) {
           console.error("사용자", userId, "의 기록 로드 실패:", error);
           set({ pastLogs: [], currentDayMemo: '' });
