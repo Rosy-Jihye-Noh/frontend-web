@@ -46,9 +46,14 @@ const RoutineDetailPage: React.FC = () => {
         style={{ paddingTop: 'var(--header-height, 90px)' }}
       >
         <div className="flex justify-between items-center mb-6">
-          <Button variant="outline" onClick={() => navigate(-1)}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> 뒤로가기
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate(-1)}>
+              <ArrowLeft className="mr-2 h-4 w-4" /> 뒤로가기
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/mypage')}>
+              목록으로
+            </Button>
+          </div>
           <Button 
           className="bg-blue-600 hover:bg-blue-700 text-white"
           onClick={() => navigate(`/routines/edit/${routine.id}`)}>

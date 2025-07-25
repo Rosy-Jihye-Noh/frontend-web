@@ -66,6 +66,8 @@ export interface AnalysisHistoryItem {
   sideImageUrl?: string;
   feedback?: Record<string, any>;
   measurements?: Record<string, any>;
+  recommendedExercise?: Record<string, any>;
+
 }
 export interface ExerciseLog {
   // Response용 필드

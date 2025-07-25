@@ -1,5 +1,6 @@
 import type { Routine } from '@/types/index';
 import axiosInstance from '../../api/axiosInstance';
+import type { RoutineExercise } from '@/types/index';
 
 /**
  * 새로운 루틴을 생성합니다.
@@ -96,4 +97,37 @@ export const getRoutinesByUser = async (userId: number): Promise<Routine[]> => {
   } catch (error) {
     throw new Error('루틴 목록을 불러오는 데 실패했습니다.');
   }
+};
+
+export interface CreateRoutineWithExerciseRequest {
+  routineDTO: {
+    name: string;
+    description?: string;
+  };
+  exerciseId: number;
+  order: number;
+}
+
+/**
+ * 챗봇: 신규 루틴 생성 + 운동 추가 (트랜잭션)
+ * @param userId - 사용자 ID
+ * @param req - routineDTO, exerciseId, order
+ * @returns 생성된 루틴 전체 정보
+ */
+export const createRoutineWithExercise = async (
+  userId: number,
+  req: CreateRoutineWithExerciseRequest
+): Promise<Routine> => {
+  const response = await axiosInstance.post(`/routines/user/${userId}/with-exercise`, req);
+  return response.data;
+};
+
+/**
+ * 특정 루틴의 운동 목록을 조회합니다.
+ * @param routineId - 루틴 ID
+ * @returns 루틴에 포함된 운동 목록
+ */
+export const fetchExercisesInRoutine = async (routineId: number): Promise<RoutineExercise[]> => {
+  const response = await axiosInstance.get(`/routines/${routineId}/exercises`);
+  return response.data;
 };
