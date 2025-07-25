@@ -38,7 +38,6 @@ export const useEmotionLogStore = create<EmotionLogState>()(
         try {
           const logs = await emotionLogApi.getLogsByUser(userId);
           set({ emotionLogs: logs });
-          // fetch 후, 현재 선택된 날짜의 정보로 다시 UI를 업데이트합니다.
           get().setSelectedDate(get().selectedDate);
         } catch (error) {
           console.error('감성 기록 로딩 실패:', error);
@@ -50,7 +49,6 @@ export const useEmotionLogStore = create<EmotionLogState>()(
 
       setSelectedDate: (date) => {
         const { emotionLogs } = get();
-        // DTO의 날짜 필드 이름이 exerciseDate로 통일되었으므로 그대로 사용
         const logForDate = emotionLogs.find(log => log.exerciseDate.toString().startsWith(date));
         set({
           selectedDate: date,
@@ -64,29 +62,43 @@ export const useEmotionLogStore = create<EmotionLogState>()(
       updateMemo: (memo) => set({ currentDayMemo: memo }),
 
       /**
-       * 현재 감성과 메모를 저장/수정합니다.
-       * 백엔드의 통합된 POST 엔드포인트를 호출합니다.
+       * (수정됨) 현재 감성과 메모를 저장/수정합니다.
+       * 만약 메모가 비어있다면, 기존 기록을 삭제합니다.
        */
       saveCurrentLog: async (userId) => {
-        const { selectedDate, currentDayEmotion, currentDayMemo, emotionLogs } = get();
+        const { selectedDate, currentDayMemo, emotionLogs } = get();
+        const existingLog = emotionLogs.find(log => log.exerciseDate.toString().startsWith(selectedDate));
 
-        if (!currentDayEmotion) {
-          toast.warning('감정을 선택해주세요.');
+        // 💡 변경점 1: 메모가 비어있는 경우의 로직
+        if (!currentDayMemo.trim()) {
+          // 이미 해당 날짜에 기록이 있다면 삭제 API를 호출합니다.
+          if (existingLog && existingLog.id) {
+            set({ isLoading: true });
+            try {
+              // 기존에 있던 deleteEmotionLog 함수를 재사용합니다.
+              await emotionLogApi.deleteEmotionLog(existingLog.id);
+              toast.success("기록이 삭제되었습니다.");
+              // 데이터를 다시 불러와 화면을 갱신합니다.
+              await get().fetchEmotionLogs(userId);
+            } catch (error) {
+              console.error('기록 삭제 실패:', error);
+              toast.error('기록 삭제에 실패했습니다.');
+            } finally {
+              set({ isLoading: false });
+            }
+          }
+          // 원래 기록이 없었다면 아무 작업도 하지 않고 함수를 종료합니다.
           return;
         }
 
+        // 💡 변경점 2: 메모가 비어있지 않은 경우, 기존의 저장 로직을 수행합니다.
         set({ isLoading: true });
         try {
-          // 기존 로그를 찾아 ID를 포함시킵니다.
-          const existingLog = emotionLogs.find(log => log.exerciseDate.toString().startsWith(selectedDate));
-
           const logData: EmotionLogDTO = {
-            // 기존 로그가 있으면 해당 ID를, 없으면 0이나 null을 보냅니다.
-            id: existingLog ? existingLog.id : 0, 
+            id: existingLog ? existingLog.id : 0,
             userId,
-            // new Date()로 감싸지 않고 문자열 그대로 전송합니다.
-            exerciseDate: selectedDate, 
-            emotion: currentDayEmotion,
+            exerciseDate: selectedDate,
+            emotion: 'NEUTRAL', // 백엔드에서 memo를 보고 새로 분석하므로 임시값
             memo: currentDayMemo,
             createdAt: new Date(),
             updatedAt: new Date()
@@ -95,7 +107,7 @@ export const useEmotionLogStore = create<EmotionLogState>()(
           await emotionLogApi.saveOrUpdateEmotionLog(logData);
           toast.success('기록이 저장되었습니다.');
           
-          await get().fetchEmotionLogs(userId); // 저장 후 데이터 다시 로드
+          await get().fetchEmotionLogs(userId);
         } catch (error) {
           console.error('감성 기록 저장 실패:', error);
           toast.error('저장에 실패했습니다.');
