@@ -54,11 +54,7 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
   // 사진 데이터 확인 (필요시 활용)
   // const { frontPhoto, sidePhoto } = (location.state as LocationState) || {};
 
-  console.log('AnalysisResultPage user:', user);
-  console.log('AnalysisResultPage analysis:', analysis);
-  console.log('URL historyId:', historyId);
-  console.log('Analysis ID:', analysis?.id);
-  
+ 
   useEffect(() => {
     // location.state.analysis가 있으면 우선 사용
     if (location.state && (location.state as any).analysis) {
@@ -78,7 +74,6 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
         setLoading(false);
       })
       .catch((error) => {
-        console.error(error);
         setErrorMessage('분석 결과를 불러오는 중 오류가 발생했습니다.');
         setLoading(false);
       });
@@ -87,13 +82,11 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
   // measurements 콘솔 출력
   useEffect(() => {
     if (analysis) {
-      console.log('analysis.measurements:', analysis.measurements);
     }
   }, [analysis]);
 
   // 챗봇 오픈 트리거 - ChatModal에서 관리하는 전역 함수 사용
   const handleChatOpen = (type: 'video' | 'consult', payload?: any) => {
-    console.log('[DEBUG] handleChatOpen called', type, payload, new Date().toISOString());
     setChatInitType(type);
     setChatInitPayload(payload);
     setIsModalOpen(false);
@@ -128,9 +121,6 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
         .replace(/\s+/g, ' ') // 연속된 공백을 하나로
         .trim(); // 앞뒤 공백 제거
       
-      console.log('Original diagnosis:', analysis.diagnosis);
-      console.log('Cleaned diagnosis:', cleanDiagnosis);
-      
       if (type === 'consult') {
         setInitialUserMessage(`자세 분석 결과에 맞는 운동을 추천해주세요.`);
       } else if (type === 'video') {
@@ -142,7 +132,6 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
   // initialUserMessage가 세팅된 후에만 모달을 오픈
   useEffect(() => {
     if (initialUserMessage) {
-      console.log('[DEBUG] useEffect (initialUserMessage) triggered, setIsChatOpen(true)', new Date().toISOString());
       setIsChatOpen(true);
     }
   }, [initialUserMessage]);
@@ -182,7 +171,6 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
         toast.success('링크가 클립보드에 복사되었습니다!');
       }
     } catch (error) {
-      console.error('공유 중 오류:', error);
       if (error instanceof Error && error.name === 'AbortError') {
         // 사용자가 공유를 취소한 경우
         return;
@@ -367,7 +355,6 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
           <Button
             className="w-full !py-4 !text-base !font-bold bg-blue-600 hover:bg-blue-700 text-white"
             onClick={() => {
-              console.log('[DEBUG] 맞춤운동 추천보기 버튼 클릭', new Date().toISOString());
               setIsModalOpen(true);
             }}
           >
@@ -388,7 +375,6 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
               <Button
                 className="w-full py-3 text-lg bg-blue-500 hover:bg-blue-600 text-white"
                 onClick={() => {
-                  console.log('[DEBUG] AI 운동 코치와 맞춤 운동 상담하기 버튼 클릭', new Date().toISOString());
                   handleChatOpen('consult', {
                     message: 'OOO 운동을 추천드립니다. 루틴에 추가하시겠습니까?'
                   });
@@ -399,7 +385,6 @@ const AnalysisResultPage: React.FC<AnalysisResultPageProps> = ({ isReadOnly = fa
               <Button
                 className="w-full py-3 text-lg bg-blue-500 hover:bg-blue-600 text-white"
                 onClick={() => {
-                  console.log('[DEBUG] 추천 운동 영상 바로 시청 버튼 클릭', new Date().toISOString());
                   handleChatOpen('video', {
                     videoUrl: 'https://www.youtube.com/watch?v=fFIL0rlRH78',
                     thumbnail: 'https://img.youtube.com/vi/fFIL0rlRH78/0.jpg',

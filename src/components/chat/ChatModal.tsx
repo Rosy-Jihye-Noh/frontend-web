@@ -226,10 +226,8 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
     try {
       let sid = sessionId;
       if (!sid || sid.trim() === '') {
-        console.log('[DEBUG] getActiveSession 호출: userId=', userId);
         const res = await getActiveSession(userId);
         sid = res;
-        console.log('[DEBUG] getActiveSession 반환값:', sid);
         if (!sid || sid.trim() === '') {
           setSessionId('');
           setMessages([]);
@@ -238,10 +236,8 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
         setSessionId(sid);
       }
       if (sid) {
-        console.log('[DEBUG] getChatHistory 호출: userId=', userId, 'sessionId=', sid);
         const historyRes = await getChatHistory(userId);
         const historyData = historyRes || [];
-        console.log('[DEBUG] getChatHistory 반환값:', historyData);
         setMessages(historyData.map(convertBackendMessageToFrontend));
       } else {
         setMessages([]);
@@ -268,7 +264,6 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
 
   // 버튼 클릭만으로 FastAPI 호출: isOpen+userId+historyId+initialUserMessage(또는 initialVideoUrl) 있으면 바로 요청
   useEffect(() => {
-    console.log('[DEBUG] useEffect triggered:', { isOpen, userId, historyId, initialUserMessage, initialVideoUrl, initType, initialRequestSent: initialRequestSentRef.current });
     if (
       isOpen &&
       userId &&
@@ -286,31 +281,20 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
         historyId,
         message,
       };
-      console.log('[DEBUG] ChatModal apiCall payload:', payload);
       const apiCall = initType === 'video' ? sendYoutubeMessage : sendAiCoachMessage;
       apiCall(payload).then(aiRes => {
         setIsLoading(false);
-        console.log('[DEBUG] AI 응답:', aiRes);
         const userMsg: ChatMessage = { type: 'user', content: message };
         
         // AI 응답을 프론트엔드 메시지 형식으로 변환
         const convertBackendMessageToFrontend = (aiRes: any) => {
-          console.log("[DEBUG] Full AI response:", aiRes);
-          console.log("[DEBUG] aiRes.videoUrl:", aiRes.videoUrl);
-          console.log("[DEBUG] aiRes.video_url:", (aiRes as any).video_url);
-          console.log("[DEBUG] Has videoUrl:", !!aiRes.videoUrl);
-          console.log("[DEBUG] Has video_url:", !!(aiRes as any).video_url);
           
           let botMessage: ChatMessage;
           
           if (aiRes.videoUrl || (aiRes as any).video_url) {
             const videoUrl = aiRes.videoUrl || (aiRes as any).video_url;
-            console.log("[DEBUG] Video response received:", aiRes);
-            console.log("[DEBUG] videoUrl:", videoUrl, "typeof:", typeof videoUrl);
             const videoId = getYoutubeId(videoUrl);
-            console.log("[DEBUG] getYoutubeId input:", videoUrl, "videoId:", videoId);
             const iframeSrc = `https://www.youtube.com/embed/${videoId}`;
-            console.log("[DEBUG] iframe src:", iframeSrc);
             botMessage = {
               type: "bot",
               content: (
@@ -363,9 +347,7 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
 
   // 메시지 전송 핸들러
   const handleSend = async () => {
-    console.log('handleSend called');
     if (!input.trim() || !userId || !historyId) {
-      console.log('handleSend: 필수 값 없음, return');
       return;
     }
     
@@ -396,22 +378,13 @@ const ChatModal = forwardRef<any, Props>(({ isOpen, onClose, initType, initPaylo
       }
       // AI 응답을 프론트엔드 메시지 형식으로 변환
       const convertBackendMessageToFrontend = (aiRes: any) => {
-        console.log("[DEBUG] Full AI response:", aiRes);
-        console.log("[DEBUG] aiRes.videoUrl:", aiRes.videoUrl);
-        console.log("[DEBUG] aiRes.video_url:", (aiRes as any).video_url);
-        console.log("[DEBUG] Has videoUrl:", !!aiRes.videoUrl);
-        console.log("[DEBUG] Has video_url:", !!(aiRes as any).video_url);
         
         let botMessage: ChatMessage;
         
         if (aiRes.videoUrl || (aiRes as any).video_url) {
           const videoUrl = aiRes.videoUrl || (aiRes as any).video_url;
-          console.log("[DEBUG] Video response received:", aiRes);
-          console.log("[DEBUG] videoUrl:", videoUrl, "typeof:", typeof videoUrl);
           const videoId = getYoutubeId(videoUrl);
-          console.log("[DEBUG] getYoutubeId input:", videoUrl, "videoId:", videoId);
           const iframeSrc = `https://www.youtube.com/embed/${videoId}`;
-          console.log("[DEBUG] iframe src:", iframeSrc);
           botMessage = {
             type: "bot",
             content: (
