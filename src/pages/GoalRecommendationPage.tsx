@@ -57,12 +57,13 @@ const GoalRecommendationPage: React.FC = () => {
 
     // ✅ 뱃지 정보가 있다면 백엔드에 전송 (뱃지 자동 수여)
     if (result.generated_badge) {
-      const badgeName = result.generated_badge.badge_name || 'AI 목표 달성자';
-      const badgeDescription = result.generated_badge.badge_description || 'AI가 추천한 목표를 설정한 것만으로도 멋져요!';
+      const badgeName = result.generated_badge.badge_name ?? '';
+      const badgeDescription = result.generated_badge.badge_description ?? '';
 
-      await awardBadgeToUser(user.id, badgeName, badgeDescription);
-
-      toast.success(`🎉 새 뱃지 획득: ${badgeName}`);
+      if (badgeName && badgeDescription) {
+        await awardBadgeToUser(user.id, badgeName, badgeDescription);
+        toast.success(`🎉 새 뱃지 획득: ${badgeName}`);
+      }
     }
 
     toast.success("새로운 목표가 성공적으로 저장되었습니다!");
